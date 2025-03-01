@@ -10,14 +10,21 @@ public class MyGameScreen extends JComponent{
     static int HEIGHT;
     static int xPixels;
     static int yPixels;
-    static int TILE_SIZE;
+    // static double tileSize;
+    // static double tileWidth;
+    // static double tileHeight;
+    static int tileSize;
+    static int tileWidth;
+    static int tileHeight;
 
     public MyGameScreen(){
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = 50;
         yPixels = 50;
-        TILE_SIZE = 10;
+        tileSize = 10;
+        tileWidth = tileSize;
+        tileHeight = tileSize;
         setSize(WIDTH, HEIGHT);
         //setPixels(num, ABORT);
     }
@@ -27,9 +34,11 @@ public class MyGameScreen extends JComponent{
         HEIGHT = 500;
         xPixels = numX;
         yPixels = numY;
-        TILE_SIZE = WIDTH / numX;
+        // tileWidth = (double) WIDTH / (double) numX;
+        // tileHeight = (double) HEIGHT / (double) numY;
+        tileWidth = WIDTH / numX;
+        tileHeight = HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
-        //setPixels(num, ABORT);
     }
     
     public MyGameScreen(final int width, final int height,
@@ -38,34 +47,53 @@ public class MyGameScreen extends JComponent{
         HEIGHT = height;
         xPixels = numX;
         yPixels = numY;
-        TILE_SIZE = width / numX;
+        tileWidth = WIDTH / numX;
+        tileHeight = HEIGHT / numY;
         setSize(width, height);
-        //setPixels(num, ABORT);
     }
 
     public void paint(Graphics g){
         Graphics2D g2d = (Graphics2D) g;
+        updateSize();
+        int tw;
+        int th;
+        tw = (int) tileWidth;
+        th = (int) tileHeight;
         for(int i = 0; i < yPixels; i++){
             for(int j = 0; j < xPixels; j++){
                 g2d.setColor(getColour(Main.getTiles()[i][j]));
-                g2d.fillRect(j*TILE_SIZE, i*TILE_SIZE, TILE_SIZE, TILE_SIZE);
+                g2d.fillRect(j*tw, i*th, tw, th);
             }
         }
     }
 
-    public Color getColour(char c){
-        if(c == '#'){
+    public Color getColour(String c){
+        if(c == TileString.Wall.getSymbol()){
             return Color.BLACK;
-        }else if(c == 'P'){
+        }else if(c == TileString.Player.getSymbol()){
             return Color.RED;
         }else{
             return Color.GRAY;
         }
     }
 
+    public void updateSize(){
+        WIDTH = super.getWidth();
+        HEIGHT = super.getHeight();
+        // tileWidth = (double) WIDTH / (double) xPixels; 
+        // tileHeight = (double) HEIGHT / (double) yPixels;
+        tileWidth = WIDTH / xPixels; 
+        tileHeight = HEIGHT / yPixels;
+
+        WIDTH = tileWidth * xPixels;
+        HEIGHT = tileHeight * yPixels;
+        super.setSize(WIDTH, HEIGHT);
+
+    }
+
     public void setPixels(int numX, int numY){
         //xPixels = numX;
         //yPixels = numY;
-        //TILE_SIZE = 10;
+        //tileSize = 10;
     }
 }
