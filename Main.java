@@ -14,9 +14,12 @@ public class Main {
     //magic numbers
     static final int n10 = 10;
     static final int n50 = 50;
-    static final String sP = "P ";
-    static final String sWall = "[]";
-    static final String sEmpty = "  ";
+    // static final String sP = "P ";
+    // static final String sWall = "[]";
+    // static final String sEmpty = "  ";
+    static final String sP = TileString.Player.getSymbol();
+    static final String sWall = TileString.Wall.getSymbol();
+    static final String sEmpty = TileString.Empty.getSymbol();
     static final String sDown = "DOWN";
     static final String sUp = "UP";
     static final String sLeft = "LEFT";
@@ -29,6 +32,13 @@ public class Main {
 
     static final int numTiles = n10;
     
+    /**
+     * The main entry point for the Java Terraria Clone application.
+     * Initializes players, game objects, and the game frame.
+     * Sets up key listeners for player movement and handles window resizing events.
+     *
+     * @param args Command line arguments
+     */
     public static void main(String[] args) {
 
         Player p1 = new Player(1, 1, 1);
@@ -147,63 +157,68 @@ public class Main {
         //MyFrame mf = new MyFrame(500,300);
 
     }
-
-    public static <T> void initTiles(int num, List<T> ps){
+    /**
+     * Initializes the tiles with players and walls.
+     * @param num The number of tiles.
+     * @param ps The list of players.
+     */
+    public static <T> void initTiles(int num, List<T> ps) {
         for (int i = 0; i < num; i++) {
             for (int j = 0; j < num; j++) {
                 for (T player : ps) {
-                    
-                    if(j == ((Player) player).getX() && i == ((Player) player).getY()){
-                        System.out.print(sP);// + ((Player) player).getId());
-                        // tiles[i][j] = 'P';
+                    if (j == ((Player) player).getX() && i == ((Player) player).getY()) {
                         tiles[i][j] = TileString.Player.getSymbol();
                     }
-                    
                 }
-                if(tiles[i][j] != sP){
-                    if(i == 0 || i == num-1 || j == 0 || j == num-1){
-                        // tiles[i][j] = '#';
-                        tiles[i][j] = sWall;
-                    }else {
-                        System.out.print("  ");
-                        // tiles[i][j] = ' ';
-                        tiles[i][j] = sEmpty;
+                if (tiles[i][j] != TileString.Player.getSymbol()) {
+                    if (i == 0 || i == num - 1 || j == 0 || j == num - 1) {
+                        tiles[i][j] = TileString.Wall.getSymbol();
+                    } else {
+                        tiles[i][j] = TileString.Empty.getSymbol();
                     }
                 }
             }
         }
     }
 
-    public static <T> void setTiles(int num, List<T> ps){
+    /**
+     * Sets the tiles with players and walls.
+     * @param num The number of tiles.
+     * @param ps The list of players.
+     */
+    public static <T> void setTiles(int num, List<T> ps) {
         for (int i = 0; i < num; i++) {
             for (int j = 0; j < num; j++) {
-                if(i == 0 || i == num-1 || j == 0 || j == num-1){
+                if (i == 0 || i == num - 1 || j == 0 || j == num - 1) {
                     tiles[i][j] = TileString.Wall.getSymbol();
-                }else {
+                } else {
                     tiles[i][j] = TileString.Empty.getSymbol();
                 }
                 for (T player : ps) {
-                    if(j == ((Player) player).getX() && i == ((Player) player).getY()){
+                    if (j == ((Player) player).getX() && i == ((Player) player).getY()) {
                         tiles[i][j] = TileString.Player.getSymbol();
-                    }  
+                    }
                 }
-                
             }
         }
         shouldPrintTiles(num, n10);
     }
-        
-    // public static void init2Players(int x1, int y1, int x2, int y2){
-    //     Player p1 = new Player(x1, y1);
-    //     Player p2 = new Player(x2, y2);
-    // }
 
+    /**
+     * Prints the tiles if the number of tiles is less than or equal to the specified number.
+     * @param num The number of tiles.
+     * @param n The specified number.
+     */
     private static void shouldPrintTiles(final int num, final int n) {
         if (num <= n) {
             printTiles(num);
         }
     }
 
+    /**
+     * Prints the tiles to the console.
+     * @param num The number of tiles.
+     */
     private static void printTiles(final int num) {
         for (int i = 0; i < num; i++) {
             for (int j = 0; j < num; j++) {
@@ -213,8 +228,11 @@ public class Main {
         }
     }
 
-    public static String[][] getTiles(){
+    /**
+     * Returns the tiles.
+     * @return The tiles.
+     */
+    public static String[][] getTiles() {
         return tiles;
     }
-
 }

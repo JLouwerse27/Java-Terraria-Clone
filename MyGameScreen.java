@@ -3,21 +3,46 @@ import java.awt.Graphics;
 import java.awt.Graphics2D;
 
 import javax.swing.JComponent;
-
-public class MyGameScreen extends JComponent{
+/**
+ * MyGameScreen is a custom JComponent that represents the game screen.
+ * It handles the rendering of the game tiles based on the provided dimensions and tile information.
+ * 
+ * The class provides multiple constructors to initialize the game screen with different configurations.
+ * It also includes methods to paint the game screen, determine tile colors, and update the screen size.
+ * 
+ * Fields:
+ * - WIDTH: The width of the game screen.
+ * - HEIGHT: The height of the game screen.
+ * - xPixels: The number of horizontal tiles.
+ * - yPixels: The number of vertical tiles.
+ * - tileSize: The size of each tile (deprecated).
+ * - tileWidth: The width of each tile.
+ * - tileHeight: The height of each tile.
+ * 
+ * Constructors:
+ * - MyGameScreen(): Initializes the game screen with default dimensions and tile configuration.
+ * - MyGameScreen(int numX, int numY): Initializes the game screen with specified number of horizontal and vertical tiles.
+ * - MyGameScreen(int width, int height, int numX, int numY): Initializes the game screen with specified dimensions and tile configuration.
+ * 
+ * Methods:
+ * - paint(Graphics g): Renders the game screen by drawing the tiles based on their colors.
+ * - getColour(String c): Returns the color corresponding to the given tile symbol.
+ * - updateSize(): Updates the size of the game screen and recalculates the tile dimensions.
+ * - setPixels(int numX, int numY): Sets the number of horizontal and vertical tiles (currently commented out).
+ */
+public class MyGameScreen extends JComponent {
     
+    // Static fields for screen dimensions and tile configuration
     static int WIDTH;
     static int HEIGHT;
     static int xPixels;
     static int yPixels;
-    // static double tileSize;
-    // static double tileWidth;
-    // static double tileHeight;
     static int tileSize;
     static int tileWidth;
     static int tileHeight;
 
-    public MyGameScreen(){
+    // Default constructor initializing the game screen with default dimensions and tile configuration
+    public MyGameScreen() {
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = 50;
@@ -26,23 +51,21 @@ public class MyGameScreen extends JComponent{
         tileWidth = tileSize;
         tileHeight = tileSize;
         setSize(WIDTH, HEIGHT);
-        //setPixels(num, ABORT);
     }
 
-    public MyGameScreen(final int numX, final int numY){
+    // Constructor initializing the game screen with specified number of horizontal and vertical tiles
+    public MyGameScreen(final int numX, final int numY) {
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = numX;
         yPixels = numY;
-        // tileWidth = (double) WIDTH / (double) numX;
-        // tileHeight = (double) HEIGHT / (double) numY;
         tileWidth = WIDTH / numX;
         tileHeight = HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
     }
     
-    public MyGameScreen(final int width, final int height,
-                            final int numX, final int numY){
+    // Constructor initializing the game screen with specified dimensions and tile configuration
+    public MyGameScreen(final int width, final int height, final int numX, final int numY) {
         WIDTH = width;
         HEIGHT = height;
         xPixels = numX;
@@ -52,48 +75,49 @@ public class MyGameScreen extends JComponent{
         setSize(width, height);
     }
 
-    public void paint(Graphics g){
+    // Method to render the game screen by drawing the tiles based on their colors
+    @Override
+    public void paint(Graphics g) {
         Graphics2D g2d = (Graphics2D) g;
         updateSize();
-        int tw;
-        int th;
-        tw = (int) tileWidth;
-        th = (int) tileHeight;
-        for(int i = 0; i < yPixels; i++){
-            for(int j = 0; j < xPixels; j++){
+        int tw = (int) tileWidth;
+        int th = (int) tileHeight;
+        for (int i = 0; i < yPixels; i++) {
+            for (int j = 0; j < xPixels; j++) {
                 g2d.setColor(getColour(Main.getTiles()[i][j]));
-                g2d.fillRect(j*tw, i*th, tw, th);
+                g2d.fillRect(j * tw, i * th, tw, th);
             }
         }
     }
 
-    public Color getColour(String c){
-        if(c == TileString.Wall.getSymbol()){
+    // Method to return the color corresponding to the given tile symbol
+    public Color getColour(String c) {
+        if (c.equals(TileString.Wall.getSymbol())) {
             return Color.BLACK;
-        }else if(c == TileString.Player.getSymbol()){
+        } else if (c.equals(TileString.Player.getSymbol())) {
             return Color.RED;
-        }else{
+        } else {
             return Color.GRAY;
         }
     }
 
-    public void updateSize(){
+    // Method to update the size of the game screen and recalculate the tile dimensions
+    public void updateSize() {
         WIDTH = super.getWidth();
         HEIGHT = super.getHeight();
-        // tileWidth = (double) WIDTH / (double) xPixels; 
-        // tileHeight = (double) HEIGHT / (double) yPixels;
-        tileWidth = WIDTH / xPixels; 
+        tileWidth = WIDTH / xPixels;
         tileHeight = HEIGHT / yPixels;
 
         WIDTH = tileWidth * xPixels;
         HEIGHT = tileHeight * yPixels;
         super.setSize(WIDTH, HEIGHT);
-
     }
 
-    public void setPixels(int numX, int numY){
-        //xPixels = numX;
-        //yPixels = numY;
-        //tileSize = 10;
+
+    // Method to set the number of horizontal and vertical tiles (currently commented out)
+    public void setPixels(int numX, int numY) {
+        // xPixels = numX;
+        // yPixels = numY;
+        // tileSize = 10;
     }
 }

@@ -1,7 +1,11 @@
+/**
+ * The {@code TileString} enum represents different types of tiles in the game.
+ * Each tile type is associated with a specific symbol.
+ */
 public enum TileString {
-    Player(Main.sP),
-    Wall(Main.sWall),
-    Empty(Main.sEmpty);
+    Player("P "),
+    Wall("[]"),
+    Empty("  ");
 
     private final String symbol;
 
