@@ -1,6 +1,4 @@
-import java.awt.Color;
-import java.awt.Graphics;
-import java.awt.Graphics2D;
+import java.awt.*;
 
 import javax.swing.JComponent;
 /**
@@ -41,6 +39,11 @@ public class MyGameScreen extends JComponent {
     static int tileWidth;
     static int tileHeight;
 
+    static int xOffset = 0;
+    static int yOffset = 0;
+
+    private BreadBoard breadBoard;
+
     // Default constructor initializing the game screen with default dimensions and tile configuration
     public MyGameScreen() {
         WIDTH = 500;
@@ -63,6 +66,24 @@ public class MyGameScreen extends JComponent {
         tileHeight = HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
     }
+
+    /**
+     * Constructor initializing the game screen with specified number of horizontal and vertical tiles
+     * with a BreadBoard object
+     * @param numX
+     * @param numY
+     * @param b BreadBoard
+     */
+    public MyGameScreen(final int numX, final int numY, final BreadBoard b) {
+        WIDTH = 500;
+        HEIGHT = 500;
+        xPixels = numX;
+        yPixels = numY;
+        tileWidth = WIDTH / numX;
+        tileHeight = HEIGHT / numY;
+        setSize(WIDTH, HEIGHT);
+        this.breadBoard = b;
+    }
     
     // Constructor initializing the game screen with specified dimensions and tile configuration
     public MyGameScreen(final int width, final int height, final int numX, final int numY) {
@@ -75,28 +96,81 @@ public class MyGameScreen extends JComponent {
         setSize(width, height);
     }
 
-    // Method to render the game screen by drawing the tiles based on their colors
+    /**
+     * Method to render the game screen by drawing the tiles based on their colors
+    */
     @Override
     public void paint(Graphics g) {
+
         Graphics2D g2d = (Graphics2D) g;
         updateSize();
+
         int tw = (int) tileWidth;
         int th = (int) tileHeight;
-        for (int i = 0; i < yPixels; i++) {
-            for (int j = 0; j < xPixels; j++) {
-                g2d.setColor(getColour(Main.getTiles()[i][j]));
-                g2d.fillRect(j * tw, i * th, tw, th);
+
+        if(Main.gameMode == Main.GATES_GAMEMODE_NUMBER) {
+            //noinspection DuplicatedCode
+            int fontSize = (int) (th / 1.5);
+            g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
+
+            for (int i = 0; i < yPixels; i++) {
+                for (int j = 0; j < xPixels; j++) {
+                    g2d.setColor(getColour(breadBoard.getBreadboard()[i][j]));
+                    g2d.fillRect(j * tw + xOffset, i * th + yOffset, tw, th);
+                    g2d.setColor(Color.WHITE);
+                    if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.RIGHT)) {
+                        g2d.drawString(">", j * tw, i * th + th/2);
+                    }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.LEFT)) {
+                        g2d.drawString("<", j * tw, i * th + th/2);
+                    }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.DOWN)) {
+                        g2d.drawString("v", j * tw, i * th + th/2);
+                    }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.UP)) {
+                        g2d.drawString("^", j * tw, i * th + th/2);
+                    }
+                }
+            }
+        }else {
+            for (int i = 0; i < yPixels; i++) {
+                for (int j = 0; j < xPixels; j++) {
+                    g2d.setColor(getColour(Main.getTiles()[i][j]));
+                    g2d.fillRect(j * tw, i * th, tw, th);
+                }
             }
         }
     }
 
     // Method to return the color corresponding to the given tile symbol
     public Color getColour(String c) {
+        //TERRARIA
         if (c.equals(TileString.Wall.getSymbol())) {
             return Color.BLACK;
         } else if (c.equals(TileString.Player.getSymbol())) {
             return Color.RED;
-        } else {
+        } else if (c.equals(TileString.Not.getSymbol())) {
+            return Color.ORANGE;
+        //BREADBOARD
+        }else if (c.equals(TileString.Or.getSymbol())) {
+            return Color.GREEN;
+        }else if (c.equals(TileString.And.getSymbol())) {
+            return Color.BLUE;
+        }else if (c.equals(TileString.LEDOff.getSymbol())) {
+            //return new Color(210, 210, 210);
+            return Color.black;
+        }else if (c.equals(TileString.LEDOn.getSymbol())) {
+            return Color.WHITE;
+        }else if (c.equals(TileString.ButtonOff.getSymbol())) {
+            return Color.darkGray;//--
+        }else if (c.equals(TileString.ButtonOn.getSymbol())) {
+            return Color.lightGray;//--
+        }else if (c.equals(TileString.SwitchOff.getSymbol())) {
+            return Color.darkGray;
+        }else if (c.equals(TileString.SwitchOn.getSymbol())) {
+            return Color.lightGray;
+        }else if (c.equals(TileString.WireOff.getSymbol())) {
+            return new Color(150,0,0);
+        }else if (c.equals(TileString.WireOn.getSymbol())) {
+            return Color.RED;
+        }else {
             return Color.GRAY;
         }
     }

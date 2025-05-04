@@ -10,9 +10,10 @@
  * </ul>
  */
 // Enum to represent the four cardinal directions
-enum Direction {
+public enum Direction {
     UP,
     DOWN,
     LEFT,
-    RIGHT
+    RIGHT,
+    NONE
 }

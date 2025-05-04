@@ -35,19 +35,19 @@ public class Player extends AliveGameObject {
         moving = true;
         while (isMoving()) {
             switch (direction) {
-                case UP:
+                case Direction.UP:
                     y = Math.max(n1, y - n1);
                     x = Math.max(n1, x);
                     break;
-                case DOWN:
+                case Direction.DOWN:
                     y = Math.min(Main.numTiles - n2, y + n1);
                     x = Math.max(n1, x);
                     break;
-                case LEFT:
+                case Direction.LEFT:
                     x = Math.max(n1, x - n1);
                     y = Math.max(n1, y);
                     break;
-                case RIGHT:
+                case Direction.RIGHT:
                     x = Math.min(Main.numTiles - n2, x + n1);
                     y = Math.max(n1, y);
                     break;
