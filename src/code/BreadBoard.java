@@ -60,10 +60,10 @@ public class BreadBoard {
 
     private String [][] defaultBreadboard = {
             {" "," "," "," "," "," "," "," "," "," "},
-            {"s","w","w","w","w","w","w"," "," "," "},
-            {" ","A","l"," ","N","l","w"," "," "," "},
-            {"s","w","w","w","A","O","A"," "," "," "},
-            {" "," "," ","w","N","w","w"," "," "," "},
+            {" ","s","w","w","w","w","w","w"," "," "},
+            {" "," ","A","l"," ","N","l","w"," "," "},
+            {" ","s","w","w","w","A","O","A"," "," "},
+            {" "," "," "," ","w","N","w","w"," "," "},
             {" "," "," "," "," "," "," "," "," "," "},
             {" "," "," "," "," "," "," "," "," "," "},
             {" "," "," "," "," "," "," "," "," "," "},
@@ -72,10 +72,10 @@ public class BreadBoard {
     };
     private Direction [][] defaultBreadboardDirection = {
             {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dR,dN,dR,dR,dN,dR,dD,dN,dN,dN},
-            {dR,dR,dN,dN,dD,dN,dD,dN,dN,dN},
-            {dN,dN,dR,dN,dR,dU,dL,dN,dN,dN},
-            {dR,dN,dR,dR,dR,dR,dU,dN,dN,dN},
+            {dN,dR,dN,dR,dR,dN,dR,dD,dN,dN},
+            {dN,dR,dR,dN,dN,dD,dN,dD,dN,dN},
+            {dN,dN,dN,dR,dN,dR,dU,dL,dN,dN},
+            {dN,dR,dN,dR,dR,dR,dR,dU,dN,dN},
             {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN},
             {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN},
             {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},

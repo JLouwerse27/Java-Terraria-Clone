@@ -28,8 +28,12 @@ public class Main {
     static final int DEFAULT_SCREEN_SIZE = 10;
     static final int DEFAULT_SCREEN_Y_OFFSET = -32;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
-    static int SCREEN_Y_OFFSET = DEFAULT_SCREEN_Y_OFFSET;
-    static int SCREEN_X_OFFSET = DEFAULT_SCREEN_X_OFFSET;
+
+    static int SCREEN_Y_OFFSET = 0;
+    static int SCREEN_X_OFFSET = 0;
+
+    static int P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
+    static int P_SCREEN_X_OFFSET = SCREEN_X_OFFSET;
 
     static int gameMode;
     // static final String sP = "P ";
@@ -93,36 +97,49 @@ public class Main {
         mf.setVisible(true);
 
 
-        final int[] mouseX = new int[1];
-        final int[] mouseY = new int[1];
+        final int[] mouseX = new int[2];
+        final int[] mouseY = new int[2];
+
+        final boolean[] dragging = {false};
 
         mf.addMouseListener(new MouseListener() {
 
             @Override
             public void mouseClicked(MouseEvent e) {
                 //checks if clicked and draws the screen accordingly
-                mouseX[0] = e.getX();
-                mouseY[0] = e.getY();
+//                mouseX[0] = e.getX();
+//                mouseY[0] = e.getY();
 
-                if(b.checkClick(e.getX() + SCREEN_X_OFFSET,e.getY() + SCREEN_Y_OFFSET)) {
+                if(b.checkClick(e.getX() - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
+                        e.getY() - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)) {
                     mf.getContentPane().repaint();
                 }
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
-
+                mouseX[0] = e.getX();
+                mouseY[0] = e.getY();
+                P_SCREEN_X_OFFSET = SCREEN_X_OFFSET;
+                P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
+                System.out.println(mouseX[0] + " " + mouseY[0]);
             }
 
             @Override
             public void mouseReleased(MouseEvent e) {
-
+//                if(dragging[0]) {
+//                    SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //+ DEFAULT_SCREEN_X_OFFSET;
+//                    SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
+//                    mf.getGameScreen().xOffset = SCREEN_X_OFFSET; //+ DEFAULT_SCREEN_X_OFFSET;
+//                    mf.getGameScreen().yOffset = SCREEN_Y_OFFSET; //+ DEFAULT_SCREEN_Y_OFFSET;
+//                    mf.getContentPane().repaint();
+//                }
             }
 
             @Override
             public void mouseEntered(MouseEvent e) {
-                mouseX[0] = e.getX();
-                mouseY[0] = e.getY();
+//                mouseX[0] = e.getX();
+//                mouseY[0] = e.getY();
             }
 
             @Override
@@ -135,7 +152,26 @@ public class Main {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                //mf.getContentPane().repaint();
+               // works but stupid
+//                SCREEN_X_OFFSET = -e.getX(); //+ DEFAULT_SCREEN_X_OFFSET;
+//                SCREEN_Y_OFFSET = -e.getY(); //+ DEFAULT_SCREEN_Y_OFFSET;
+//                mf.getGameScreen().xOffset = e.getX() + DEFAULT_SCREEN_X_OFFSET;
+//                mf.getGameScreen().yOffset = e.getY() + DEFAULT_SCREEN_Y_OFFSET;
+//                mf.getContentPane().repaint();
+
+
+                SCREEN_X_OFFSET = -(mouseX[0]-e.getX()); //
+                SCREEN_Y_OFFSET = -(mouseY[0]-e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
+                SCREEN_X_OFFSET += P_SCREEN_X_OFFSET;
+                SCREEN_Y_OFFSET += P_SCREEN_Y_OFFSET;
+
+                mf.getGameScreen().xOffset = SCREEN_X_OFFSET;
+                mf.getGameScreen().yOffset = SCREEN_Y_OFFSET;
+                mf.getContentPane().repaint();
+
+
+//                dragging[0] = true;
+
             }
 
             @Override
@@ -161,8 +197,8 @@ public class Main {
                         b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
                     }
                 } else if (e.getKeyCode() == KeyEvent.VK_R) {
-                    b.rotateItem((mouseX[0]+SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
-                            (mouseY[0]+SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
+                    b.rotateItem((mouseX[0]-SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
+                            (mouseY[0]-SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
                 }
 
             }

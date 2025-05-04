@@ -39,8 +39,8 @@ public class MyGameScreen extends JComponent {
     static int tileWidth;
     static int tileHeight;
 
-    static int xOffset = 0;
-    static int yOffset = 0;
+    int xOffset = 0;
+    int yOffset = 0;
 
     private BreadBoard breadBoard;
 
@@ -119,13 +119,13 @@ public class MyGameScreen extends JComponent {
                     g2d.fillRect(j * tw + xOffset, i * th + yOffset, tw, th);
                     g2d.setColor(Color.WHITE);
                     if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.RIGHT)) {
-                        g2d.drawString(">", j * tw, i * th + th/2);
+                        g2d.drawString(">", j * tw + xOffset, i * th + yOffset + th/2);
                     }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.LEFT)) {
-                        g2d.drawString("<", j * tw, i * th + th/2);
+                        g2d.drawString("<", j * tw + xOffset, i * th + yOffset + th/2);
                     }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.DOWN)) {
-                        g2d.drawString("v", j * tw, i * th + th/2);
+                        g2d.drawString("v", j * tw + xOffset, i * th + yOffset + th/2);
                     }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.UP)) {
-                        g2d.drawString("^", j * tw, i * th + th/2);
+                        g2d.drawString("^", j * tw + xOffset, i * th + yOffset + th/2);
                     }
                 }
             }
