@@ -19,7 +19,8 @@ public enum TileString {
     SwitchOff("s"),
     SwitchOn("S"),
     WireOff("w"),
-    WireOn("W");
+    WireOn("W"),
+    CrossWire("X");
 
     private final String symbol;
 

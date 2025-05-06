@@ -35,7 +35,7 @@ public class MyGameScreen extends JComponent {
     static int HEIGHT;
     static int xPixels;
     static int yPixels;
-    static int tileSize;
+    static int tileSize = 40;
     static int tileWidth;
     static int tileHeight;
 
@@ -43,6 +43,14 @@ public class MyGameScreen extends JComponent {
     int yOffset = 0;
 
     private BreadBoard breadBoard;
+
+    //quality of life things
+    private final static Direction dR = Direction.RIGHT;
+    private final static Direction dL = Direction.LEFT;
+    private final static Direction dU = Direction.UP;
+    private final static Direction dD = Direction.DOWN;
+    private final static Direction dN = Direction.NONE;
+
 
     // Default constructor initializing the game screen with default dimensions and tile configuration
     public MyGameScreen() {
@@ -62,12 +70,12 @@ public class MyGameScreen extends JComponent {
         HEIGHT = 500;
         xPixels = numX;
         yPixels = numY;
-        tileWidth = WIDTH / numX;
-        tileHeight = HEIGHT / numY;
+        tileWidth = tileSize;//WIDTH / numX;
+        tileHeight = tileSize;//HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
     }
 
-    /**
+    /** --For BreadBoard--
      * Constructor initializing the game screen with specified number of horizontal and vertical tiles
      * with a BreadBoard object
      * @param numX
@@ -79,8 +87,8 @@ public class MyGameScreen extends JComponent {
         HEIGHT = 500;
         xPixels = numX;
         yPixels = numY;
-        tileWidth = WIDTH / numX;
-        tileHeight = HEIGHT / numY;
+        tileWidth = tileSize;//WIDTH / numX;
+        tileHeight = tileSize;//HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
         this.breadBoard = b;
     }
@@ -91,8 +99,8 @@ public class MyGameScreen extends JComponent {
         HEIGHT = height;
         xPixels = numX;
         yPixels = numY;
-        tileWidth = WIDTH / numX;
-        tileHeight = HEIGHT / numY;
+        tileWidth = tileSize;//WIDTH / numX;
+        tileHeight = tileSize;//HEIGHT / numY;
         setSize(width, height);
     }
 
@@ -127,6 +135,21 @@ public class MyGameScreen extends JComponent {
                     }else if(breadBoard.getBreadboardDirection()[i][j].equals(Direction.UP)) {
                         g2d.drawString("^", j * tw + xOffset, i * th + yOffset + th/2);
                     }
+                    if(breadBoard.getBreadboard()[i][j].equals("X")) {
+                        //BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.getBreadBoardItemsList().get(breadBoard.getBreadBoardItemIndexAtCoordinates(j,i));
+                        BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.locateBreadBoardItemOnBoard(j,i);
+                        if(dw.getDir2() == dR) {
+                            g2d.drawString(">", j * tw + xOffset, i * th + yOffset + th/2 + fontSize);
+                        }else if(dw.getDir2() == dL) {
+                            g2d.drawString("<", j * tw + xOffset, i * th + yOffset + th/2 + fontSize);
+                        }else if(dw.getDir2() == dD) {
+                            g2d.drawString("v", j * tw + xOffset, i * th + yOffset + th/2 + fontSize);
+                        }else if(dw.getDir2() == dU) {
+                            g2d.drawString("^", j * tw + xOffset, i * th + yOffset + th/2 + fontSize);
+                        }
+                    }
+
+
                 }
             }
         }else {
@@ -170,6 +193,8 @@ public class MyGameScreen extends JComponent {
             return new Color(150,0,0);
         }else if (c.equals(TileString.WireOn.getSymbol())) {
             return Color.RED;
+        }else if (c.equals(TileString.CrossWire.getSymbol())) {
+            return new Color(110,0,0);
         }else {
             return Color.GRAY;
         }
@@ -179,11 +204,11 @@ public class MyGameScreen extends JComponent {
     public void updateSize() {
         WIDTH = super.getWidth();
         HEIGHT = super.getHeight();
-        tileWidth = WIDTH / xPixels;
-        tileHeight = HEIGHT / yPixels;
+        //tileWidth = WIDTH / xPixels;
+        //tileHeight = HEIGHT / yPixels;
 
-        WIDTH = tileWidth * xPixels;
-        HEIGHT = tileHeight * yPixels;
+        //WIDTH = tileWidth * xPixels;
+        //HEIGHT = tileHeight * yPixels;
         super.setSize(WIDTH, HEIGHT);
     }
 

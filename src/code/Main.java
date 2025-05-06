@@ -122,7 +122,6 @@ public class Main {
                 mouseY[0] = e.getY();
                 P_SCREEN_X_OFFSET = SCREEN_X_OFFSET;
                 P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
-                System.out.println(mouseX[0] + " " + mouseY[0]);
             }
 
             @Override
@@ -181,6 +180,8 @@ public class Main {
             }
         });
 
+        boolean[] keys = new boolean[500];
+
         mf.addKeyListener(new KeyListener() {
 
             @Override
@@ -190,22 +191,49 @@ public class Main {
 
             @Override
             public void keyPressed(KeyEvent e) {
+                keys[e.getKeyCode()] = true;
                 if(e.getKeyCode() == KeyEvent.VK_ENTER) {
                     if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
                         b.setGamemode(BreadBoard.EDITING_KEYWORD);
                     }else if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
                         b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
                     }
-                } else if (e.getKeyCode() == KeyEvent.VK_R) {
-                    b.rotateItem((mouseX[0]-SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
+                } else if (keys[KeyEvent.VK_R]) {//rotate with "R"
+                    b.rotateItem(0,(mouseX[0]-SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
                             (mouseY[0]-SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
+//                    if (keys[KeyEvent.VK_SHIFT]) {//rotate second dir with "shift + R"
+//
+//                    }
+                } else if (keys[KeyEvent.VK_Q]) {
+                    b.rotateItem(1,(mouseX[0]-SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
+                                (mouseY[0]-SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
+                } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                    b.itemCursor = -1;
+                }else if (e.getKeyCode() == KeyEvent.VK_0) {
+                    b.itemCursor = 0;
+                }else if (e.getKeyCode() == KeyEvent.VK_1) {
+                    b.itemCursor = 1;
+                }else if (e.getKeyCode() == KeyEvent.VK_2) {
+                    b.itemCursor = 2;
+                }else if (e.getKeyCode() == KeyEvent.VK_3) {
+                    b.itemCursor = 3;
+                }else if (e.getKeyCode() == KeyEvent.VK_4) {
+                    b.itemCursor = 4;
+                }else if (e.getKeyCode() == KeyEvent.VK_5) {
+                    b.itemCursor = 5;
+                }else if (e.getKeyCode() == KeyEvent.VK_6) {
+                    b.itemCursor = 6;
+                }else if (e.getKeyCode() == KeyEvent.VK_7) {
+                    b.itemCursor = 7;
+                }else if (e.getKeyCode() == KeyEvent.VK_8) {
+                    b.itemCursor = 8;
                 }
 
             }
 
             @Override
             public void keyReleased(KeyEvent e) {
-
+                keys[e.getKeyCode()] = false;
             }
         });
 
