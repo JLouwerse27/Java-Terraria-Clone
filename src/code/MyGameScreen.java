@@ -38,6 +38,7 @@ public class MyGameScreen extends JComponent {
     static int tileSize = 40;
     static int tileWidth;
     static int tileHeight;
+    static int originalTileSize = 40;
 
     int xOffset = 0;
     int yOffset = 0;
@@ -148,9 +149,17 @@ public class MyGameScreen extends JComponent {
                             g2d.drawString("^", j * tw + xOffset, i * th + yOffset + th/2 + fontSize);
                         }
                     }
-
-
                 }
+            }
+            fontSize = (int) (originalTileSize / 1.5);
+            g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
+            if(breadBoard.getGamemode() == BreadBoard.DEFAULT_KEYWORD){
+                g2d.drawString("DEFAULT", WIDTH - 140, HEIGHT - 30);
+            }else if(breadBoard.getGamemode() == BreadBoard.EDITING_KEYWORD){
+                if(Main.getCopyingAndPasting()){
+                    g2d.drawRect(30,30,80,80);
+                }
+                g2d.drawString("EDITING", WIDTH - 140, HEIGHT - 30);
             }
         }else {
             for (int i = 0; i < yPixels; i++) {
@@ -204,14 +213,13 @@ public class MyGameScreen extends JComponent {
     public void updateSize() {
         WIDTH = super.getWidth();
         HEIGHT = super.getHeight();
-        //tileWidth = WIDTH / xPixels;
-        //tileHeight = HEIGHT / yPixels;
-
-        //WIDTH = tileWidth * xPixels;
-        //HEIGHT = tileHeight * yPixels;
         super.setSize(WIDTH, HEIGHT);
     }
-
+    //
+    public void setTileSize(final int tw, final int th) {
+        tileWidth = tw;
+        tileHeight = th;
+    }
 
     // Method to set the number of horizontal and vertical tiles (currently commented out)
     public void setPixels(int numX, int numY) {

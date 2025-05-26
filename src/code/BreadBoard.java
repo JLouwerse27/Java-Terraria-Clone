@@ -1,4 +1,5 @@
 import javax.swing.*;
+import java.awt.event.MouseEvent;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -17,6 +18,9 @@ public class BreadBoard {
     private final static Direction dU = Direction.UP;
     private final static Direction dD = Direction.DOWN;
     private final static Direction dN = Direction.NONE;
+
+    /**Empty is 0 in itemEnum*/
+    private final static int EMPTY_TYPE = 0;
 
     private final int SIZE;
 
@@ -57,33 +61,109 @@ public class BreadBoard {
      */
     //note: shortened (removed S and W and L
     private String[] itemEnum = {" ","s", "w", "X", "N","O","A","l"};
+    //full version
+    //private String[] fullItemEnum = {" ","s", "w", "X", "N","O","A","l"};
 
+    //current breadboard stuff; different from default - I think.
     private String[][] breadboard;
     private Direction[][] breadboardDirection;
+    private Direction[][] breadboardDirection2;
 
     private String [][] defaultBreadboard = {
-            {" "," "," "," "," "," "," "," "," "," "},
-            {" ","s","w","w","w","w","w","w"," "," "},
-            {" "," ","A","l"," ","N","l","w"," "," "},
-            {" ","s","w","w","w","A","O","A"," "," "},
-            {" "," "," "," ","w","N","w","w"," "," "},
-            {" "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "}
+            {" "," ","w","w","w","w","w","w","w","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {"s","w","w"," "," "," "," ","w"," ","w","w","w","w","w","w","w","w","l"," ","l","w","w","w"," "," "," "," "," "," "," "},
+            {" "," ","A","w","w"," ","w","X","w","X","w"," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "," "," "," "," "},
+            {"s","w","w"," ","O","w","O","A"," ","w","w","w","w","w","w","w","w","w","w","w","w","w","X","w","w","w","w"," "," "," "},
+            {" ","w","A","w","w"," "," ","w"," ","N"," "," "," ","w"," "," "," "," "," "," "," "," ","w"," "," "," ","w"," "," "," "},
+            {"s","X","w","w","w","w","w","w","w","A","A","w","w","X","w","w"," "," "," "," "," "," ","w"," "," "," ","w"," "," "," "},
+            {" ","w"," "," "," "," ","w"," "," "," ","N"," "," ","w"," ","O","w","w","w","w"," "," ","w"," "," "," ","w"," "," "," "},
+            {" ","w","w","w","w","w","X","w","w","w","w"," "," ","w"," ","w"," "," "," ","w"," "," ","w"," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," ","w"," ","w","A","A","w","w","X","w","w"," "," "," ","O","w","w","O","w","w","w","A"," "," "," "},
+            {" "," ","A","w","X","w","w"," "," ","N","N"," "," ","w"," ","w"," "," "," ","w"," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," ","w","w","w","w","w","w","w","w"," ","O","w","w","w","w"," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," "," "," ","w"," "," ","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," "," "," ","N"," "," ","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," "," "," ","W","W","A","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w"," "," "," "," "," ","w"," "," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," ","w","w","w","w","N","W","A","w","w","w","w","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
+            {" "," ","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w"," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
+            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "}
     };
     private Direction [][] defaultBreadboardDirection = {
-            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dN,dR,dN,dR,dR,dN,dR,dD,dN,dN},
-            {dN,dR,dR,dN,dN,dD,dN,dD,dN,dN},
-            {dN,dN,dN,dR,dN,dR,dU,dL,dN,dN},
-            {dN,dR,dN,dR,dR,dR,dR,dU,dN,dN},
-            {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
-            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN}
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dR,dN,dN,dN,dN,dN,dD,dN,dD,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dR,dR,dD,dN,dN,dD,dN,dD,dU,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dR,dR,dU,dL,dN,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dU,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dD,dR,dR,dU,dN,dN,dU,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dR,dN,dR,dR,dN,dN,dN,dN,dR,dR,dN,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dU,dN,dN,dN,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dR,dN,dN,dR,dU,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dR,dR,dN,dN,dR,dN,dN,dN,dN,dN,dR,dN,dN,dU,dN,dN,dN,dL,dN,dN,dN},
+            {dN,dN,dD,dN,dL,dN,dN,dN,dN,dU,dU,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dU,dU,dN,dN,dN,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dR,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN}
+    };
+    private Direction [][] defaultBreadboardDirection2 = {
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dR,dN,dR,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dR,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dD,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
+            {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN}
     };
 
     public Direction convertToDirection(final String s){
@@ -123,6 +203,8 @@ public class BreadBoard {
                 return new LED(true,d,x,y);
             case "l":
                 return new LED(false,d,x,y);
+            case " ":
+                return null;
             default:
                 System.out.println("Unknown tile: " + breadboard[y][x] + " at " + x + "," + y);
         }
@@ -139,7 +221,7 @@ public class BreadBoard {
     public int getBreadBoardItemIndexAtCoordinates(final int x, final int y) {
         for (int i = 0; i < breadBoardItemsList.size(); i++) {
             if (breadBoardItemsList.get(i).getX() == x && breadBoardItemsList.get(i).getY() == y) {
-                System.out.println("got index " + i);
+                //System.out.println("got index " + i);
                 return i;
             }
         }
@@ -223,26 +305,31 @@ public class BreadBoard {
         if(size != Main.DEFAULT_SCREEN_SIZE){
             breadboard = new String[size][size];
             breadboardDirection = new Direction[size][size];
+            breadboardDirection2 = new Direction[size][size];
             for (int i = 0; i < size; i++) {
                 for (int j = 0; j < size; j++) {
 
                     breadboard[i][j] = " ";
                     breadboardDirection[i][j] = dN;
+                    breadboardDirection2[i][j] = dN;
 
                     if(i<defaultBreadboard.length && j < defaultBreadboard[i].length){
                         breadboard[i][j] = defaultBreadboard[i][j];
                         breadboardDirection[i][j] = defaultBreadboardDirection[i][j];
+                        breadboardDirection2[i][j] = defaultBreadboardDirection2[i][j];
                     }
                 }
             }
         }else{
             breadboard = defaultBreadboard;
             breadboardDirection = defaultBreadboardDirection;
+            breadboardDirection2 = defaultBreadboardDirection2;
         }
         setTilesInMain(breadboard);
         for(int i = 0; i < breadboard.length; i++) {
             for(int j = 0; j < breadboard[i].length; j++) {
                 Direction d = breadboardDirection[i][j];
+                Direction d2 = breadboardDirection2[i][j];
                 switch (breadboard[i][j]) {
                     case "B":
                         breadBoardItemsList.add(new Button(true, d, j, i));
@@ -257,7 +344,8 @@ public class BreadBoard {
                         breadBoardItemsList.add(new Switch(false, d, j, i));
                         break;
                     case "L":
-                        breadBoardItemsList.add(new LED(true, d, j, i));
+                        breadBoardItemsList.add(new LED(false, d, j, i));
+                        updateBreadBoard("l", j, i);//no LED should be on by default
                         break;
                     case "l":
                         breadBoardItemsList.add(new LED(false, d, j, i));
@@ -276,7 +364,15 @@ public class BreadBoard {
                         break;
                     case "W":
                         breadBoardItemsList.add(new Wire(d, j, i));
-                        updateBreadBoard("w", j, i);
+                        updateBreadBoard("w", j, i);//no wire should be on by default
+                        break;
+                    case "X":
+                        breadBoardItemsList.add(new DoubleWire(d, d2, j, i));
+                        break;
+                    case " ":
+                        break;
+                    default:
+                        System.out.println("ERROR LOADING TILES IN BREADBOARD CONSTRUCTOR!");
                         break;
                 }
             }
@@ -296,7 +392,8 @@ public class BreadBoard {
      * @param y
      * @return whether the program should repaint or not
      */
-    public boolean checkClick(final int x, final int y) {
+    public boolean checkClick(final MouseEvent e, int x, final int y) {
+
         if(gamemode.equals(DEFAULT_KEYWORD)) {
             for(CBreadBoardItem cbi:cBreadBoardItemsList){
                 if(x >= cbi.getX() * MyGameScreen.tileWidth &&
@@ -309,10 +406,14 @@ public class BreadBoard {
                 }
             }
         }else if (gamemode.equals(EDITING_KEYWORD)) {
+            System.out.println(e.getButton());
             int tile_x = x/MyGameScreen.tileWidth;
             int tile_y = y/MyGameScreen.tileHeight;
-            clickAndChangeBreadBoard(itemCursor,tile_x,tile_y);
-            //callPaint();
+            if(e.getButton() == MouseEvent.BUTTON3){//right click
+                clickAndChangeBreadBoard(EMPTY_TYPE,tile_x,tile_y);//0 is empty space
+            }else if(e.getButton() == MouseEvent.BUTTON1){
+                clickAndChangeBreadBoard(itemCursor, tile_x, tile_y);
+            }
             return true;
         }
 
@@ -339,10 +440,12 @@ public class BreadBoard {
                 if (getBreadBoardItemIndexAtCoordinates(x, y) != -1) {
 
                     if (locateBreadBoardItemOnBoard(x,y).returnTile().equals("X")) {
+
                         DoubleWire dw = (DoubleWire) locateBreadBoardItemOnBoard(x,y);
                         int dirNum = dw.getDir2().ordinal() + 1;
                         if (dirNum >= Direction.values().length) dirNum = 0;
-                        //to do: implement safety measure so that user cannot make one direction the opposite of the other
+                        breadboardDirection2[y][x] = Direction.values()[dirNum];
+                        //to do: implement safety measure so that user cannot make d2 the opposite of d1
                         dw.setDir2(Direction.values()[dirNum]);
 
                     }
@@ -353,7 +456,7 @@ public class BreadBoard {
     }
 
     /**
-     * Simply calls paint in main.
+     * Calls Mains getMyFrame's object's repaint.
      */
     private void callPaint(){
         Main.getMyFrame().repaint();
@@ -440,7 +543,7 @@ public class BreadBoard {
     }
 
     public void signal(final Direction d, final boolean s, final int x, final int y) {
-        //System.out.println("Signal " + s + " from " + x + "," + y);
+        //System.out.println(" signal " + s + " from " + x + "," + y);
         if(d == Direction.NONE) {
             for (int i = y - 1; i <= y + 1; i++) {
                 for (int j = x - 1; j <= x + 1; j++) {
@@ -920,7 +1023,7 @@ public class BreadBoard {
             } else {
                 this.out = false;
                 if(getBreadBoardItemIndexAtCoordinates(nx+1,ny)!=-1){
-                    System.out.println((breadBoardItemsList.get(getBreadBoardItemIndexAtCoordinates(nx+1, ny)).getOut()));
+                    //System.out.println((breadBoardItemsList.get(getBreadBoardItemIndexAtCoordinates(nx+1, ny)).getOut()));
                     if (breadBoardItemsList.get(getBreadBoardItemIndexAtCoordinates(nx+1, ny)).getOut()
                     && ((breadBoardItemsList.get(getBreadBoardItemIndexAtCoordinates(nx+1, ny)).getDir() == dL)
                     || (breadBoardItemsList.get(getBreadBoardItemIndexAtCoordinates(nx+1, ny)).getDir() == dN))) {
@@ -1158,6 +1261,30 @@ public class BreadBoard {
     }
 
     /**
+     * Returns the string array of directions of items in the Breadboard
+     * can be direction one or two depending on the given array
+     * @return symobl breadboardDirection array
+     */
+    public String[][] getBreadboardDirectionAsStringArray(final Direction[][] dA){
+        String[][] arr = new String[dA.length][dA.length];
+        for(int i = 0; i < dA.length; i++){
+            for(int j = 0; j < dA[i].length; j++){
+                arr[i][j] = dA[i][j].getSymbol();
+            }
+        }
+        return arr;
+    }
+
+
+    /**
+     * Returns the array of the second directions of items in the Breadboard
+     * @return breadboardDirection2 array
+     */
+    public Direction[][] getBreadboardDirection2(){
+        return breadboardDirection2;
+    }
+
+    /**
      * Returns the array of BreadBoard items
      * @return
      */
@@ -1171,7 +1298,49 @@ public class BreadBoard {
         this.gamemode = gamemode;
     }
 
+    public void printTiles(final int num) {
+        System.out.println(convertTilesIntoArrayString(
+                breadboard,
+                "private String [][] defaultBreadboard =",
+                num));
+        System.out.println(convertTilesIntoArrayString(
+                getBreadboardDirectionAsStringArray(
+                        breadboardDirection),
+                "private Direction [][] defaultBreadboardDirection =",
+                num));
+        System.out.println(convertTilesIntoArrayString(
+                getBreadboardDirectionAsStringArray(
+                        breadboardDirection2),
+                "private Direction [][] defaultBreadboardDirection2 =",
+                num));
+    }
 
+    private String convertTilesIntoArrayString(final String[][] array, final String name, final int num){
+        String s = name + " {";
+        boolean isDirection = name.contains("Direction");
+        for (int i = 0; i < num; i++) {
+            s+="\n";
+            s+= "{";
+            for (int j = 0; j < num; j++) {
+
+                if(!isDirection) {s += "\"";}
+                s += array[i][j];
+                if(!isDirection) {s += "\"";}
+                s += ",";
+                //System.out.print(tiles[i][j]);
+                //System.out.print("\"");
+                //System.out.print(",");
+                //System.out.print("\"");
+            }
+            s = s.substring(0, s.length() - 1);
+            s+="}";
+            if(i != num - 1) {
+                s+=",";
+            }
+        }
+        s+="\n};";
+        return s;
+    }
 
 }
 

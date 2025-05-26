@@ -11,9 +11,20 @@
  */
 // Enum to represent the four cardinal directions
 public enum Direction {
-    UP,
-    DOWN,
-    LEFT,
-    RIGHT,
-    NONE
+    UP("dU"),
+    DOWN("dD"),
+    LEFT("dL"),
+    RIGHT("dR"),
+    NONE("dN");
+
+    private final String symbol;
+
+    Direction(String symbol) {
+        this.symbol = symbol;
+    }
+
+    //returns the symbol String
+    public String getSymbol() {
+        return symbol;
+    }
 }
