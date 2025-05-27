@@ -90,6 +90,17 @@ public class BreadBoard {
     //full version
     //private String[] fullItemEnum = {"_","s", "w", "X", "N","O","A","l"};
 
+    /**
+     * May have to replace later, like changing it to an ArrayList
+     */
+    private Object[][] signalArray = new Object[400][4];//carries up to 400 signals
+
+    private void setSignalArrayToNull(){
+        for (int i = 0; i < signalArray.length; i++) {
+            signalArray[i] = null;
+        }
+    }
+
     //current breadboard stuff; different from default - I think.
     private String[][] breadboard;
     private Direction[][] breadboardDirection;
@@ -413,6 +424,9 @@ public class BreadBoard {
             breadboardDirection = defaultBreadboardDirection;
             breadboardDirection2 = defaultBreadboardDirection2;
         }
+
+        setSignalArrayToNull();
+
         //setTilesInMain(breadboard);
         for(int i = 0; i < breadboard.length; i++) {
             for(int j = 0; j < breadboard[i].length; j++) {
@@ -679,6 +693,22 @@ public class BreadBoard {
     }
 
     /**
+     * Ticks
+     */
+    public void tick() {
+        for (int i = 0; i < signalArray.length; i++) {
+            if (signalArray[i] != null) {
+                Direction d = (Direction) signalArray[i][0];
+                boolean s = (boolean) signalArray[i][1];
+                int x = (int) signalArray[i][2];
+                int y = (int) signalArray[i][3];
+                propagateSignal(d, s, x, y);
+                signalArray[i] = null;
+            }
+        }
+    }
+
+    /**
      * Calls Mains getMyFrame's object's repaint.
      */
     private void callPaint(){
@@ -768,7 +798,7 @@ public class BreadBoard {
      * @param y
      */
     public void setGates(final boolean s, final int dx, final int dy, final int x, final int y) {
-        String sBR = breadboard[y + dy][x + dx]; // tile to the right
+        String sBR = breadboard[y + dy][x + dx]; // adjacent tile
 
         if (sBR.equals(NOT_SYMBOL)) {
             Not not = (Not) locateBreadBoardItemOnBoard(x + dx, y + dy);
@@ -797,55 +827,65 @@ public class BreadBoard {
         }
     }
 
-    public void signal(final Direction d, final boolean s, final int x, final int y) {
-        //System.out.println(" signal " + s + " from " + x + "," + y);
-        if(d == Direction.NONE) {
-            for (int i = y - 1; i <= y + 1; i++) {
-                for (int j = x - 1; j <= x + 1; j++) {
-                    if (i != -1 && j != -1
-                            && i < HEIGHT && j < WIDTH
-                            && !(i == y - 1 && j == x - 1)
-                            && !(i == y + 1 && j == x - 1)
-                            && !(i == y - 1 && j == x + 1)
-                            && !(i == y + 1 && j == x + 1)
-                            && !(i == y && j == x)) {
+    /**
+     * Just does the signal logic
+     * @param d
+     * @param s
+     * @param x
+     * @param y
+     */
+    private void propagateSignal(final Direction d, final boolean s, final int x, final int y) {
+        if (d == Direction.NONE) {
+            for (int j = y - 1; j <= y + 1; j++) {
+                for (int k = x - 1; k <= x + 1; k++) {
+                    if (j >= 0 && k >= 0 && j < HEIGHT && k < WIDTH &&
+                            !(j == y && k == x) &&
+                            !(j == y - 1 && k == x - 1) &&
+                            !(j == y + 1 && k == x - 1) &&
+                            !(j == y - 1 && k == x + 1) &&
+                            !(j == y + 1 && k == x + 1)) {
 
-                        setWiresAndLeds(s, j, i);
+                        setWiresAndLeds(s, k, j);
 
-                        if(j == x + 1){//gate is to the right of this block
-                            setGates(s,1,0,x,y);
-                        }else if(j == x - 1){//gate is to the left of this block
-                            setGates(s,-1,0,x,y);
-                        } else if (i == y + 1) {//gate is below this block
-                            setGates(s,0,1,x,y);
-                        }else if (i == y - 1) {//gate is above this block
-                            setGates(s,0,-1,x,y);
-                        }
+                        if (k == x + 1) setGates(s, 1, 0, x, y);
+                        else if (k == x - 1) setGates(s, -1, 0, x, y);
+                        else if (j == y + 1) setGates(s, 0, 1, x, y);
+                        else if (j == y - 1) setGates(s, 0, -1, x, y);
                     }
                 }
             }
-        }else if (d == Direction.RIGHT) {
-            if (x + 1 < WIDTH) {
-                setWiresAndLeds(s, x + 1, y);
-                setGates(s, 1, 0, x, y);
-            }
-        } else if (d == Direction.LEFT) {
-            if (x - 1 >= 0) {
-                setWiresAndLeds(s, x - 1, y);
-                setGates(s, -1, 0, x, y);
-            }
-        }else if (d == Direction.DOWN) {
-            if (y + 1 < HEIGHT) {
-                setWiresAndLeds(s, x, y + 1);
-                setGates(s, 0, 1, x, y);
-            }
-        } else if (d == Direction.UP) {
-            if (y - 1 >= 0) {
-                setWiresAndLeds(s, x, y - 1);
-                setGates(s, 0, -1, x, y);
-            }
+        } else if (d == Direction.RIGHT && x + 1 < WIDTH) {
+            setWiresAndLeds(s, x + 1, y);
+            setGates(s, 1, 0, x, y);
+        } else if (d == Direction.LEFT && x - 1 >= 0) {
+            setWiresAndLeds(s, x - 1, y);
+            setGates(s, -1, 0, x, y);
+        } else if (d == Direction.DOWN && y + 1 < HEIGHT) {
+            setWiresAndLeds(s, x, y + 1);
+            setGates(s, 0, 1, x, y);
+        } else if (d == Direction.UP && y - 1 >= 0) {
+            setWiresAndLeds(s, x, y - 1);
+            setGates(s, 0, -1, x, y);
         }
     }
+
+    /**
+     * Queues a signal
+     * @param d
+     * @param s
+     * @param x
+     * @param y
+     */
+    public void signal(Direction d, boolean s, int x, int y) {
+        for (int i = 0; i < signalArray.length; i++) {
+            if (signalArray[i] == null) {
+                signalArray[i] = new Object[]{d, s, x, y};
+                return;
+            }
+        }
+        System.out.println("Signal queue overflow.");
+    }
+
 
     /**
      * Button, extends cBreadBoardItem
@@ -871,7 +911,7 @@ public class BreadBoard {
             }
         }
 
-        public void signal(final boolean s){
+        public void signal(){
             //--
         }
 
@@ -891,7 +931,7 @@ public class BreadBoard {
 
         public void set(final boolean b) {
             out = !out;
-            this.signal(out);
+            this.signal();
         }
 
         public String returnTile() {
@@ -907,8 +947,12 @@ public class BreadBoard {
             return out;
         }
 
-        public void signal(final boolean s) {
-            BreadBoard.this.signal(this.getDir(),s, this.getX(), this.getY());
+        public void signal() {
+//            if(Main.tick_true){
+                BreadBoard.this.signal(this.getDir(),out, this.getX(), this.getY());
+//            }else {
+//                putIntoSignalsArray(this.getDir(),out, this.getX(), this.getY());
+//            }
         }
 
     }
@@ -1005,6 +1049,10 @@ public class BreadBoard {
                 return false;
             }
             return false;
+        }
+
+        public void signal(){
+            System.out.println("must implement gate to signal");
         }
 
         public boolean getOut(){
@@ -1177,6 +1225,11 @@ public class BreadBoard {
                 }
 //
             }
+            signal();
+
+        }
+
+        public void signal(){
             if (this.out) {
                 setBreadBoardTile("L", getX(), getY());
             } else {
@@ -1245,7 +1298,8 @@ public class BreadBoard {
          * @param s signal: true or false
          */
         public void signal(final Direction d, final boolean s) {
-            BreadBoard.this.signal(d,s,this.getX(),this.getY());
+            //BreadBoard.this.signal(d,s,this.getX(),this.getY());
+            BreadBoard.this.signal(d, s, this.getX(),this.getY());
         }
 
         public Direction getDir2(){
@@ -1278,7 +1332,7 @@ public class BreadBoard {
                 setBreadBoardTile("w", getX(), getY());
             }
             Main.getMyFrame().repaint();
-            this.signal(out);
+            this.signal();
         }
 
         public boolean getOut(){
@@ -1300,8 +1354,8 @@ public class BreadBoard {
         /**
          * Like the signal in Switch, searches for other board members.
          */
-        public void signal(final boolean s) {
-            BreadBoard.this.signal(this.getDir(),s,this.getX(),this.getY());
+        public void signal() {
+            BreadBoard.this.signal(this.getDir(),out,this.getX(),this.getY());
         }
 
     }
@@ -1320,6 +1374,8 @@ public class BreadBoard {
             this.x = x;
             this.y = y;
         }
+
+        public abstract void signal();
 
         public int getX(){
             return x;
@@ -1355,7 +1411,7 @@ public class BreadBoard {
 
         public abstract void set(final boolean on);
 
-        public abstract void signal(final boolean s);
+        //public abstract void signal(final boolean s);
 
     }
 

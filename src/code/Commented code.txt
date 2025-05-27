@@ -25,3 +25,51 @@
 //        s+="\n};";
 //        return s;
 //    }
+
+in breadboard class
+if (d == Direction.NONE) {
+                for (int i = y - 1; i <= y + 1; i++) {
+                    for (int j = x - 1; j <= x + 1; j++) {
+                        if (i != -1 && j != -1
+                                && i < HEIGHT && j < WIDTH
+                                && !(i == y - 1 && j == x - 1)
+                                && !(i == y + 1 && j == x - 1)
+                                && !(i == y - 1 && j == x + 1)
+                                && !(i == y + 1 && j == x + 1)
+                                && !(i == y && j == x)) {
+
+                            setWiresAndLeds(s, j, i);
+
+                            if (j == x + 1) {//gate is to the right of this block
+                                setGates(s, 1, 0, x, y);
+                            } else if (j == x - 1) {//gate is to the left of this block
+                                setGates(s, -1, 0, x, y);
+                            } else if (i == y + 1) {//gate is below this block
+                                setGates(s, 0, 1, x, y);
+                            } else if (i == y - 1) {//gate is above this block
+                                setGates(s, 0, -1, x, y);
+                            }
+                        }
+                    }
+                }
+            } else if (d == Direction.RIGHT) {
+                if (x + 1 < WIDTH) {
+                    setWiresAndLeds(s, x + 1, y);
+                    setGates(s, 1, 0, x, y);
+                }
+            } else if (d == Direction.LEFT) {
+                if (x - 1 >= 0) {
+                    setWiresAndLeds(s, x - 1, y);
+                    setGates(s, -1, 0, x, y);
+                }
+            } else if (d == Direction.DOWN) {
+                if (y + 1 < HEIGHT) {
+                    setWiresAndLeds(s, x, y + 1);
+                    setGates(s, 0, 1, x, y);
+                }
+            } else if (d == Direction.UP) {
+                if (y - 1 >= 0) {
+                    setWiresAndLeds(s, x, y - 1);
+                    setGates(s, 0, -1, x, y);
+                }
+            }

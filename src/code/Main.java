@@ -5,7 +5,7 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
-import javax.swing.JFrame;
+import javax.swing.*;
 
 // import punchcard.Assembler;
 
@@ -73,7 +73,8 @@ public class Main {
 
     static int gameMode;
     static int numTiles;
-    
+    static boolean tick_true = false;
+
     /**
      * The main entry point for the Java Terraria Clone application.
      * Initializes players, game objects, and the game frame.
@@ -139,7 +140,14 @@ public class Main {
         mf.setGameScreen(mgs);
         mf.setVisible(true);
 
-
+        Timer timer = new Timer(50, new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                b.tick(); // run every 500ms
+                //tick_true = !tick_true;
+            }
+        });
+        timer.start();
 
 
 //        MouseHandler mh = new MouseHandler(mf, b);
