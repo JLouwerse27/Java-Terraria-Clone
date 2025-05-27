@@ -1,6 +1,7 @@
 import javax.swing.*;
 import java.awt.event.MouseEvent;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -22,20 +23,22 @@ public class BreadBoard {
     /**Empty is 0 in itemEnum*/
     private final static int EMPTY_TYPE = 0;
 
-    private final int SIZE;
+    private final int WIDTH;
+    private final int HEIGHT;
 
     final static String DEFAULT_KEYWORD = "DEFAULT";
     final static String EDITING_KEYWORD = "EDITING";
+    final static String CUTTING_KEYWORD = "CUTTING";
+    final static String COPYING_KEYWORD = "COPYING";
+    final static String PASTING_KEYWORD = "PASTING";
+
 
     private String gamemode = DEFAULT_KEYWORD;
     public int itemCursor = -1;
 
 
-
-    private List<BreadBoardItem> breadBoardItemsList = new ArrayList<BreadBoardItem>();
-    private List<CBreadBoardItem> cBreadBoardItemsList = new ArrayList<CBreadBoardItem>();
-
-
+    public List<BreadBoardItem> breadBoardItemsList = new ArrayList<BreadBoardItem>();
+    public List<CBreadBoardItem> cBreadBoardItemsList = new ArrayList<CBreadBoardItem>();
 
 
     /**
@@ -181,18 +184,39 @@ public class BreadBoard {
         return null;
     }
 
-    private BreadBoardItem convertToType(final String ts, final Direction d, int x, final int y){
+    public int convertToItemEnumOrdinal(final String s){
+        //{" ","s", "w", "X", "N","O","A","l"}
+        if(s.equals(" ")){
+            return 0;
+        }else if(s.equals("s") || s.equals("S")){
+            return 1;
+        }else if(s.equals("w") || s.equals("W")){
+            return 2;
+        }else if(s.equals("X")){
+            return 3;
+        }else if(s.equals("N")){
+            return 4;
+        }else if(s.equals("O")){
+            return 5;
+        }else if(s.equals("A")){
+            return 6;
+        }else if(s.equals("l") || s.equals("L")){
+            return 7;
+        }else{//not on the enum
+            return -1;
+        }
+    }
+
+    private BreadBoardItem convertToType(final String ts, final Direction d, final Direction d2, int x, final int y){
         switch (ts) {
             case "s":
                 return new Switch(false, d, x, y);
             case "S":
                 return new Switch(true, d, x, y);
-            case "w":
-                return new Wire(d, x, y);
-            case "W":
+            case "w", "W":
                 return new Wire(d, x, y);
             case "X":
-                return new DoubleWire(d,dN,x,y);
+                return new DoubleWire(d,d2,x,y);
             case "N":
                 return new Not(d, x, y);
             case "A":
@@ -245,7 +269,13 @@ public class BreadBoard {
         return -1;
     }
 
-    public void clickAndChangeBreadBoard(final int type, final int x, final int y){
+    public boolean changeBreadBoard(final int type, final Direction dir1,
+                                    final Direction dir2, final int x, final int y){
+
+        if(x < 0 || y < 0 || x > breadboard[y].length || y > breadboard.length){
+            return false;
+        }
+
         if(type == -1) {
             //first remove the existing object
             int theOne = 0;
@@ -266,11 +296,11 @@ public class BreadBoard {
                         i = -1;
                     } else {
                         breadBoardItemsList.add(theOne,
-                                convertToType(itemEnum[i + 1], dN, x, y));
+                                convertToType(itemEnum[i + 1], dN,dN, x, y));
                     }
                     breadboardDirection[y][x] = dN;//call this before cuz of repaint in next fn
-                    updateBreadBoard(itemEnum[i + 1], x, y);
-                    return;
+                    setBreadBoardTile(itemEnum[i + 1], x, y);
+                    return true;
                 }
             }
         }else if(type == 0) {//empty
@@ -283,8 +313,8 @@ public class BreadBoard {
                 theOne = i;
             }
             breadboardDirection[y][x] = dN;//call this before cuz of repaint in next fn
-            updateBreadBoard(itemEnum[type], x, y);
-        }else  {//wire
+            setBreadBoardTile(itemEnum[type], x, y);
+        }else {//anything else
             //first remove the existing object if it's not a wire
             int theOne = 0;
             if (getBreadBoardItemIndexAtCoordinates(x, y) != -1
@@ -294,20 +324,47 @@ public class BreadBoard {
                 theOne = i;
             }
             breadBoardItemsList.add(theOne,
-                    convertToType(itemEnum[type], dN, x, y));
-            breadboardDirection[y][x] = dN;//call this before cuz of repaint in next fn
-            updateBreadBoard(itemEnum[type], x, y);
+                    convertToType(itemEnum[type], dir1,dir2, x, y));
+            breadboardDirection[y][x] = dir1;//call this before cuz of repaint in next fn
+            breadboardDirection2[y][x] = dir2;
+            setBreadBoardTile(itemEnum[type], x, y);
+        }
+        return true;//fix later for other cases
+    }
+
+    /**
+     * Sets all the arrays, preferably from BreadBoardFileLoader.java
+     * @param tiles
+     * @param dir1
+     * @param dir2
+     */
+    public void setBreadBoardState(String[][] tiles, Direction[][] dir1, Direction[][] dir2) {
+        for (int y = 0; y < HEIGHT; y++) {
+            for (int x = 0; x < WIDTH; x++) {
+                String tile = tiles[y][x];
+                Direction d1 = dir1[y][x];
+                Direction d2 = dir2[y][x];
+
+                setBreadBoardTile(tile, x, y);
+                setBreadBoardDirectionTile(d1, x, y);
+                setBreadBoardDirection2Tile(d2, x, y);
+
+                int type = convertToItemEnumOrdinal(tile);
+                changeBreadBoard(type, d1, d2, x, y);
+            }
         }
     }
 
-    public BreadBoard(final int size) {
-        SIZE = size;
-        if(size != Main.DEFAULT_SCREEN_SIZE){
-            breadboard = new String[size][size];
-            breadboardDirection = new Direction[size][size];
-            breadboardDirection2 = new Direction[size][size];
-            for (int i = 0; i < size; i++) {
-                for (int j = 0; j < size; j++) {
+
+    public BreadBoard(final int width, final int height) {
+        WIDTH = width;
+        HEIGHT = height;
+        if(WIDTH != Main.DEFAULT_SCREEN_SIZE){
+            breadboard = new String[width][height];
+            breadboardDirection = new Direction[width][height];
+            breadboardDirection2 = new Direction[width][height];
+            for (int i = 0; i < height; i++) {
+                for (int j = 0; j < width; j++) {
 
                     breadboard[i][j] = " ";
                     breadboardDirection[i][j] = dN;
@@ -325,7 +382,7 @@ public class BreadBoard {
             breadboardDirection = defaultBreadboardDirection;
             breadboardDirection2 = defaultBreadboardDirection2;
         }
-        setTilesInMain(breadboard);
+        //setTilesInMain(breadboard);
         for(int i = 0; i < breadboard.length; i++) {
             for(int j = 0; j < breadboard[i].length; j++) {
                 Direction d = breadboardDirection[i][j];
@@ -345,7 +402,7 @@ public class BreadBoard {
                         break;
                     case "L":
                         breadBoardItemsList.add(new LED(false, d, j, i));
-                        updateBreadBoard("l", j, i);//no LED should be on by default
+                        setBreadBoardTile("l", j, i);//no LED should be on by default
                         break;
                     case "l":
                         breadBoardItemsList.add(new LED(false, d, j, i));
@@ -364,7 +421,7 @@ public class BreadBoard {
                         break;
                     case "W":
                         breadBoardItemsList.add(new Wire(d, j, i));
-                        updateBreadBoard("w", j, i);//no wire should be on by default
+                        setBreadBoardTile("w", j, i);//no wire should be on by default
                         break;
                     case "X":
                         breadBoardItemsList.add(new DoubleWire(d, d2, j, i));
@@ -380,9 +437,9 @@ public class BreadBoard {
         //setTilesInMain();
     }
 
-    private void setTilesInMain(final String[][] bb) {
-        Main.setTiles(SIZE, bb);
-    }
+//    private void setTilesInMain(final String[][] bb) {
+//        Main.setTiles(WIDTH, bb);
+//    }
 
     /**
      * Checks clicks and calls update breadboard
@@ -393,31 +450,166 @@ public class BreadBoard {
      * @return whether the program should repaint or not
      */
     public boolean checkClick(final MouseEvent e, int x, final int y) {
-
-        if(gamemode.equals(DEFAULT_KEYWORD)) {
-            for(CBreadBoardItem cbi:cBreadBoardItemsList){
+        System.out.println("checkClick at " + x + ", " + y);
+        if(gamemode.equals(DEFAULT_KEYWORD))
+        {
+            for(CBreadBoardItem cbi:cBreadBoardItemsList)
+            {
                 if(x >= cbi.getX() * MyGameScreen.tileWidth &&
                         x < cbi.getX() * MyGameScreen.tileWidth + MyGameScreen.tileWidth
                         && y >= cbi.getY() * MyGameScreen.tileHeight &&
-                        y < cbi.getY() * MyGameScreen.tileHeight + MyGameScreen.tileHeight) {
+                        y < cbi.getY() * MyGameScreen.tileHeight + MyGameScreen.tileHeight)
+                {
                     cbi.set(true);//true is just a necessary thing, not actually used
-                    updateBreadBoard(cbi.returnTile(),cbi.getX(),cbi.getY());
+                    setBreadBoardTile(cbi.returnTile(),cbi.getX(),cbi.getY());
                     return true;
                 }
             }
-        }else if (gamemode.equals(EDITING_KEYWORD)) {
-            System.out.println(e.getButton());
-            int tile_x = x/MyGameScreen.tileWidth;
-            int tile_y = y/MyGameScreen.tileHeight;
-            if(e.getButton() == MouseEvent.BUTTON3){//right click
-                clickAndChangeBreadBoard(EMPTY_TYPE,tile_x,tile_y);//0 is empty space
-            }else if(e.getButton() == MouseEvent.BUTTON1){
-                clickAndChangeBreadBoard(itemCursor, tile_x, tile_y);
+        }else if (gamemode.equals(EDITING_KEYWORD))
+        {
+            if (!Main.getCopying()) {
+                System.out.println("mouse click:" + e.getButton());
+                int tile_x = x / MyGameScreen.tileWidth;
+                int tile_y = y / MyGameScreen.tileHeight;
+
+                if (tile_x >= 0 && tile_x < MyGameScreen.xPixels
+                        && tile_y >= 0 && tile_y < MyGameScreen.yPixels)
+                {
+                    if (e.getButton() == MouseEvent.BUTTON3) {//right click
+                        return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y);//0 is empty space
+                    } else if (e.getButton() == MouseEvent.BUTTON1) {
+                        return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y);
+                    }else if (e.getButton() == MouseEvent.NOBUTTON) { // drag ======= MAY HAVE TO CHANGE ========
+                        if(Main.mouseClickNumber[0] == MouseEvent.BUTTON1) {//drag left click
+                            return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y);
+                        }else if (Main.mouseClickNumber[0] == MouseEvent.BUTTON3) {//drag left click
+                            return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y);
+                        }
+                    }
+                } else
+                {
+                    return false;
+                }
             }
-            return true;
+        }
+        else if (gamemode.equals(COPYING_KEYWORD) || gamemode.equals(CUTTING_KEYWORD))
+        {//copying and pasting
+            int sX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
+            if(sX < 0) sX = 0;
+
+            int sY = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
+            if(sY < 0) sY = 0;
+
+            int eX = (int)(Main.mouseX[1] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
+            if(eX > MyGameScreen.xPixels) eX = MyGameScreen.xPixels;
+
+            int eY = (int)(Main.mouseY[1] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
+            if(eY > MyGameScreen.yPixels) eY = MyGameScreen.yPixels;
+
+            selectEntities(sX,sY,eX,eY);
+
+            if(gamemode.equals(CUTTING_KEYWORD)) {
+                eraseRegion(sX, sY, eX, eY);
+            }
+
         }
 
         return false;
+    }
+
+    /**
+     * Selects entities and tiles within a given space
+     * @param sX
+     * @param sY
+     * @param eX
+     * @param eY
+     */
+    private void selectEntities(final int sX, final int sY, final int eX, final int eY)
+    {
+        if((sX > eX) || (sY > eY))
+        {
+            System.out.println("ERROR SELECTING ENTITIES; DON'T DRAG IN REVERSE");
+            //could possibly change this in the future
+            return;
+        }else if(sX == eX || sY == eY)
+        {//one of the lengths is zero
+            return;
+        }
+
+
+        int dX = eX - sX;
+        int dY = eY - sY;
+
+        String[][] tempCutCopyPasteBoard = new String[dY][dX];
+        Direction[][] tempCutCopyPasteBoardDir1 = new Direction[dY][dX];
+        Direction[][] tempCutCopyPasteBoardDir2 = new Direction[dY][dX];
+
+        System.out.println("temp board at: "
+                + sX
+                + ", " + sY
+                + ", " + eX
+                + ", " + eY
+                + " with dimensions: "
+                + tempCutCopyPasteBoard[0].length
+                + ", "
+                + tempCutCopyPasteBoard.length);
+
+        Main.getMyGameScreen().tempCutCopyPasteBoardList.clear();
+        Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.clear();
+        Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.clear();
+        //set the board to the actual breadboard pieces
+        for (int i = 0; i < dY; i++)
+        {
+            for (int j = 0; j < dX; j++)
+            {
+                tempCutCopyPasteBoard[i][j] = breadboard[i+sY][j+sX];
+                tempCutCopyPasteBoardDir1[i][j] = breadboardDirection[i+sY][j+sX];
+                tempCutCopyPasteBoardDir2[i][j] = breadboardDirection2[i+sY][j+sX];
+            }
+            //add the section of the board arrays to the board lists in mgs
+            Main.getMyGameScreen().tempCutCopyPasteBoardList.add(
+                    new ArrayList<>(Arrays.asList(tempCutCopyPasteBoard[i])));
+            Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.add(
+                    new ArrayList<>(Arrays.asList(tempCutCopyPasteBoardDir1[i])));
+            Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.add(
+                    new ArrayList<>(Arrays.asList(tempCutCopyPasteBoardDir2[i])));
+            //System.out.println(Main.getMyGameScreen().tempCutCopyPasteBoardList.get(i));
+        }
+
+        //System.out.println(convertTilesIntoArrayString(tempCutCopyPasteBoard, "", dX, dY));
+
+        //System.out.println(convertTilesIntoArrayString(Main.getMyGameScreen().tempCutCopyPasteBoardList, "", dX, dY));
+
+    }
+
+    /**
+     * Sets everything within the region to empty tile
+     * @param sX starting x
+     * @param sY starting y
+     * @param eX ending x
+     * @param eY ending y
+     */
+    private void eraseRegion(int sX, int sY, int eX, int eY) {
+        for (int y = sY; y < eY; y++) {
+            for (int x = sX; x < eX; x++) {
+                changeBreadBoard(0, Direction.NONE, Direction.NONE, x, y); // sets to EMPTY
+            }
+        }
+    }
+
+    /**
+     * Selects entity and tile and adds it to a temp array
+     * @param x
+     * @param y
+     */
+    private BreadBoardItem selectEntity(final int x, final int y)
+    {
+        if (getBreadBoardItemIndexAtCoordinates(x, y) != -1) {
+            int i = getBreadBoardItemIndexAtCoordinates(x, y);
+            return breadBoardItemsList.get(i);
+        }else {
+            return null;
+        }
     }
 
     /**
@@ -467,16 +659,45 @@ public class BreadBoard {
      * Updates the breadBoard array by
      * setting the array cell at x and y to given tile string
      * calls main.setTiles
-     * then repaints
+     * then repaints //commented out
      * @param tile
      * @param x
      * @param y
      */
-    private void updateBreadBoard(final String tile, final int x, final int y){
+    public void setBreadBoardTile(final String tile, final int x, final int y){
         breadboard[y][x] = tile;
-        Main.setTiles(SIZE, breadboard);
-        callPaint();
+        //Main.setTiles(SIZE, breadboard);
+        //callPaint();
     }
+
+    /**
+     * Updates the breadBoardDirection array by
+     * setting the array cell direction at x and y to given direction
+     * calls main.setTiles //defunct
+     * then repaints
+     * @param x
+     * @param y
+     */
+    public void setBreadBoardDirectionTile(final Direction dir, final int x, final int y){
+        breadboardDirection[y][x] = dir;
+        //Main.setTiles(SIZE, breadboardDirection); defunct
+        //callPaint();
+    }
+
+    /**
+     * Updates the breadBoardDirection2 array by
+     * setting the array cell direction at x and y to given direction
+     * calls main.setTiles //defunct
+     * then repaints
+     * @param x
+     * @param y
+     */
+    public void setBreadBoardDirection2Tile(final Direction dir, final int x, final int y){
+        breadboardDirection2[y][x] = dir;
+        //Main.setTiles(SIZE, breadboardDirection); defunct
+        //callPaint();
+    }
+
 
     private void setWiresAndLeds(final boolean s, final int x, final int y) {
         if (s) {
@@ -548,7 +769,7 @@ public class BreadBoard {
             for (int i = y - 1; i <= y + 1; i++) {
                 for (int j = x - 1; j <= x + 1; j++) {
                     if (i != -1 && j != -1
-                            && i < SIZE && j < SIZE
+                            && i < HEIGHT && j < WIDTH
                             && !(i == y - 1 && j == x - 1)
                             && !(i == y + 1 && j == x - 1)
                             && !(i == y - 1 && j == x + 1)
@@ -558,170 +779,37 @@ public class BreadBoard {
                         setWiresAndLeds(s, j, i);
 
                         if(j == x + 1){//gate is to the right of this block
-
                             setGates(s,1,0,x,y);
-//                            if (breadboard[i][j].equals("A")) {
-//                                And and = (And) locateBreadBoardItemOnBoard(j, i);
-//                                assert and != null;
-//                                and.setRightGate(s,1,0);
-//                                and.calculate();
-//                                and.signal();
-//                            }else if (breadboard[i][j].equals("O")) {
-//                                Or or = (Or) locateBreadBoardItemOnBoard(j, i);
-//                                assert or != null;
-//                                or.setRightGate(s,1,0);
-//                                or.calculate();
-//                                or.signal();
-//                            }else if (breadboard[i][j].equals("N")) {
-//                                Not not = (Not) locateBreadBoardItemOnBoard(j, i);
-//                                assert not != null;
-//                                if(not.setRightGate(s,1,0)) {
-//                                    not.calculate();
-//                                    not.signal();
-//                                }
-//                            }
                         }else if(j == x - 1){//gate is to the left of this block
                             setGates(s,-1,0,x,y);
-//                            if (breadboard[i][j].equals("A")) {
-//                                And and = (And) locateBreadBoardItemOnBoard(j, i);
-//                                assert and != null;
-//                                and.setRightGate(s,-1,0);
-//                                and.calculate();
-//                                and.signal();
-//                            }else if (breadboard[i][j].equals("O")) {
-//                                Or or = (Or) locateBreadBoardItemOnBoard(j, i);
-//                                assert or != null;
-//                                or.setRightGate(s,-1,0);
-//                                or.calculate();
-//                                or.signal();
-//                            }else if (breadboard[i][j].equals("N")) {
-//                                Not not = (Not) locateBreadBoardItemOnBoard(j, i);
-//                                assert not != null;
-//                                if(not.setRightGate(s,-1,0)) {
-//                                    not.calculate();
-//                                    not.signal();
-//                                }
-//                            }
                         } else if (i == y + 1) {//gate is below this block
                             setGates(s,0,1,x,y);
-//                            if (breadboard[i][j].equals("A")) {
-//                                And and = (And) locateBreadBoardItemOnBoard(j, i);
-//                                assert and != null;
-//                                and.setRightGate(s,0,1);
-//                                and.calculate();
-//                                and.signal();
-//                            }else if (breadboard[i][j].equals("O")) {
-//                                Or or = (Or) locateBreadBoardItemOnBoard(j, i);
-//                                assert or != null;
-//                                or.setRightGate(s,0,1);
-//                                or.calculate();
-//                                or.signal();
-//                            }else if (breadboard[i][j].equals("N")) {
-//                                Not not = (Not) locateBreadBoardItemOnBoard(j, i);
-//                                assert not != null;
-//                                not.setRightGate(s,0,1);
-//                                not.calculate();
-//                                not.signal();
-//                            }
                         }else if (i == y - 1) {//gate is above this block
                             setGates(s,0,-1,x,y);
-//                            if (breadboard[i][j].equals("A")) {
-//                                And and = (And) locateBreadBoardItemOnBoard(j, i);
-//                                assert and != null;
-//                                and.setRightGate(s,0,-1);
-//                                and.calculate();
-//                                and.signal();
-//                            }else if (breadboard[i][j].equals("O")) {
-//                                Or or = (Or) locateBreadBoardItemOnBoard(j, i);
-//                                assert or != null;
-//                                or.setRightGate(s,0,-1);
-//                                or.calculate();
-//                                or.signal();
-//                            }else if (breadboard[i][j].equals("N")) {
-//                                Not not = (Not) locateBreadBoardItemOnBoard(j, i);
-//                                assert not != null;
-//                                not.setRightGate(s,0,-1);
-//                                not.calculate();
-//                                not.signal();
-//                            }
                         }
                     }
                 }
             }
-        }else if (d == Direction.RIGHT){
-
-            setWiresAndLeds(s,x+1,y);
-            setGates(s,1,0,x,y);
-
-        }else if (d == Direction.LEFT){
-//            String sBR = breadboard[y][x-1];//string of the BreadBoard item to the left
-            setWiresAndLeds(s,x-1,y);
-            setGates(s,-1,0,x,y);
-//            if (sBR.equals("N")) {
-//                Not not = (Not) locateBreadBoardItemOnBoard(x-1, y);
-//                assert not != null;
-//                not.setRightGate(s,-1,0);
-//                not.calculate();
-//                not.signal();
-//            }else if (sBR.equals("A")) {
-//                And and = (And) locateBreadBoardItemOnBoard(x-1, y);
-//                assert and != null;
-//                and.setRightGate(s,-1,0);
-//                and.calculate();
-//                and.signal();
-//            }else if (sBR.equals("O")) {
-//                Or or = (Or) locateBreadBoardItemOnBoard(x-1, y);
-//                assert or != null;
-//                or.setRightGate(s,-1,0);
-//                or.calculate();
-//                or.signal();
-//            }
-        }else if (d == Direction.DOWN){
-//            String sBR = breadboard[y+1][x];//string of the BreadBoard item below it
-            setWiresAndLeds(s,x,y+1);
-            setGates(s,0,1,x,y);
-//            if (sBR.equals("N")) {
-//                Not not = (Not) locateBreadBoardItemOnBoard(x, y+1);
-//                assert not != null;
-//                not.setRightGate(s,0,1);
-//                not.calculate();
-//                not.signal();
-//            }else if (sBR.equals("A")) {
-//                And and = (And) locateBreadBoardItemOnBoard(x, y+1);
-//                assert and != null;
-//                and.setRightGate(s,0,1);
-//                and.calculate();
-//                and.signal();
-//            }else if (sBR.equals("O")) {
-//                Or or = (Or) locateBreadBoardItemOnBoard(x, y+1);
-//                assert or != null;
-//                or.setRightGate(s,0,1);
-//                or.calculate();
-//                or.signal();
-//            }
-        }else if (d == Direction.UP){
-//            String sBR = breadboard[y-1][x];//string of the BreadBoard item above
-            setWiresAndLeds(s,x,y-1);
-            setGates(s,0,-1,x,y);
-//            if (sBR.equals("N")) {
-//                Not not = (Not) locateBreadBoardItemOnBoard(x, y-1);
-//                assert not != null;
-//                not.setRightGate(s,0,-1);
-//                not.calculate();
-//                not.signal();
-//            }else if (sBR.equals("A")) {
-//                And and = (And) locateBreadBoardItemOnBoard(x, y-1);
-//                assert and != null;
-//                and.setRightGate(s,0,-1);
-//                and.calculate();
-//                and.signal();
-//            }else if (sBR.equals("O")) {
-//                Or or = (Or) locateBreadBoardItemOnBoard(x, y-1);
-//                assert or != null;
-//                or.setRightGate(s,0,-1);
-//                or.calculate();
-//                or.signal();
-//            }
+        }else if (d == Direction.RIGHT) {
+            if (x + 1 < WIDTH) {
+                setWiresAndLeds(s, x + 1, y);
+                setGates(s, 1, 0, x, y);
+            }
+        } else if (d == Direction.LEFT) {
+            if (x - 1 >= 0) {
+                setWiresAndLeds(s, x - 1, y);
+                setGates(s, -1, 0, x, y);
+            }
+        }else if (d == Direction.DOWN) {
+            if (y + 1 < HEIGHT) {
+                setWiresAndLeds(s, x, y + 1);
+                setGates(s, 0, 1, x, y);
+            }
+        } else if (d == Direction.UP) {
+            if (y - 1 >= 0) {
+                setWiresAndLeds(s, x, y - 1);
+                setGates(s, 0, -1, x, y);
+            }
         }
     }
 
@@ -1055,9 +1143,9 @@ public class BreadBoard {
 //
             }
             if (this.out) {
-                updateBreadBoard("L", getX(), getY());
+                setBreadBoardTile("L", getX(), getY());
             } else {
-                updateBreadBoard("l", getX(), getY());
+                setBreadBoardTile("l", getX(), getY());
             }
             Main.getMyFrame().repaint();
         }
@@ -1150,9 +1238,9 @@ public class BreadBoard {
             delay();
             this.out = out;
             if(out) {
-                updateBreadBoard("W", getX(), getY());
+                setBreadBoardTile("W", getX(), getY());
             }else {
-                updateBreadBoard("w", getX(), getY());
+                setBreadBoardTile("w", getX(), getY());
             }
             Main.getMyFrame().repaint();
             this.signal(out);
@@ -1302,44 +1390,35 @@ public class BreadBoard {
         System.out.println(convertTilesIntoArrayString(
                 breadboard,
                 "private String [][] defaultBreadboard =",
+                num,
                 num));
         System.out.println(convertTilesIntoArrayString(
                 getBreadboardDirectionAsStringArray(
                         breadboardDirection),
                 "private Direction [][] defaultBreadboardDirection =",
+                num,
                 num));
         System.out.println(convertTilesIntoArrayString(
                 getBreadboardDirectionAsStringArray(
                         breadboardDirection2),
                 "private Direction [][] defaultBreadboardDirection2 =",
+                num,
                 num));
     }
 
-    private String convertTilesIntoArrayString(final String[][] array, final String name, final int num){
-        String s = name + " {";
+    private String convertTilesIntoArrayString(final String[][] array, final String name, final int numX, final int numY) {
         boolean isDirection = name.contains("Direction");
-        for (int i = 0; i < num; i++) {
-            s+="\n";
-            s+= "{";
-            for (int j = 0; j < num; j++) {
+        StringBuilder sb = new StringBuilder();
 
-                if(!isDirection) {s += "\"";}
-                s += array[i][j];
-                if(!isDirection) {s += "\"";}
-                s += ",";
-                //System.out.print(tiles[i][j]);
-                //System.out.print("\"");
-                //System.out.print(",");
-                //System.out.print("\"");
-            }
-            s = s.substring(0, s.length() - 1);
-            s+="}";
-            if(i != num - 1) {
-                s+=",";
+        for (int i = 0; i < numY; i++) {
+            for (int j = 0; j < numX; j++) {
+                sb.append(i).append(" ")
+                        .append(j).append(" ")
+                        .append(isDirection ? array[i][j] : array[i][j]).append("\n");
             }
         }
-        s+="\n};";
-        return s;
+
+        return sb.toString();
     }
 
 }

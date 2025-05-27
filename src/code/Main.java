@@ -1,4 +1,7 @@
 import java.awt.event.*;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -13,8 +16,8 @@ public class Main {
 
     //frame
     private static MyFrame mf;
+    private static MyGameScreen mgs;
     private static BreadBoard b;
-
 
     //magic numbers
     static final int n3 = 3;
@@ -27,10 +30,10 @@ public class Main {
     static final int PUNCHCARD_GAMEMODE_NUMBER = 2;
     static final int GATES_GAMEMODE_NUMBER = 3;
 
-    static final int DEFAULT_SCREEN_SIZE = 10;
+    static final int DEFAULT_SCREEN_SIZE = 10;//ARCHAIC: TERRARIA AND SUCH
     static final int DEFAULT_SCREEN_Y_OFFSET = -32;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
-    static final int DEFAULT_LOGIC_SCREEN_SIZE = 100;
+    static final int DEFAULT_LOGIC_SCREEN_SIZE = 3;
 
     static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
 
@@ -39,11 +42,7 @@ public class Main {
 
     static double P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
     static double P_SCREEN_X_OFFSET = SCREEN_X_OFFSET;
-
-    static int gameMode;
-    // static final String sP = "P ";
-    // static final String sWall = "[]";
-    // static final String sEmpty = "  ";
+    
     static final String sP = TileString.Player.getSymbol();
     static final String sWall = TileString.Wall.getSymbol();
     static final String sEmpty = TileString.Empty.getSymbol();
@@ -56,8 +55,21 @@ public class Main {
     static final String sA = "A";
     static final String sD = "D";
 
-    private static boolean copyingAndPasting = false;
+    static final int[] mouseX = new int[2];
+    static final int[] mouseY = new int[2];
+    static final int[] mouseClickNumber = new int[2];
 
+    static final boolean[] mouseScrollUp = {false};
+    static final boolean[] mouseScrollDown = {false};
+
+    static final boolean[] dragging = {false};
+    static final boolean[] keys = new boolean[500];
+
+    private static boolean cutting = false;
+    private static boolean copying = false;
+    private static boolean pasting = false;
+
+    static int gameMode;
     static int numTiles;
     
     /**
@@ -89,32 +101,45 @@ public class Main {
     }
 
     private static void initLogicGates() {
-        numTiles = DEFAULT_LOGIC_SCREEN_SIZE;
-        tiles = new String[numTiles][numTiles];
-        initTiles(numTiles);
+        int width;
+        int height;
+
+        //Path file = Paths.get("test_breadboard.txt");
+        Path file = Paths.get("save.txt");
+
+        try {
+            width = BreadBoardFileLoader.dimensions(file)[0];
+            height = BreadBoardFileLoader.dimensions(file)[1];
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+//        tiles = new String[width][height];
+//        initTiles(numTiles); ARCHAIC!!!!
 
         mf = new MyFrame();
         mf.setSize(500 + 16, 500 + 38);
         mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         mf.setTitle("muh gates");
 
-        b = new BreadBoard(numTiles);
-        MyGameScreen mgs = new MyGameScreen(numTiles, numTiles, b);
+        b = new BreadBoard(width,height);
+
+
+        try {
+            BreadBoardFileLoader.load(b,file);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        mgs = new MyGameScreen(width, height, b);
         mf.setGameScreen(mgs);
         mf.setVisible(true);
 
 
-        final int[] mouseX = new int[2];
-        final int[] mouseY = new int[2];
 
-        final boolean[] mouseScrollUp = {false};
-        final boolean[] mouseScrollDown = {false};
 
-        final boolean[] dragging = {false};
-        boolean[] keys = new boolean[500];
-
-        MouseHandler mh = new MouseHandler(mf, b);
-        MouseHandler.MouseListenerHandler mlh = mh.new MouseListenerHandler();
+//        MouseHandler mh = new MouseHandler(mf, b);
+//        MouseHandler.MouseListenerHandler mlh = mh.new MouseListenerHandler();
 
         //mf.addMouseListener(mlh);
 
@@ -133,6 +158,7 @@ public class Main {
 
             @Override
             public void mousePressed(MouseEvent e) {
+                mouseClickNumber[0] = e.getButton();
                 mouseX[0] = e.getX();
                 mouseY[0] = e.getY();
                 P_SCREEN_X_OFFSET = Main.SCREEN_X_OFFSET;
@@ -141,6 +167,15 @@ public class Main {
 
             @Override
             public void mouseReleased(MouseEvent e) {
+
+                if(copying && b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)){
+                    copying = false;
+                    b.setGamemode(BreadBoard.EDITING_KEYWORD);
+                    return;
+                }
+
+                //paste();
+
 //                if(dragging[0]) {
 //                    SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //+ DEFAULT_SCREEN_X_OFFSET;
 //                    SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
@@ -173,7 +208,7 @@ public class Main {
                 }else if(e.getWheelRotation() < 0) {
                     mouseScrollUp[0] = true;
                     mouseScrollDown[0] = false;
-                }else if(e.getWheelRotation() == 0){
+                }else {
                     mouseScrollUp[0] = false;
                     mouseScrollDown[0] = false;
                 }
@@ -188,24 +223,56 @@ public class Main {
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if(!keys[KeyEvent.VK_CONTROL]) {//dragging without control key
+                if(!(copying || cutting))
+                {//dragging without CTL+C
+                    if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
+                        SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //
+                        SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
+                        SCREEN_X_OFFSET += P_SCREEN_X_OFFSET;
+                        SCREEN_Y_OFFSET += P_SCREEN_Y_OFFSET;
 
-                    copyingAndPasting = false;
+                        mf.getGameScreen().xOffset = (int) SCREEN_X_OFFSET;
+                        mf.getGameScreen().yOffset = (int) SCREEN_Y_OFFSET;
+                        mf.getContentPane().repaint();
+                    }else if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD))
+                    {
+                        //System.out.println(e.getButton()); is 0 in this case, for all clicks
+                        if(mouseClickNumber[0] == MouseEvent.BUTTON1) {//left button tapped and then dragged
+                            if (b.checkClick(e, e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
+                                    e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)) {
 
-                    SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //
-                    SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
-                    SCREEN_X_OFFSET += P_SCREEN_X_OFFSET;
-                    SCREEN_Y_OFFSET += P_SCREEN_Y_OFFSET;
+                                mf.getContentPane().repaint();
+                            }
+                        }else if(mouseClickNumber[0] == MouseEvent.BUTTON3) {//left button clicked and then dragged
+                            if (b.checkClick(e, e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
+                                    e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)) {
 
-                    mf.getGameScreen().xOffset = (int) SCREEN_X_OFFSET;
-                    mf.getGameScreen().yOffset = (int) SCREEN_Y_OFFSET;
-                    mf.getContentPane().repaint();
+                                mf.getContentPane().repaint();
+                            }
+                        }
+                    }
+                }else
+                {//dragging with CTL+C
+                    if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD))
+                    {//while editing
 
-                }else {//dragging with control key
-                    if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)){//while editing
-                        copyingAndPasting = true;
-                    }else if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)){
-                        copyingAndPasting = false;
+                        b.setGamemode(BreadBoard.COPYING_KEYWORD);
+                        mouseX[1] = e.getX();
+                        mouseY[1] = e.getY();
+
+                        b.checkClick(e,mouseX[1], mouseY[1]);
+                        mgs.repaint();
+                    }else if(b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)
+                    || b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
+                        mouseX[1] = e.getX();
+                        mouseY[1] = e.getY();
+
+                        b.checkClick(e,mouseX[1], mouseY[1]);
+                        mgs.repaint();
+                    }else if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD))
+                    {
+                        copying = false;
+                        cutting = false;
                     }
                 }
 //                dragging[0] = true;
@@ -231,67 +298,91 @@ public class Main {
             @Override
             public void keyPressed(KeyEvent e) {
                 keys[e.getKeyCode()] = true;
-                if(keys[KeyEvent.VK_ENTER] || keys[KeyEvent.VK_E]) {
-                    if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
+                if(keys[KeyEvent.VK_ENTER] || keys[KeyEvent.VK_E])
+                {
+                    if(b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD))
+                    {
                         b.setGamemode(BreadBoard.EDITING_KEYWORD);
-                    }else if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
+                    }else if(b.getGamemode().equals(BreadBoard.EDITING_KEYWORD))
+                    {
                         b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
                     }
                     mf.getContentPane().repaint();
-                } else if (keys[KeyEvent.VK_R]) {//rotate with "R"
+                } else if (keys[KeyEvent.VK_R])
+                {//rotate with "R"
                     b.rotateItem(0,(mouseX[0]-(int)SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
                             (mouseY[0]-(int)SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
 //                    if (keys[KeyEvent.VK_SHIFT]) {//rotate second dir with "shift + R"
 //
 //                    }
-                } else if (keys[KeyEvent.VK_Q]) {
+                } else if (keys[KeyEvent.VK_Q])
+                {
                     b.rotateItem(1,(mouseX[0]-(int)SCREEN_X_OFFSET+DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileWidth,
                                 (mouseY[0]-(int)SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
-                } else if(keys[KeyEvent.VK_S]){//print or "save"
+                } else if(keys[KeyEvent.VK_S])
+                {//print or "save"
                     b.printTiles(DEFAULT_LOGIC_SCREEN_SIZE);
-                }else if(keys[KeyEvent.VK_CONTROL]){//zoom in out
+                }else if(keys[KeyEvent.VK_CONTROL])
+                {
+                    if(!(keys[KeyEvent.VK_C] || keys[KeyEvent.VK_V] || keys[KeyEvent.VK_X]))
+                    {//zoom in and out if not CTL+C or CTL + V
+                        if (mouseScrollDown[0]) {
+                            if (MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT >= 4) {
+                                double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
+                                double dy = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
 
-                    if(mouseScrollDown[0]){
-                        if(MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT >=4) {
-                            double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
-                            double dy = (mouseY[0]+ DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
+                                int oldTileSize = MyGameScreen.tileSize;
+                                MyGameScreen.tileSize = (int) (MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT);
 
-                            int oldTileSize = MyGameScreen.tileSize;
-                            MyGameScreen.tileSize = (int)(MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT);
+                                SCREEN_X_OFFSET = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
+                                        - (dx * MyGameScreen.tileSize / oldTileSize));
+                                SCREEN_Y_OFFSET = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
+                                        - (dy * MyGameScreen.tileSize / oldTileSize));
 
-                            SCREEN_X_OFFSET = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
-                                    - (dx * MyGameScreen.tileSize / oldTileSize));
-                            SCREEN_Y_OFFSET = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
-                                    - (dy * MyGameScreen.tileSize / oldTileSize));
+                                mgs.xOffset = (int) SCREEN_X_OFFSET;
+                                mgs.yOffset = (int) SCREEN_Y_OFFSET;
 
-                            mgs.xOffset = (int)SCREEN_X_OFFSET;
-                            mgs.yOffset = (int)SCREEN_Y_OFFSET;
+                            }
+                            mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                            mgs.repaint();
+                            mouseScrollDown[0] = false;
+                        } else if (mouseScrollUp[0]) {
+                            if (MyGameScreen.tileSize <= 70) {
+                                double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
+                                double dy = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
 
+                                int oldTileSize = MyGameScreen.tileSize;
+                                MyGameScreen.tileSize = (int) (MyGameScreen.tileSize * SCREEN_ZOOM_COEFFICENT);
+
+                                SCREEN_X_OFFSET = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
+                                        - (dx * MyGameScreen.tileSize / oldTileSize));
+                                SCREEN_Y_OFFSET = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
+                                        - (dy * MyGameScreen.tileSize / oldTileSize));
+
+                                mgs.xOffset = (int) SCREEN_X_OFFSET;
+                                mgs.yOffset = (int) SCREEN_Y_OFFSET;
+                            }
+                            mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                            mgs.repaint();
+                            mouseScrollUp[0] = false;
                         }
-                        mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                    } else if (keys[KeyEvent.VK_C])
+                    {
+                        copying = true;
+                        b.setGamemode(BreadBoard.COPYING_KEYWORD);
                         mgs.repaint();
-                        mouseScrollDown[0] = false;
-                    }else if (mouseScrollUp[0]){
-                        if(MyGameScreen.tileSize<=70) {
-                            double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
-                            double dy = (mouseY[0]+ DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
-
-                            int oldTileSize = MyGameScreen.tileSize;
-                            MyGameScreen.tileSize = (int)(MyGameScreen.tileSize * SCREEN_ZOOM_COEFFICENT);
-
-                            SCREEN_X_OFFSET = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
-                                    - (dx * MyGameScreen.tileSize / oldTileSize));
-                            SCREEN_Y_OFFSET = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
-                                    - (dy * MyGameScreen.tileSize / oldTileSize));
-
-                            mgs.xOffset = (int)SCREEN_X_OFFSET;
-                            mgs.yOffset = (int)SCREEN_Y_OFFSET;
-                        }
-                        mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                    }else if (keys[KeyEvent.VK_V])
+                    {
+                        b.setGamemode(BreadBoard.PASTING_KEYWORD);
+                        pasting = true;
+                        paste();
+                        //mgs.repaint();
+                    }else if (keys[KeyEvent.VK_X])
+                    {
+                        cutting = true;
+                        b.setGamemode(BreadBoard.CUTTING_KEYWORD);
                         mgs.repaint();
-                        mouseScrollUp[0] = false;
                     }
-
                 }else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
                     b.itemCursor = -1;
                 }else if (e.getKeyCode() == KeyEvent.VK_0) {
@@ -317,9 +408,44 @@ public class Main {
             @Override
             public void keyReleased(KeyEvent e) {
                 keys[e.getKeyCode()] = false;
+                if(e.getKeyCode() == KeyEvent.VK_CONTROL && b.getGamemode() == BreadBoard.COPYING_KEYWORD){
+                    b.setGamemode(BreadBoard.EDITING_KEYWORD);
+                    //mgs.repaint();
+                }
             }
         });
 
+    }
+
+    /**
+     * Pastes the stuff from the clipboard onto the breadboard
+     */
+    private static void paste(){
+        int sX = (int)(mouseX[0] - SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
+        if(sX < 0) sX = 0;
+
+        int sY = (int)(mouseY[0] - SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
+        if(sY < 0) sY = 0;
+
+        if(pasting && b.getGamemode().equals(BreadBoard.PASTING_KEYWORD)){
+            for(int i = 0; i < mgs.tempCutCopyPasteBoardList.size(); i++){
+                for (int j = 0; j < mgs.tempCutCopyPasteBoardList.getFirst().size(); j++) {
+                    b.setBreadBoardTile(mgs.tempCutCopyPasteBoardList.get(i).get(j),j+sX,i+sY);
+                    b.setBreadBoardDirectionTile(mgs.tempCutCopyPasteBoardDirection1List.get(i).get(j),j+sX,i+sY);
+                    b.setBreadBoardDirection2Tile(mgs.tempCutCopyPasteBoardDirection2List.get(i).get(j),j+sX,i+sY);
+                    b.changeBreadBoard(
+                            b.convertToItemEnumOrdinal(mgs.tempCutCopyPasteBoardList.get(i).get(j)),
+                            mgs.tempCutCopyPasteBoardDirection1List.get(i).get(j),
+                            mgs.tempCutCopyPasteBoardDirection2List.get(i).get(j),
+                            j+sX,
+                            i+sY);
+
+                }
+            }
+            mgs.repaint();
+            b.setGamemode(BreadBoard.EDITING_KEYWORD);
+            pasting = false;
+        }
     }
 
     public static void initPunchCard(){
@@ -538,6 +664,11 @@ public class Main {
         return tiles;
     }
 
+    /**
+     * Should probably get rid of this
+     * @param numTiles
+     * @param nTiles
+     */
     public static void setTiles(int numTiles, final String[][] nTiles) {
 // ================= TO DO: add checking ==============
         tiles = nTiles;
@@ -546,18 +677,34 @@ public class Main {
 
     /**
      * Returns the frame.
-     * @return The frame.
+     * @return mf.
      */
     public static MyFrame getMyFrame() {
         return mf;
     }
 
     /**
-     * Standard getter for the temporary copyingAndPasting variable
-     * @return copyingAndPasting
+     * Returns the gamescreen.
+     * @return mgs.
      */
-    public static boolean getCopyingAndPasting(){
-        return copyingAndPasting;
+    public static MyGameScreen getMyGameScreen() {
+        return mgs;
+    }
+
+    /**
+     * Standard getter for the temporary copying variable
+     * @return copying
+     */
+    public static boolean getCopying(){
+        return copying;
+    }
+
+    /**
+     * Standard getter for the temporary copying variable
+     * @return copying
+     */
+    public static boolean getCutting(){
+        return cutting;
     }
 
 }

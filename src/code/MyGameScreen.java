@@ -1,4 +1,6 @@
 import java.awt.*;
+import java.util.List;
+import java.util.ArrayList;
 
 import javax.swing.JComponent;
 /**
@@ -52,7 +54,9 @@ public class MyGameScreen extends JComponent {
     private final static Direction dD = Direction.DOWN;
     private final static Direction dN = Direction.NONE;
 
-
+    List<List<String>> tempCutCopyPasteBoardList = new ArrayList<List<String>>();
+    List<List<Direction>> tempCutCopyPasteBoardDirection1List = new ArrayList<List<Direction>>();
+    List<List<Direction>> tempCutCopyPasteBoardDirection2List = new ArrayList<List<Direction>>();
     // Default constructor initializing the game screen with default dimensions and tile configuration
     public MyGameScreen() {
         WIDTH = 500;
@@ -153,17 +157,63 @@ public class MyGameScreen extends JComponent {
             }
             fontSize = (int) (originalTileSize / 1.5);
             g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
-            if(breadBoard.getGamemode() == BreadBoard.DEFAULT_KEYWORD){
+
+            //---draw a string to show if you're in default or editing mode---
+            if(breadBoard.getGamemode() == BreadBoard.DEFAULT_KEYWORD)
+            {
                 g2d.drawString("DEFAULT", WIDTH - 140, HEIGHT - 30);
-            }else if(breadBoard.getGamemode() == BreadBoard.EDITING_KEYWORD){
-                if(Main.getCopyingAndPasting()){
-                    g2d.drawRect(30,30,80,80);
-                }
+
+            }else if(breadBoard.getGamemode() == BreadBoard.EDITING_KEYWORD)
+            {
                 g2d.drawString("EDITING", WIDTH - 140, HEIGHT - 30);
+            }else if(breadBoard.getGamemode() == BreadBoard.COPYING_KEYWORD ||
+                    breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD )
+            {
+                if(Main.getCopying() || Main.getCutting())
+                {
+                    int dX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET);
+                    int mX0 = (int) (((dX / tileWidth) * tileWidth));
+
+                    int dy = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET);
+                    int mY0 = (int) (((dy / tileHeight) * tileHeight));
+
+                    if(Main.getCopying()) {
+                        g2d.setColor(Color.CYAN);
+                    }else if(Main.getCutting()) {
+                        g2d.setColor(Color.RED);
+                    }
+                    for (int i = 0; i < tempCutCopyPasteBoardList.size(); i++){
+                        for (int j = 0; j < tempCutCopyPasteBoardList.get(i).size(); j++){
+                            //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(i).get(j)));
+
+                            g2d.fillRect((int)(j*tileWidth + Main.SCREEN_X_OFFSET + mX0),
+                                    (int)(i*tileHeight + Main.SCREEN_Y_OFFSET + mY0), tileWidth, tileHeight);
+                        }
+                    }
+                    g2d.setColor(Color.WHITE);
+                    g2d.setStroke(new BasicStroke(5));
+                    g2d.drawRect(Main.mouseX[0]+ Main.DEFAULT_SCREEN_X_OFFSET,
+                            Main.mouseY[0]+ Main.DEFAULT_SCREEN_Y_OFFSET,
+                            Main.mouseX[1]-Main.mouseX[0],
+                            Main.mouseY[1]-Main.mouseY[0]);
+                }
+                g2d.setColor(Color.WHITE);
+                if(Main.getCopying()) {
+                    g2d.drawString("COPYING", WIDTH - 140, HEIGHT - 30);
+                }else if(Main.getCutting()) {
+                    g2d.drawString("CUTTING", WIDTH - 140, HEIGHT - 30);
+                }
             }
-        }else {
-            for (int i = 0; i < yPixels; i++) {
-                for (int j = 0; j < xPixels; j++) {
+        }else if(breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD)
+        {
+            g2d.setColor(Color.WHITE);
+            g2d.drawString("PASTING", WIDTH - 140, HEIGHT - 30);
+        }else
+        {
+            for (int i = 0; i < yPixels; i++)
+            {
+                for (int j = 0; j < xPixels; j++)
+                {
                     g2d.setColor(getColour(Main.getTiles()[i][j]));
                     g2d.fillRect(j * tw, i * th, tw, th);
                 }

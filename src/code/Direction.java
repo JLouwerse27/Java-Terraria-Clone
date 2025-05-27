@@ -27,4 +27,13 @@ public enum Direction {
     public String getSymbol() {
         return symbol;
     }
+
+    public static Direction fromSymbol(String symbol) {
+        for (Direction d : values()) {
+            if (d.symbol.equals(symbol)) {
+                return d;
+            }
+        }
+        throw new IllegalArgumentException("Invalid direction symbol: " + symbol);
+    }
 }

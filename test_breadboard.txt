@@ -1,0 +1,13 @@
+3,3
+TILES
+w,w,
+s,A,l
+ ,w,X
+DIR1
+dR,dR,dR
+dU,dN,dD
+dN,dL,dR
+DIR2
+dN,dN,dN
+dN,dN,dN
+dN,dN,dL
