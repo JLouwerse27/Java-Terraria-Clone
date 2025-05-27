@@ -34,6 +34,8 @@ public class Main {
     static final int DEFAULT_SCREEN_Y_OFFSET = -32;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
     static final int DEFAULT_LOGIC_SCREEN_SIZE = 3;
+    private static int LOGIC_SCREEN_WIDTH;
+    private static int LOGIC_SCREEN_HEIGHT;
 
     static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
 
@@ -105,11 +107,13 @@ public class Main {
         int height;
 
         //Path file = Paths.get("test_breadboard.txt");
-        Path file = Paths.get("save.txt");
+        Path file = Paths.get("save2.txt");
 
         try {
             width = BreadBoardFileLoader.dimensions(file)[0];
             height = BreadBoardFileLoader.dimensions(file)[1];
+            LOGIC_SCREEN_WIDTH = width;
+            LOGIC_SCREEN_HEIGHT = height;
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
@@ -321,7 +325,7 @@ public class Main {
                                 (mouseY[0]-(int)SCREEN_Y_OFFSET+DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileHeight);
                 } else if(keys[KeyEvent.VK_S])
                 {//print or "save"
-                    b.printTiles(DEFAULT_LOGIC_SCREEN_SIZE);
+                    b.printTiles(LOGIC_SCREEN_WIDTH,LOGIC_SCREEN_HEIGHT);
                 }else if(keys[KeyEvent.VK_CONTROL])
                 {
                     if(!(keys[KeyEvent.VK_C] || keys[KeyEvent.VK_V] || keys[KeyEvent.VK_X]))

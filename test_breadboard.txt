@@ -1,8 +1,8 @@
 3,3
 TILES
-w,w,
+w,w,_
 s,A,l
- ,w,X
+_,w,X
 DIR1
 dR,dR,dR
 dU,dN,dD

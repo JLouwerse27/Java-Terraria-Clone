@@ -32,6 +32,19 @@ public class BreadBoard {
     final static String COPYING_KEYWORD = "COPYING";
     final static String PASTING_KEYWORD = "PASTING";
 
+    final static String EMPTY_SYMBOL      = "_";
+    final static String NOT_SYMBOL        = TileString.Not.getSymbol();
+    final static String OR_SYMBOL         = TileString.Or.getSymbol();
+    final static String AND_SYMBOL        = TileString.And.getSymbol();
+    final static String LED_OFF_SYMBOL   = TileString.LEDOff.getSymbol();
+    final static String LED_ON_SYMBOL    = TileString.LEDOn.getSymbol();
+    final static String BUTTON_OFF_SYMBOL = TileString.ButtonOff.getSymbol();
+    final static String BUTTON_ON_SYMBOL  = TileString.ButtonOn.getSymbol();
+    final static String SWITCH_OFF_SYMBOL = TileString.SwitchOff.getSymbol();
+    final static String SWITCH_ON_SYMBOL  = TileString.SwitchOn.getSymbol();
+    final static String WIRE_OFF_SYMBOL   = TileString.WireOff.getSymbol();
+    final static String WIRE_ON_SYMBOL    = TileString.WireOn.getSymbol();
+    final static String CROSSWIRE_SYMBOL  = TileString.CrossWire.getSymbol();
 
     private String gamemode = DEFAULT_KEYWORD;
     public int itemCursor = -1;
@@ -63,9 +76,19 @@ public class BreadBoard {
      *
      */
     //note: shortened (removed S and W and L
-    private String[] itemEnum = {" ","s", "w", "X", "N","O","A","l"};
+    private String[] itemEnum = {
+            EMPTY_SYMBOL,
+            SWITCH_OFF_SYMBOL,
+            WIRE_OFF_SYMBOL,
+            CROSSWIRE_SYMBOL,
+            NOT_SYMBOL,
+            OR_SYMBOL,
+            AND_SYMBOL,
+            LED_OFF_SYMBOL
+    };
+
     //full version
-    //private String[] fullItemEnum = {" ","s", "w", "X", "N","O","A","l"};
+    //private String[] fullItemEnum = {"_","s", "w", "X", "N","O","A","l"};
 
     //current breadboard stuff; different from default - I think.
     private String[][] breadboard;
@@ -73,36 +96,36 @@ public class BreadBoard {
     private Direction[][] breadboardDirection2;
 
     private String [][] defaultBreadboard = {
-            {" "," ","w","w","w","w","w","w","w","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {"s","w","w"," "," "," "," ","w"," ","w","w","w","w","w","w","w","w","l"," ","l","w","w","w"," "," "," "," "," "," "," "},
-            {" "," ","A","w","w"," ","w","X","w","X","w"," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "," "," "," "," "},
-            {"s","w","w"," ","O","w","O","A"," ","w","w","w","w","w","w","w","w","w","w","w","w","w","X","w","w","w","w"," "," "," "},
-            {" ","w","A","w","w"," "," ","w"," ","N"," "," "," ","w"," "," "," "," "," "," "," "," ","w"," "," "," ","w"," "," "," "},
-            {"s","X","w","w","w","w","w","w","w","A","A","w","w","X","w","w"," "," "," "," "," "," ","w"," "," "," ","w"," "," "," "},
-            {" ","w"," "," "," "," ","w"," "," "," ","N"," "," ","w"," ","O","w","w","w","w"," "," ","w"," "," "," ","w"," "," "," "},
-            {" ","w","w","w","w","w","X","w","w","w","w"," "," ","w"," ","w"," "," "," ","w"," "," ","w"," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," ","w"," ","w","A","A","w","w","X","w","w"," "," "," ","O","w","w","O","w","w","w","A"," "," "," "},
-            {" "," ","A","w","X","w","w"," "," ","N","N"," "," ","w"," ","w"," "," "," ","w"," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," ","w","w","w","w","w","w","w","w"," ","O","w","w","w","w"," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," "," "," ","w"," "," ","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," "," "," ","N"," "," ","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," "," "," ","W","W","A","w"," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w"," "," "," "," "," ","w"," "," "," "," ","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," ","w","w","w","w","N","W","A","w","w","w","w","w"," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w"," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," ","w"," "," "," "},
-            {" "," ","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w"," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "},
-            {" "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "," "}
+            {"_","_","w","w","w","w","w","w","w","w","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"s","w","w","_","_","_","_","w","_","w","w","w","w","w","w","w","w","l","_","l","w","w","w","_","_","_","_","_","_","_"},
+            {"_","_","A","w","w","_","w","X","w","X","w","_","_","_","_","_","_","_","_","_","_","_","w","_","_","_","_","_","_","_"},
+            {"s","w","w","_","O","w","O","A","_","w","w","w","w","w","w","w","w","w","w","w","w","w","X","w","w","w","w","_","_","_"},
+            {"_","w","A","w","w","_","_","w","_","N","_","_","_","w","_","_","_","_","_","_","_","_","w","_","_","_","w","_","_","_"},
+            {"s","X","w","w","w","w","w","w","w","A","A","w","w","X","w","w","_","_","_","_","_","_","w","_","_","_","w","_","_","_"},
+            {"_","w","_","_","_","_","w","_","_","_","N","_","_","w","_","O","w","w","w","w","_","_","w","_","_","_","w","_","_","_"},
+            {"_","w","w","w","w","w","X","w","w","w","w","_","_","w","_","w","_","_","_","w","_","_","w","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","w","_","w","A","A","w","w","X","w","w","_","_","_","O","w","w","O","w","w","w","A","_","_","_"},
+            {"_","_","A","w","X","w","w","_","_","N","N","_","_","w","_","w","_","_","_","w","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","w","w","w","w","w","w","w","w","_","O","w","w","w","w","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","_","_","w","_","_","w","_","_","_","w","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","_","_","N","_","_","w","_","_","_","w","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","_","_","W","W","A","w","_","_","_","w","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","_","_","_","_","_","w","_","_","_","_","w","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","w","w","w","w","N","W","A","w","w","w","w","w","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","w","_","_","_"},
+            {"_","_","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","w","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"},
+            {"_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_","_"}
     };
     private Direction [][] defaultBreadboardDirection = {
             {dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN,dN},
@@ -178,34 +201,35 @@ public class BreadBoard {
             return dU;
         }else if(s.equals("d")){
             return dD;
-        }else if(s.equals("n") || s.equals(" ")){
+        }else if(s.equals("n") || s.equals(EMPTY_SYMBOL)){
             return dN;
         }
         return null;
     }
 
-    public int convertToItemEnumOrdinal(final String s){
-        //{" ","s", "w", "X", "N","O","A","l"}
-        if(s.equals(" ")){
+    public int convertToItemEnumOrdinal(final String s) {
+        String sym = s.trim();
+        if (sym.equals(EMPTY_SYMBOL)) {
             return 0;
-        }else if(s.equals("s") || s.equals("S")){
+        } else if (sym.equals(SWITCH_OFF_SYMBOL) || sym.equals(SWITCH_ON_SYMBOL)) {
             return 1;
-        }else if(s.equals("w") || s.equals("W")){
+        } else if (sym.equals(WIRE_OFF_SYMBOL) || sym.equals(WIRE_ON_SYMBOL)) {
             return 2;
-        }else if(s.equals("X")){
+        } else if (sym.equals(CROSSWIRE_SYMBOL)) {
             return 3;
-        }else if(s.equals("N")){
+        } else if (sym.equals(NOT_SYMBOL)) {
             return 4;
-        }else if(s.equals("O")){
+        } else if (sym.equals(OR_SYMBOL)) {
             return 5;
-        }else if(s.equals("A")){
+        } else if (sym.equals(AND_SYMBOL)) {
             return 6;
-        }else if(s.equals("l") || s.equals("L")){
+        } else if (sym.equals(LED_OFF_SYMBOL) || sym.equals(LED_ON_SYMBOL)) {
             return 7;
-        }else{//not on the enum
+        } else {
             return -1;
         }
     }
+
 
     private BreadBoardItem convertToType(final String ts, final Direction d, final Direction d2, int x, final int y){
         switch (ts) {
@@ -227,7 +251,7 @@ public class BreadBoard {
                 return new LED(true,d,x,y);
             case "l":
                 return new LED(false,d,x,y);
-            case " ":
+            case EMPTY_SYMBOL:
                 return null;
             default:
                 System.out.println("Unknown tile: " + breadboard[y][x] + " at " + x + "," + y);
@@ -350,7 +374,14 @@ public class BreadBoard {
                 setBreadBoardDirection2Tile(d2, x, y);
 
                 int type = convertToItemEnumOrdinal(tile);
-                changeBreadBoard(type, d1, d2, x, y);
+                if(type != -1) {
+                    changeBreadBoard(type, d1, d2, x, y);
+                }else {
+                    String raw = tiles[y][x];
+                    System.out.printf("weoa: raw='%s' tile='%s' at (%d,%d)%n",
+                            raw, tile, x, y);
+                    System.out.println("length = " + raw.length() + " char codes: " + Arrays.toString(raw.toCharArray()));
+                }
             }
         }
     }
@@ -366,7 +397,7 @@ public class BreadBoard {
             for (int i = 0; i < height; i++) {
                 for (int j = 0; j < width; j++) {
 
-                    breadboard[i][j] = " ";
+                    breadboard[i][j] = EMPTY_SYMBOL;
                     breadboardDirection[i][j] = dN;
                     breadboardDirection2[i][j] = dN;
 
@@ -426,7 +457,7 @@ public class BreadBoard {
                     case "X":
                         breadBoardItemsList.add(new DoubleWire(d, d2, j, i));
                         break;
-                    case " ":
+                    case "_":
                         break;
                     default:
                         System.out.println("ERROR LOADING TILES IN BREADBOARD CONSTRUCTOR!");
@@ -700,31 +731,33 @@ public class BreadBoard {
 
 
     private void setWiresAndLeds(final boolean s, final int x, final int y) {
+        String tile = breadboard[y][x];
+
         if (s) {
-            if (breadboard[y][x].equals("w")) {
+            if (tile.equals(WIRE_OFF_SYMBOL)) {
                 Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y);
                 assert wire != null;
-                wire.setOut(s);
+                wire.setOut(true);
             }
-            if (breadboard[y][x].equals("l")) {
+            if (tile.equals(LED_OFF_SYMBOL)) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y);
                 assert led != null;
-                led.setOut(s);
+                led.setOut(true);
             }
         } else {
-            if (breadboard[y][x].equals("W")) {
+            if (tile.equals(WIRE_ON_SYMBOL)) {
                 Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y);
                 assert wire != null;
-                wire.setOut(s);
+                wire.setOut(false);
             }
-            if (breadboard[y][x].equals("L")) {
+            if (tile.equals(LED_ON_SYMBOL)) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y);
                 assert led != null;
-                led.setOut(s);
+                led.setOut(false);
             }
         }
-
     }
+
 
     /**
      * Sets gates and double wires
@@ -734,32 +767,33 @@ public class BreadBoard {
      * @param x
      * @param y
      */
-    public void setGates(final boolean s, final int dx, final int dy, final int x, final int y){
-        String sBR = breadboard[y+dy][x+dx];//string of the BreadBoard item to the right
-        if (sBR.equals("N")) {
-            Not not = (Not) locateBreadBoardItemOnBoard(x+dx, y+dy);
+    public void setGates(final boolean s, final int dx, final int dy, final int x, final int y) {
+        String sBR = breadboard[y + dy][x + dx]; // tile to the right
+
+        if (sBR.equals(NOT_SYMBOL)) {
+            Not not = (Not) locateBreadBoardItemOnBoard(x + dx, y + dy);
             assert not != null;
-            if(not.setRightGate(s,dx,dy)) {
+            if (not.setRightGate(s, dx, dy)) {
                 not.calculate();
                 not.signal();
             }
-        }else if (sBR.equals("A")) {
-            And and = (And) locateBreadBoardItemOnBoard(x+dx, y+dy);
+        } else if (sBR.equals(AND_SYMBOL)) {
+            And and = (And) locateBreadBoardItemOnBoard(x + dx, y + dy);
             assert and != null;
-            if(and.setRightGate(s,dx,dy)) {
+            if (and.setRightGate(s, dx, dy)) {
                 and.calculate();
                 and.signal();
             }
-        }else if (sBR.equals("O")) {
-            Or or = (Or) locateBreadBoardItemOnBoard(x+dx, y+dy);
+        } else if (sBR.equals(OR_SYMBOL)) {
+            Or or = (Or) locateBreadBoardItemOnBoard(x + dx, y + dy);
             assert or != null;
-            if(or.setRightGate(s,dx,dy)) {
+            if (or.setRightGate(s, dx, dy)) {
                 or.calculate();
                 or.signal();
             }
-        }else if(sBR.equals("X")){
-            DoubleWire dw = (DoubleWire) locateBreadBoardItemOnBoard(x+dx, y+dy);
-            dw.setRightInput(s,dx,dy);
+        } else if (sBR.equals(CROSSWIRE_SYMBOL)) {
+            DoubleWire dw = (DoubleWire) locateBreadBoardItemOnBoard(x + dx, y + dy);
+            dw.setRightInput(s, dx, dy);
         }
     }
 
@@ -831,9 +865,9 @@ public class BreadBoard {
 
         public String returnTile(){
             if(out){
-                return "B";
+                return TileString.ButtonOn.getSymbol();
             }else {
-                return "b";
+                return TileString.ButtonOff.getSymbol();
             }
         }
 
@@ -860,13 +894,14 @@ public class BreadBoard {
             this.signal(out);
         }
 
-        public String returnTile(){
-            if(out){
-                return "S";
-            }else {
-                return "s";
+        public String returnTile() {
+            if (out) {
+                return SWITCH_ON_SYMBOL;
+            } else {
+                return SWITCH_OFF_SYMBOL;
             }
         }
+
 
         public boolean getOut(){
             return out;
@@ -1081,7 +1116,7 @@ public class BreadBoard {
         }
 
         public String returnTile(){
-            return "O";
+            return OR_SYMBOL;
         }
 
         public void signal() {
@@ -1256,9 +1291,9 @@ public class BreadBoard {
 
         public String returnTile(){
             if(out){
-                return "W";
+                return WIRE_ON_SYMBOL;
             }else {
-                return "w";
+                return WIRE_OFF_SYMBOL;
             }
         }
 
@@ -1307,7 +1342,7 @@ public class BreadBoard {
         }
 
         public String returnTile(){
-            return " ";
+            return "_";
         }
     }
 
@@ -1386,39 +1421,49 @@ public class BreadBoard {
         this.gamemode = gamemode;
     }
 
-    public void printTiles(final int num) {
-        System.out.println(convertTilesIntoArrayString(
+    public void printTiles(final int w, final int h) {
+
+        String s = "";
+        s += w + "," + h + "\n";
+        s += "TILES\n";
+        s += convertTilesIntoArrayString(
                 breadboard,
                 "private String [][] defaultBreadboard =",
-                num,
-                num));
-        System.out.println(convertTilesIntoArrayString(
+                w,
+                h);
+        s += "DIR1\n";
+        s += convertTilesIntoArrayString(
                 getBreadboardDirectionAsStringArray(
                         breadboardDirection),
                 "private Direction [][] defaultBreadboardDirection =",
-                num,
-                num));
-        System.out.println(convertTilesIntoArrayString(
+                w,
+                h);
+        s += "DIR2\n";
+        s += convertTilesIntoArrayString(
                 getBreadboardDirectionAsStringArray(
                         breadboardDirection2),
                 "private Direction [][] defaultBreadboardDirection2 =",
-                num,
-                num));
+                w,
+                h);
+        System.out.println(s);
     }
 
     private String convertTilesIntoArrayString(final String[][] array, final String name, final int numX, final int numY) {
         boolean isDirection = name.contains("Direction");
-        StringBuilder sb = new StringBuilder();
+        String s = "";
 
-        for (int i = 0; i < numY; i++) {
-            for (int j = 0; j < numX; j++) {
-                sb.append(i).append(" ")
-                        .append(j).append(" ")
-                        .append(isDirection ? array[i][j] : array[i][j]).append("\n");
+        for (int i = 0; i < numX; i++) {
+            for (int j = 0; j < numY; j++) {
+                s += array[i][j];
+                if(j != numX -1){
+                    s += ",";
+                }
             }
+
+            s += "\n";
         }
 
-        return sb.toString();
+        return s;
     }
 
 }

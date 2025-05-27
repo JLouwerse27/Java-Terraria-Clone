@@ -25,7 +25,7 @@ public class BreadBoardFileLoader {
                 current = dir1Lines;
             } else if (line.equals("DIR2")) {
                 current = dir2Lines;
-            } else if (!line.isEmpty() && !line.equals("TILES") && !line.equals("WIDTH") && !line.equals("HEIGHT")) {
+            } else if (!line.isEmpty() && !line.equals("TILES")) {
                 current.add(line.replace("\"", "").split(",", -1));
             }
         }
