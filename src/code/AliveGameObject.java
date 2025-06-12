@@ -1,3 +1,5 @@
+package src.code;
+
 /**
  * Represents a game object that is alive and can move.
  * This class extends GameObject and includes additional properties for movement and thinking capabilities.

@@ -1,3 +1,5 @@
+package src.code;
+
 /**
  * Represents a generic game object with basic properties such as position, 
  * and flags indicating whether it is alive and can move.

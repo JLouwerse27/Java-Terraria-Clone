@@ -1,3 +1,5 @@
+package src.code;
+
 /**
  * Enum to represent the four cardinal directions.
  * <p>
@@ -15,7 +17,9 @@ public enum Direction {
     DOWN("dD"),
     LEFT("dL"),
     RIGHT("dR"),
-    NONE("dN");
+    NONE("dN"),
+    INTO("dI"), //away from player
+    OUTOF("dO"); //to the player
 
     private final String symbol;
 

@@ -25,3 +25,224 @@
 //        s+="\n};";
 //        return s;
 //    }
+
+in breadboard class
+if (d == Direction.NONE) {
+                for (int i = y - 1; i <= y + 1; i++) {
+                    for (int j = x - 1; j <= x + 1; j++) {
+                        if (i != -1 && j != -1
+                                && i < HEIGHT && j < WIDTH
+                                && !(i == y - 1 && j == x - 1)
+                                && !(i == y + 1 && j == x - 1)
+                                && !(i == y - 1 && j == x + 1)
+                                && !(i == y + 1 && j == x + 1)
+                                && !(i == y && j == x)) {
+
+                            setWiresAndLeds(s, j, i);
+
+                            if (j == x + 1) {//gate is to the right of this block
+                                setGates(s, 1, 0, x, y);
+                            } else if (j == x - 1) {//gate is to the left of this block
+                                setGates(s, -1, 0, x, y);
+                            } else if (i == y + 1) {//gate is below this block
+                                setGates(s, 0, 1, x, y);
+                            } else if (i == y - 1) {//gate is above this block
+                                setGates(s, 0, -1, x, y);
+                            }
+                        }
+                    }
+                }
+            } else if (d == Direction.RIGHT) {
+                if (x + 1 < WIDTH) {
+                    setWiresAndLeds(s, x + 1, y);
+                    setGates(s, 1, 0, x, y);
+                }
+            } else if (d == Direction.LEFT) {
+                if (x - 1 >= 0) {
+                    setWiresAndLeds(s, x - 1, y);
+                    setGates(s, -1, 0, x, y);
+                }
+            } else if (d == Direction.DOWN) {
+                if (y + 1 < HEIGHT) {
+                    setWiresAndLeds(s, x, y + 1);
+                    setGates(s, 0, 1, x, y);
+                }
+            } else if (d == Direction.UP) {
+                if (y - 1 >= 0) {
+                    setWiresAndLeds(s, x, y - 1);
+                    setGates(s, 0, -1, x, y);
+                }
+            }
+
+
+public void signal(Direction d, boolean s, int x, int y, int t) {
+        //System.out.println("called signal from " + x + " " + y);
+        //cleanEmptySignalsAtBeginningOfSignalArray();
+
+        boolean allNull = true;
+
+        for(int i = signalArray.length-2; i >= 0; i--) {
+            if (signalArray[i] != null || (i == 0 && allNull)) {
+
+                allNull = false;
+//                System.out.println("signal(): setting the " + (i + 1) + "th signal at " +
+//                        x + " " +
+//                        y + " which will be called at tick " +
+//                        t);
+                signalArray[i + 1] = new Object[]{d, s, x, y, t};
+
+                return;
+
+            }
+        }
+//        for (int i = 0; i < signalArray.length; i++) {
+//            if (signalArray[i] == null) {
+////                System.out.println("signal(): setting the " + i + "th signal at " +
+////                        x + " " +
+////                        y + " which will be called at tick " +
+////                        t);
+//                signalArray[i] = new Object[]{d, s, x, y, t};
+//                return;
+//            }
+//        }
+        System.out.println("Signal queue overflow.");
+    }
+
+
+
+
+/**
+ * Just does the signal logic
+ * @param d
+ * @param s
+ * @param x
+ * @param y
+ */
+private boolean propagateSignal(final Direction d, final boolean s, final int x, final int y, final int t) {
+    if(t == Main.tickNumber) {
+        //System.out.println("pS(): signal " + s + " from " + x + " " + y + " on tick " + t);
+        if (d == Direction.NONE) {
+            for (int i = y - 1; i <= y + 1; i++) {
+                for (int j = x - 1; j <= x + 1; j++) {
+                    if (i >= 0 && j >= 0 && i < HEIGHT && j < WIDTH &&
+                            !(i == y && j == x) &&
+                            !(i == y - 1 && j == x - 1) &&
+                            !(i == y + 1 && j == x - 1) &&
+                            !(i == y - 1 && j == x + 1) &&
+                            !(i == y + 1 && j == x + 1)) {
+
+
+                        if (j == x + 1) {
+                            setGates(s, 1, 0, x, y, t);
+                            setWiresAndLeds(s, 1, 0, j, i, t);
+                        } else if (j == x - 1) {
+                            setGates(s, -1, 0, x, y, t);
+                            setWiresAndLeds(s, -1, 0, j, i, t);
+                        } else if (i == y + 1) {
+                            setGates(s, 0, 1, x, y, t);
+                            setWiresAndLeds(s, 0, 1, j, i, t);
+                        } else if (i == y - 1) {
+                            setGates(s, 0, -1, x, y, t);
+                            setWiresAndLeds(s, 0, -1, j, i, t);
+                        }
+                    }
+                }
+            }
+        } else if (d == Direction.RIGHT && x + 1 < WIDTH) {
+            setWiresAndLeds(s, 1, 0, x + 1, y, t);
+            setGates(s, 1, 0, x, y, t);
+        } else if (d == Direction.LEFT && x - 1 >= 0) {
+            setWiresAndLeds(s, -1, 0, x - 1, y, t);
+            setGates(s, -1, 0, x, y, t);
+        } else if (d == Direction.DOWN && y + 1 < HEIGHT) {
+            setWiresAndLeds(s, 0, 1, x, y + 1, t);
+            setGates(s, 0, 1, x, y, t);
+        } else if (d == Direction.UP && y - 1 >= 0) {
+            setWiresAndLeds(s, 0, -1, x, y - 1, t);
+            setGates(s, 0, -1, x, y, t);
+        }
+        return true;//this saved me
+    }else {
+        return false;//and this, it allows future ones to be held
+    }
+}
+
+
+
+for (int i = 0; i < signalArray.length; i++) {
+    if (signalArray[i] != null) {
+        SignalEvent ev = signalArray[i];
+        Direction d = ev.dir;
+        boolean s = ev.state;
+        int x = ev.x;
+        int y = ev.y;
+
+        /**
+         * Tick that the signal is supposed to be propagated
+         */
+        int tickToBe = (int)ev.tick;
+//                System.out.println(
+//                        "tick(): gonna propagate " + i +
+//                        "th signal from " +
+//                        x + " " + y +
+//                        " on tick" + tickToBe);
+        if(propagateSignal) {//if the signal sucessfully propogated
+            //signalArray[i] = null;//clear it before so it allows room for next ones
+
+        }
+    }
+
+
+public void signal(Direction d, boolean s, int x, int y, int t) {
+    //System.out.println("called signal from " + x + " " + y);
+    //cleanEmptyOrOldSignalsAtBeginningOfSignalArray();
+    if(t == Main.tickNumber || t == Main.tickNumber + 1) {
+        Object[][] localCopy = new Object[signalArray.length][];
+        for (int i = 0; i < signalArray.length; i++) {
+            if (signalArray[i] != null && !((int)signalArray[i][SIGNAL_ARRAY_TICK_PLACE] < Main.tickNumber)) {
+                localCopy[i] = signalArray[i];
+            }else {
+                localCopy[i] = null;
+            }
+        }
+
+        for (int i = 0; i < localCopy.length; i++) {
+            if (localCopy[i] == null) {//we found an empty place to put the new one in
+
+//                //first check if there's empty spots before this one
+                int checkingPoint = i;
+
+                while(checkingPoint + 1 < localCopy.length) {
+                    checkingPoint++;
+                    if (localCopy[checkingPoint] != null
+                            && !((int) localCopy[checkingPoint][SIGNAL_ARRAY_TICK_PLACE] < Main.tickNumber)) {
+
+                        //localCopy[checkingPoint-1] = localCopy[checkingPoint];
+                        System.out.println("chece");
+                    }
+                }
+                // Shift and insert after the previous signal
+                if (checkingPoint < localCopy.length) {
+                    localCopy[checkingPoint] = new Object[]{d, s, x, y, t};
+
+                    signalArray = localCopy;
+
+                }
+                Main.getMyGameScreen().repaint();
+                return;
+            }
+        }
+
+        for (int i = 0; i < signalArray.length; i++) {
+            if (signalArray[i] != null && i == signalArray.length - 1) {
+                System.out.println("Signal queue overflow.");
+            } else {
+                break;
+            }
+        }
+
+// If we got here, the whole array was empty — write to index 0
+        signalArray[0] = new Object[]{d, s, x, y, t};
+        Main.getMyGameScreen().repaint();
+    }
+}

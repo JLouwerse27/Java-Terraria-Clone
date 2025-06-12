@@ -1,3 +1,5 @@
+package src.code;
+
 import javax.swing.JFrame;
 
 /**

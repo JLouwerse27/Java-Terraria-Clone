@@ -1,58 +1,82 @@
+package src.code;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
-
 public class BreadBoardFileLoader {
 
     public static void load(BreadBoard board, Path path) throws IOException {
         List<String> lines = Files.readAllLines(path);
+        int[] dims = dimensions(path);
+        int width = dims[0];
+        int height = dims[1];
+        int zHeight = dims[2];
 
-//        String[] dims = lines.get(0).split(",");
-//        int width = Integer.parseInt(dims[0].trim());
-//        int height = Integer.parseInt(dims[1].trim());
-        lines.remove(0);
+        String[][][] tiles = new String[zHeight][height][width];
+        String[][][] dir1Raw = new String[zHeight][height][width];
+        String[][][] dir2Raw = new String[zHeight][height][width];
 
-        List<String[]> tileLines = new ArrayList<>();
-        List<String[]> dir1Lines = new ArrayList<>();
-        List<String[]> dir2Lines = new ArrayList<>();
+        int z = -1;
+        String section = "";
+        int y = 0;
 
-        List<String[]> current = tileLines;
         for (String line : lines) {
             line = line.trim();
-            if (line.equals("DIR1")) {
-                current = dir1Lines;
-            } else if (line.equals("DIR2")) {
-                current = dir2Lines;
-            } else if (!line.isEmpty() && !line.equals("TILES")) {
-                current.add(line.replace("\"", "").split(",", -1));
+            if (line.isEmpty()) continue;
+
+            if (line.startsWith("LAYER")) {
+                z++;
+                y = 0;
+                continue;
             }
+            if (line.equals("TILES") || line.equals("DIR1") || line.equals("DIR2")) {
+                section = line;
+                y = 0;
+                continue;
+            }
+
+            String[] parts = line.split(",", -1);
+            for (int x = 0; x < width; x++) {
+                switch (section) {
+                    case "TILES":
+                        tiles[z][y][x] = parts[x];
+                        break;
+                    case "DIR1":
+                        dir1Raw[z][y][x] = parts[x];
+                        break;
+                    case "DIR2":
+                        dir2Raw[z][y][x] = parts[x];
+                        break;
+                }
+            }
+            y++;
         }
 
-        int h = tileLines.size();
-        int w = tileLines.get(0).length;
-
-        Direction[][] dir1 = new Direction[h][w];
-        Direction[][] dir2 = new Direction[h][w];
-        String[][] tiles = new String[h][w];
-
-        for (int i = 0; i < h; i++) {
-            for (int j = 0; j < w; j++) {
-                tiles[i][j] = tileLines.get(i)[j];
-                dir1[i][j] = Direction.fromSymbol(dir1Lines.get(i)[j]);
-                dir2[i][j] = Direction.fromSymbol(dir2Lines.get(i)[j]);
+        // Convert string directions to enum
+        Direction[][][] dir1 = new Direction[zHeight][height][width];
+        Direction[][][] dir2 = new Direction[zHeight][height][width];
+        for (int zz = 0; zz < zHeight; zz++) {
+            for (int yy = 0; yy < height; yy++) {
+                for (int xx = 0; xx < width; xx++) {
+                    dir1[zz][yy][xx] = Direction.fromSymbol(dir1Raw[zz][yy][xx]);
+                    dir2[zz][yy][xx] = Direction.fromSymbol(dir2Raw[zz][yy][xx]);
+                }
             }
         }
 
         board.setBreadBoardState(tiles, dir1, dir2);
+        System.out.println("BreadBoardFileLoader.load(): called setBreadBoardState()");
     }
 
     public static int[] dimensions(Path path) throws IOException {
         String firstLine = Files.lines(path).findFirst().orElseThrow();
         String[] parts = firstLine.split(",");
-        int width = Integer.parseInt(parts[0].trim());
-        int height = Integer.parseInt(parts[1].trim());
-        return new int[]{width, height};
+        return new int[]{
+                Integer.parseInt(parts[0].trim()),
+                Integer.parseInt(parts[1].trim()),
+                Integer.parseInt(parts[2].trim())
+        };
     }
 }

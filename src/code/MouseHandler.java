@@ -1,3 +1,5 @@
+package src.code;
+
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.awt.event.MouseMotionListener;
@@ -42,8 +44,11 @@ public class MouseHandler {
 //                mouseX[0] = e.getX();
 //                mouseY[0] = e.getY();
 
-            if(b.checkClick(e,e.getX() - (int)SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
-                    e.getY() - (int)SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)) {
+            if(b.checkClick(
+                    e,
+                    e.getX() - (int)SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
+                    e.getY() - (int)SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET,
+                    Main.LOGIC_SCREEN_LAYER)) {
                 mf.getContentPane().repaint();
             }
         }

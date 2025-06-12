@@ -1,3 +1,5 @@
+package src.code;
+
 public enum Opcodes {
 
     NOOP,//0000

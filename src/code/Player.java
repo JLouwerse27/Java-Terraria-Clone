@@ -1,3 +1,5 @@
+package src.code;
+
 /**
  * Represents a player in the game.
  * The player can move in four directions: UP, DOWN, LEFT, and RIGHT.

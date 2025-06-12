@@ -1,0 +1,40 @@
+3,3,3
+LAYER 0
+TILES
+__,__,__
+BW,BW,BW
+__,__,__
+DIR1
+dN,dN,dN
+dR,dR,dN
+dN,dN,dN
+DIR2
+dN,dN,dN
+dN,dN,dN
+dN,dN,dN
+LAYER 1
+TILES
+__,__,__
+Bs,__,BL
+__,__,__
+DIR1
+dN,dN,dN
+dN,dN,dN
+dN,dN,dN
+DIR2
+dN,dN,dN
+dN,dN,dN
+dN,dN,dN
+LAYER 2
+TILES
+__,__,__
+__,__,__
+__,__,__
+DIR1
+dN,dN,dN
+dN,dN,dN
+dN,dN,dN
+DIR2
+dN,dN,dN
+dN,dN,dN
+dN,dN,dN
