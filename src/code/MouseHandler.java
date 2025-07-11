@@ -46,8 +46,8 @@ public class MouseHandler {
 
             if(b.checkClick(
                     e,
-                    e.getX() - (int)SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET,
-                    e.getY() - (int)SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET,
+                    (short) (e.getX() - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
+                    (short) (e.getY() - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
                     Main.LOGIC_SCREEN_LAYER)) {
                 mf.getContentPane().repaint();
             }

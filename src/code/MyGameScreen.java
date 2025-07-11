@@ -1,11 +1,14 @@
 package src.code;
 
 import java.awt.*;
+import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
 
 import javax.swing.JComponent;
+import static src.code.Main.*;
+
 /**
  * MyGameScreen is a custom JComponent that represents the game screen.
  * It handles the rendering of the game tiles based on the provided dimensions and tile information.
@@ -36,15 +39,17 @@ import javax.swing.JComponent;
 public class MyGameScreen extends JComponent {
     
     // Static fields for screen dimensions and tile configuration
-    static int WIDTH;
-    static int HEIGHT;
-    static int xPixels;
-    static int yPixels;
-    static int zPixels;
-    static int tileSize = 40;
-    static int tileWidth;
-    static int tileHeight;
-    static int originalTileSize = 40;
+    static short WIDTH;
+    static short HEIGHT;
+    static short xPixels;
+    static short yPixels;
+    static short zPixels;
+    static byte tileSize = 40;
+    static byte tileWidth;
+    static byte tileHeight;
+    static byte originalTileSize = 40;
+
+    static final short MINIMAP_TILE_SIZE = 4;
 
     int xOffset = 0;
     int yOffset = 0;
@@ -57,14 +62,18 @@ public class MyGameScreen extends JComponent {
     private final static Direction dU = Direction.UP;
     private final static Direction dD = Direction.DOWN;
     private final static Direction dN = Direction.NONE;
+    private final static Direction dO = Direction.OUTOF;
+    private final static Direction dI = Direction.INTO;
 
-    List<List<List<String>>> tempCutCopyPasteBoardList = new ArrayList<List<List<String>>>();
+    List<List<List<Byte>>> tempCutCopyPasteBoardList = new ArrayList<List<List<Byte>>>();
     List<List<List<Direction>>> tempCutCopyPasteBoardDirection1List = new ArrayList<List<List<Direction>>>();
     List<List<List<Direction>>> tempCutCopyPasteBoardDirection2List = new ArrayList<List<List<Direction>>>();
 
-    String[][][] tempCutCopyPasteBoard;
-    Direction[][][] tempCutCopyPasteBoardDirection1;
-    Direction[][][] tempCutCopyPasteBoardDirection2;
+    //String[][][] tempCutCopyPasteBoard;
+    byte[][][] cutCopyPasteBoardBytes;
+    Direction[][][] cutCopyPasteBoardDirection1;
+    Direction[][][] cutCopyPasteBoardDirection2;
+
 
     private Graphics2D g2d;
 
@@ -83,7 +92,7 @@ public class MyGameScreen extends JComponent {
     }
 
     // Constructor initializing the game screen with specified number of horizontal and vertical tiles
-    public MyGameScreen(final int numX, final int numY) {
+    public MyGameScreen(final short numX, final short numY) {
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = numX;
@@ -100,7 +109,7 @@ public class MyGameScreen extends JComponent {
      * @param numY
      * @param b BreadBoard
      */
-    public MyGameScreen(final int numX, final int numY, final int numZ, final BreadBoard b) {
+    public MyGameScreen(final short numX, final short numY, final byte numZ, final BreadBoard b) {
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = numX;
@@ -110,15 +119,16 @@ public class MyGameScreen extends JComponent {
         tileHeight = tileSize;//HEIGHT / numY;
         setSize(WIDTH, HEIGHT);
 
-        tempCutCopyPasteBoard = new String[zPixels][yPixels][xPixels];
-        tempCutCopyPasteBoardDirection1 = new Direction[zPixels][yPixels][xPixels];
-        tempCutCopyPasteBoardDirection2 = new Direction[zPixels][yPixels][xPixels];
+        //tempCutCopyPasteBoard = new String[zPixels][yPixels][xPixels];
+        cutCopyPasteBoardBytes = new byte[zPixels][yPixels][xPixels];
+        cutCopyPasteBoardDirection1 = new Direction[zPixels][yPixels][xPixels];
+        cutCopyPasteBoardDirection2 = new Direction[zPixels][yPixels][xPixels];
 
         this.breadBoard = b;
     }
     
     // Constructor initializing the game screen with specified dimensions and tile configuration
-    public MyGameScreen(final int width, final int height, final int numX, final int numY) {
+    public MyGameScreen(final short width, final short height, final short numX, final short numY) {
         WIDTH = width;
         HEIGHT = height;
         xPixels = numX;
@@ -130,7 +140,7 @@ public class MyGameScreen extends JComponent {
 
     /**
      * Method to render the game screen by drawing the tiles based on their colors
-    */
+     */
     @Override
     public void paint(Graphics g) {
 
@@ -140,21 +150,35 @@ public class MyGameScreen extends JComponent {
         int tw = (int) tileWidth;
         int th = (int) tileHeight;
 
+        int bufferPixels = 1;
+
+        // last block horizontal */
+        int lbx = (int) (-SCREEN_X_OFFSET - DEFAULT_SCREEN_X_OFFSET + WIDTH) / tileSize + bufferPixels;
+        // last block vertical */
+        int lby = (int) (-SCREEN_Y_OFFSET - DEFAULT_SCREEN_Y_OFFSET + HEIGHT) / tileSize + bufferPixels;
+
+        if(lbx > xPixels) lbx = xPixels;
+        if(lby > yPixels) lby = yPixels;
+
+
         if(Main.gameMode == Main.GATES_GAMEMODE_NUMBER) {
             //noinspection DuplicatedCode
             int fontSize = (int) (th / 1.5);
             g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
 
+            //draw mouse coordinates on screen
+
+
             int layer = Main.LOGIC_SCREEN_LAYER;
 
-            for (int j = 0; j < yPixels; j++) {
-                for (int k = 0; k < xPixels; k++) {
+            for (int j = 0; j < lby; j++) {
+                for (int k = 0; k < lbx; k++) {
 
                     //draw the individual tile
-                    g2d.setColor(getColour(breadBoard.getBreadboard()[layer][j][k]));
+                    g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k]));
                     g2d.fillRect(k * tw + xOffset, j * th + yOffset, tw, th);
-                    g2d.setColor(Color.WHITE);
 
+                    g2d.setColor(Color.WHITE);
                     //draw the direction
                     if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.RIGHT)) {
                         g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th/2);
@@ -169,65 +193,94 @@ public class MyGameScreen extends JComponent {
                     }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.OUTOF)) {
                         g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th/2);
                     }
-                    if(breadBoard.getBreadboard()[layer][j][k].equals(TileString.CrossWire.getSymbol())) {
+                    if(breadBoard.getBreadboardByte()[layer][j][k] == (TileByte.DoubleWire).getSymbol()
+                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOn.getSymbol()
+                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOff.getSymbol()
+                    && breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
                         //BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.getBreadBoardItemsList().get(breadBoard.getBreadBoardItemIndexAtCoordinates(k,j));
-                        BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.locateBreadBoardItemOnBoard(k,j,layer);
-                        if(dw.getDir2() == dR) {
-                            g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th/2 + (int) (th / 1.5));
-                        }else if(dw.getDir2() == dL) {
-                            g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th/2 + (int) (th / 1.5));
-                        }else if(dw.getDir2() == dD) {
-                            g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th/2 + (int) (th / 1.5));
-                        }else if(dw.getDir2() == dU) {
-                            g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th/2 + (int) (th / 1.5));
+                        //BreadBoard.Wire w = (BreadBoard.Wire)breadBoard.locateBreadBoardItemOnBoard(k,j,layer);
+
+                        if(breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
+                            if (breadBoard.getBreadboardDirection2()[layer][j][k] == dR) {
+                                g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dL) {
+                                g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dD) {
+                                g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dU) {
+                                g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dI) {
+                                g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dO) {
+                                g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                            }
                         }
                     }
                 }
             }
-
             paintSignalStuff();
+            paintTempArrayStuff();
 
             fontSize = (int) (originalTileSize / 1.5);//don't know if this should be here
+            paintMouseCoordinates();
 
 //============== COPYING CUTTING AND PASTING OVERLAY (and mode strings) =======================================
             //-- draw a string to show if you're in default or editing mode ----
             if(breadBoard.getGamemode() == BreadBoard.DEFAULT_KEYWORD)
             {
+                g2d.setColor(Color.WHITE);
                 g2d.drawString("DEFAULT", WIDTH - 140, HEIGHT - 30);
 
             }else if(breadBoard.getGamemode() == BreadBoard.EDITING_KEYWORD)
             {
+                g2d.setColor(Color.WHITE);
                 g2d.drawString("EDITING", WIDTH - 140, HEIGHT - 30);
             }else if(breadBoard.getGamemode() == BreadBoard.COPYING_KEYWORD ||
-                    breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD )
+                    breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD ) //IF THE USER HAS CLICKED CTL C OR CTL V
             {
-                if(Main.getCopying() || Main.getCutting())
+                if(Main.getCopying() || Main.getCutting()) //NOT REDUNDANT, THIS IS WHEN USER IS DRAGGING
                 {
-                    int dX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET);
-                    int mX0 = (int) (((dX / tileWidth) * tileWidth));
+                    int dx = (mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET) /
+                            (tw) * tw + xOffset;
 
-                    int dy = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET);
-                    int mY0 = (int) (((dy / tileHeight) * tileHeight));
+                    int dy = (mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) /
+                             (th) * th + yOffset;
+//                    if (
+//                        (double)((mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET))
+//                                - (Math.floor((double) (mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) /
+//                                        (th)))
+//                                * th > 0){
+//                        dy+=th;
+//                    }
+                                    //mouseY[0] + DEFAULT_SCREEN_Y_OFFSET; //- yOffset % tileSize;//(int)((mouseY[0])/tileHeight)*tileHeight;
+
+                    System.out.println("mouseY[0] = " + mouseY[0] + "mouseY[1] = " + mouseY[1] +" dy = " + dy);
 
                     if(Main.getCopying()) {
                         g2d.setColor(Color.CYAN);
                     }else if(Main.getCutting()) {
                         g2d.setColor(Color.RED);
                     }
-                    for (int j = 0; j < tempCutCopyPasteBoardList.size(); j++){
-                        for (int k = 0; k < tempCutCopyPasteBoardList.get(j).size(); k++){
-                            //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(j).get(k)));
+                    if(tempCutCopyPasteBoardList != null
+                            && tempCutCopyPasteBoardList.size() > 0
+                            && tempCutCopyPasteBoardList.getFirst().size() > 0) {
+                        for (int j = 0; j < tempCutCopyPasteBoardList.get(layer).size(); j++) {
+                            for (int k = 0; k < tempCutCopyPasteBoardList.get(layer).get(j).size(); k++) {
+                                //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(j).get(k)));
 
-                            g2d.fillRect((int)(k*tileWidth + Main.SCREEN_X_OFFSET + mX0),
-                                    (int)(j*tileHeight + Main.SCREEN_Y_OFFSET + mY0), tileWidth, tileHeight);
+                                g2d.fillRect(
+                                        (int) (k * tw + dx),
+                                        (int) (j * th + dy),
+                                        tw,
+                                        th);
+                            }
                         }
                     }
                     g2d.setColor(Color.WHITE);
-                    g2d.setStroke(new BasicStroke(5));
-                    g2d.drawRect(Main.mouseX[0]+ Main.DEFAULT_SCREEN_X_OFFSET,
-                            Main.mouseY[0]+ Main.DEFAULT_SCREEN_Y_OFFSET,
-                            Main.mouseX[1]-Main.mouseX[0],
-                            Main.mouseY[1]-Main.mouseY[0]);
+                    g2d.drawRect(mouseX[0]+ DEFAULT_SCREEN_X_OFFSET,
+                            mouseY[0]+ DEFAULT_SCREEN_Y_OFFSET,
+                            mouseX[1]-mouseX[0],
+                            mouseY[1]-mouseY[0]);
                 }
                 g2d.setColor(Color.WHITE);
                 if(Main.getCopying()) {
@@ -235,23 +288,27 @@ public class MyGameScreen extends JComponent {
                 }else if(Main.getCutting()) {
                     g2d.drawString("CUTTING", WIDTH - 140, HEIGHT - 30);
                 }
-            }
-        }else if(breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD)
-        {
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("PASTING", WIDTH - 140, HEIGHT - 30);
-        }else
-        {
-            for (int j = 0; j < yPixels; j++)
+            }else if(breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD)
             {
-                for (int k = 0; k < xPixels; k++)
-                {
-                    g2d.setColor(getColour(Main.getTiles()[j][k]));
-                    g2d.fillRect(k * tw, j * th, tw, th);
-                }
+                g2d.setColor(Color.WHITE);
+                g2d.drawString("PASTING", WIDTH - 140, HEIGHT - 30);
             }
+        }else //terraria and assembler
+        {
+            g2d.setColor(Color.BLACK);
+            g2d.drawString("PAUSED", WIDTH - 140, HEIGHT - 30);
         }
 
+    }
+
+    /**
+     * Paints the mouse coordinates at the bottom right of the screen
+     */
+    private void paintMouseCoordinates() {
+        g2d.setColor(Color.WHITE);
+        int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
+        int y = mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET;
+        g2d.drawString(x / tileWidth + "," + y / tileHeight, WIDTH - 240, HEIGHT - 30);
     }
 
 
@@ -326,61 +383,86 @@ public class MyGameScreen extends JComponent {
         //}
     }
 
+    /**
+     * Paints what is copied or cut from the clipboard.
+     */
+    public void paintTempArrayStuff() {
+        int layer = LOGIC_SCREEN_LAYER;
+        if(tempCutCopyPasteBoardList.isEmpty()){
+            return;
+        }
+//        for (int j = 0; j < cutCopyPasteBoardBytes[layer].length; j++){
+//            for(int k = 0; k < cutCopyPasteBoardBytes[layer][j].length; k++){
+        for (int i = 0; i < tempCutCopyPasteBoardList.size(); i++) {
+            for (int j = 0; j < tempCutCopyPasteBoardList.getFirst().size(); j++) {
+                for (int k = 0; k < tempCutCopyPasteBoardList.getFirst().getFirst().size(); k++) {
+                    g2d.setColor(getColour(tempCutCopyPasteBoardList.get(i).get(j).get(k)));
+                    g2d.fillRect(
+                            WIDTH - 500 + k*MINIMAP_TILE_SIZE,
+                            21 + i*(tempCutCopyPasteBoardList.getFirst().size()+MINIMAP_TILE_SIZE) + j*MINIMAP_TILE_SIZE,
+                            MINIMAP_TILE_SIZE,
+                            MINIMAP_TILE_SIZE);
+                }
+            }
+        }
 
+//                if(CutCopyPasteBoardBytes[layer][j][k] == null){
+//                    return;
+//                }
+    }
 
-
-    // Method to return the color corresponding to the given tile symbol
-    public Color getColour(String c) {
+    public Color getColour(byte c) {
         //TERRARIA
-        if (c.equals(TileString.Wall.getSymbol())) {
-            return Color.BLACK;
-        } else if (c.equals(TileString.Player.getSymbol())) {
-            return Color.RED;
-        } else if (c.equals(TileString.Not.getSymbol())) {
+        if (c == TileByte.Not.getSymbol()) {
             return Color.ORANGE;
-        //BREADBOARD
-        }else if (c.equals(TileString.Or.getSymbol())) {
+            //BREADBOARD
+        }else if (c == TileByte.Or.getSymbol()) {
             return Color.GREEN;
-        }else if (c.equals(TileString.And.getSymbol())) {
+        }else if (c == TileByte.And.getSymbol()) {
             return Color.BLUE;
-        }else if (c.equals(TileString.LEDOff.getSymbol())) {
+        }else if (c == TileByte.LEDOff.getSymbol()) {
             //return new Color(210, 210, 210);
             return Color.black;
-        }else if (c.equals(TileString.LEDOn.getSymbol())) {
+        }else if (c == TileByte.LEDOn.getSymbol()) {
             return Color.WHITE;
-        }else if (c.equals(TileString.ButtonOff.getSymbol())) {
+        }else if (c == TileByte.ButtonOff.getSymbol()) {
             return Color.darkGray;//--
-        }else if (c.equals(TileString.ButtonOn.getSymbol())) {
+        }else if (c == TileByte.ButtonOn.getSymbol()) {
             return Color.lightGray;//--
-        }else if (c.equals(TileString.SwitchOff.getSymbol())) {
+        }else if (c == TileByte.SwitchOff.getSymbol()) {
             return Color.darkGray;
-        }else if (c.equals(TileString.SwitchOn.getSymbol())) {
+        }else if (c == TileByte.SwitchOn.getSymbol()) {
             return Color.lightGray;
-        }else if (c.equals(TileString.WireOff.getSymbol())) {
+        }else if (c == TileByte.WireOff.getSymbol()) {
             return new Color(150,0,0);
-        }else if (c.equals(TileString.WireOn.getSymbol())) {
+        }else if (c == TileByte.WireOn.getSymbol()) {
             return Color.RED;
-        }else if (c.equals(TileString.CrossWire.getSymbol())) {
+        }else if (c == TileByte.DoubleWire.getSymbol()) {
             return new Color(110,0,0);
-        }else if (c.equals(TileString.Resistor1.getSymbol())) {
+        }else if (c == TileByte.Resistor1.getSymbol()) {
             return new Color(10,140,10);
-        }else if (c.equals(TileString.Resistor3.getSymbol())) {
+        }else if (c == TileByte.Resistor3.getSymbol()) {
             return new Color(10,120,10);
-        }else if (c.equals(TileString.Resistor5.getSymbol())) {
+        }else if (c == TileByte.Resistor5.getSymbol()) {
             return new Color(10,100,10);
+        }else if (c == TileByte.Resistor10.getSymbol()) {
+            return new Color(10,80,10);
+        }else if (c == TileByte.Xor.getSymbol()) {
+            return new Color(200,120,20);
         }else {
+            //System.out.println("paint(): given c: " + c);
             return Color.GRAY;
         }
     }
 
     // Method to update the size of the game screen and recalculate the tile dimensions
     public void updateSize() {
-        WIDTH = super.getWidth();
-        HEIGHT = super.getHeight();
+        WIDTH = (short) super.getWidth();
+        HEIGHT = (short) super.getHeight();
         super.setSize(WIDTH, HEIGHT);
     }
     //
-    public void setTileSize(final int tw, final int th) {
+    public void setTileSize(final byte tw, final byte th) {
         tileWidth = tw;
         tileHeight = th;
     }

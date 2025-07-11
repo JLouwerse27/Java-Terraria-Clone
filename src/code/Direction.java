@@ -12,27 +12,56 @@ package src.code;
  * </ul>
  */
 // Enum to represent the four cardinal directions
+//public enum Direction {
+//    UP("dU"),
+//    DOWN("dD"),
+//    LEFT("dL"),
+//    RIGHT("dR"),
+//    NONE("dN"),
+//    INTO("dI"), //away from player
+//    OUTOF("dO"); //to the player
+//
+//    private final String symbol;
+//
+//    //Direction(String symbol) {this.symbol = symbol;}
+//    Direction(String symbol) {this.symbol = symbol;}
+//
+//    //returns the symbol String
+//    public String getSymbol() {
+//        return symbol;
+//    }
+//
+//    public static Direction fromSymbol(String symbol) {
+//        for (Direction d : values()) {
+//            if (d.symbol.equals(symbol)) {
+//                return d;
+//            }
+//        }
+//        throw new IllegalArgumentException("Invalid direction symbol: " + symbol);
+//    }
+//}
+
+// Enum to represent the four cardinal directions
 public enum Direction {
-    UP("dU"),
-    DOWN("dD"),
-    LEFT("dL"),
-    RIGHT("dR"),
-    NONE("dN"),
-    INTO("dI"), //away from player
-    OUTOF("dO"); //to the player
+    NONE((byte)0),
+    UP((byte)1),
+    RIGHT((byte)2),
+    DOWN((byte)3),
+    LEFT((byte)4),
+    INTO((byte)5), //away from player
+    OUTOF((byte)6); //to the player
 
-    private final String symbol;
+    private final Byte symbol;
 
-    Direction(String symbol) {
-        this.symbol = symbol;
-    }
+    //Direction(String symbol) {this.symbol = symbol;}
+    Direction(Byte symbol) {this.symbol = symbol;}
 
     //returns the symbol String
-    public String getSymbol() {
+    public Byte getSymbol() {
         return symbol;
     }
 
-    public static Direction fromSymbol(String symbol) {
+    public static Direction fromSymbol(Byte symbol) {
         for (Direction d : values()) {
             if (d.symbol.equals(symbol)) {
                 return d;

@@ -1,12 +1,15 @@
 package src.code;
 
-import javax.swing.*;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
-import java.sql.SQLOutput;
+import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Date;
 import java.util.List;
+
+import static src.code.Main.keys;
 
 /**
  * Class for gates made from a grid via user clicking on a tile grid.
@@ -31,21 +34,21 @@ public class BreadBoard {
     /**Empty is 0 in itemEnum*/
     private final static int EMPTY_TYPE = 0;
 
-    private final int WIDTH;
-    private final int HEIGHT;
-    private final int ZHEIGHT;
+    private final short WIDTH;
+    private final short HEIGHT;
+    private final byte ZHEIGHT;
 
-    final int TOP_Z;
-    final int BOTTOM_Z;
+    final byte TOP_Z;
+    final byte BOTTOM_Z;
 
-    final static int SIGNAL_ARRAY_LENGTH = 400;
-    final static int SIGNAL_ARRAY_D_PLACE = 0;
-    final static int SIGNAL_ARRAY_S_PLACE = 1;
-    final static int SIGNAL_ARRAY_X_PLACE = 2;
-    final static int SIGNAL_ARRAY_Y_PLACE = 3;
-    final static int SIGNAL_ARRAY_Z_PLACE = 4;
-    final static int SIGNAL_ARRAY_TICK_PLACE = 5;
-    final static int MAX_TICKS_IN_THE_FUTURE = 100;
+    final static short SIGNAL_ARRAY_LENGTH = 50;
+    final static byte SIGNAL_ARRAY_D_PLACE = 0;
+    final static byte SIGNAL_ARRAY_S_PLACE = 1;
+    final static byte SIGNAL_ARRAY_X_PLACE = 2;
+    final static byte SIGNAL_ARRAY_Y_PLACE = 3;
+    final static byte SIGNAL_ARRAY_Z_PLACE = 4;
+    final static byte SIGNAL_ARRAY_TICK_PLACE = 5;
+    final static byte MAX_TICKS_IN_THE_FUTURE = 100;
     /**
      * THE width of the signal array for items, which is the location fo the last input thing.
      * So if tick place is the last one and it's equal to 4, then this must be 4.
@@ -59,32 +62,53 @@ public class BreadBoard {
     final static String COPYING_KEYWORD = "COPYING";
     final static String PASTING_KEYWORD = "PASTING";
 
-    final static String EMPTY_SYMBOL      = "__";
-    final static String NOT_SYMBOL        = TileString.Not.getSymbol();
-    final static String OR_SYMBOL         = TileString.Or.getSymbol();
-    final static String AND_SYMBOL        = TileString.And.getSymbol();
-    final static String LED_OFF_SYMBOL   = TileString.LEDOff.getSymbol();
-    final static String LED_ON_SYMBOL    = TileString.LEDOn.getSymbol();
-    final static String BUTTON_OFF_SYMBOL = TileString.ButtonOff.getSymbol();
-    final static String BUTTON_ON_SYMBOL  = TileString.ButtonOn.getSymbol();
-    final static String SWITCH_OFF_SYMBOL = TileString.SwitchOff.getSymbol();
-    final static String SWITCH_ON_SYMBOL  = TileString.SwitchOn.getSymbol();
-    final static String WIRE_OFF_SYMBOL   = TileString.WireOff.getSymbol();
-    final static String WIRE_ON_SYMBOL    = TileString.WireOn.getSymbol();
-    final static String CROSSWIRE_SYMBOL  = TileString.CrossWire.getSymbol();
-    final static String RESISTOR_1_SYMBOL = TileString.Resistor1.getSymbol();
-    final static String RESISTOR_3_SYMBOL = TileString.Resistor3.getSymbol();
-    final static String RESISTOR_5_SYMBOL = TileString.Resistor5.getSymbol();
-    final static String RESISTOR_10_SYMBOL = TileString.Resistor10.getSymbol();
+//    final static String EMPTY_SYMBOL      = TileString.BreadBoardEmpty.getSymbol();
+//    final static String NOT_SYMBOL        = TileString.Not.getSymbol();
+//    final static String OR_SYMBOL         = TileString.Or.getSymbol();
+//    final static String AND_SYMBOL        = TileString.And.getSymbol();
+//    final static String LED_OFF_SYMBOL   = TileString.LEDOff.getSymbol();
+//    final static String LED_ON_SYMBOL    = TileString.LEDOn.getSymbol();
+//    final static String BUTTON_OFF_SYMBOL = TileString.ButtonOff.getSymbol();
+//    final static String BUTTON_ON_SYMBOL  = TileString.ButtonOn.getSymbol();
+//    final static String SWITCH_OFF_SYMBOL = TileString.SwitchOff.getSymbol();
+//    final static String SWITCH_ON_SYMBOL  = TileString.SwitchOn.getSymbol();
+//    final static String WIRE_OFF_SYMBOL   = TileString.WireOff.getSymbol();
+//    final static String WIRE_ON_SYMBOL    = TileString.WireOn.getSymbol();
+//    final static String CROSSWIRE_SYMBOL  = TileString.CrossWire.getSymbol();
+//    final static String RESISTOR_1_SYMBOL = TileString.Resistor1.getSymbol();
+//    final static String RESISTOR_3_SYMBOL = TileString.Resistor3.getSymbol();
+//    final static String RESISTOR_5_SYMBOL = TileString.Resistor5.getSymbol();
+//    final static String RESISTOR_10_SYMBOL = TileString.Resistor10.getSymbol();
+
+    final static byte EMPTY_BYTE        = TileByte.Empty.getSymbol();
+    final static byte NOT_BYTE          = TileByte.Not.getSymbol();
+    final static byte OR_BYTE           = TileByte.Or.getSymbol();
+    final static byte XOR_BYTE          = TileByte.Xor.getSymbol();
+    final static byte AND_BYTE          = TileByte.And.getSymbol();
+    final static byte LED_OFF_BYTE      = TileByte.LEDOff.getSymbol();
+    final static byte LED_ON_BYTE       = TileByte.LEDOn.getSymbol();
+    final static byte BUTTON_OFF_BYTE   = TileByte.ButtonOff.getSymbol();
+    final static byte BUTTON_ON_BYTE    = TileByte.ButtonOn.getSymbol();
+    final static byte SWITCH_OFF_BYTE   = TileByte.SwitchOff.getSymbol();
+    final static byte SWITCH_ON_BYTE    = TileByte.SwitchOn.getSymbol();
+    final static byte WIRE_OFF_BYTE     = TileByte.WireOff.getSymbol();
+    final static byte WIRE_ON_BYTE      = TileByte.WireOn.getSymbol();
+    final static byte DOUBLE_WIRE_BYTE    = TileByte.DoubleWire.getSymbol();
+    final static byte RESISTOR_1_BYTE   = TileByte.Resistor1.getSymbol();
+    final static byte RESISTOR_3_BYTE   = TileByte.Resistor3.getSymbol();
+    final static byte RESISTOR_5_BYTE   = TileByte.Resistor5.getSymbol();
+    final static byte RESISTOR_10_BYTE  = TileByte.Resistor10.getSymbol();
 
 
     private String gamemode = DEFAULT_KEYWORD;
-    public int itemCursor = -1;
+    public byte itemCursor = 0;
 
 
     public List<BreadBoardItem> breadBoardItemsList = new ArrayList<BreadBoardItem>();
+    /**
+     * Clickable Breadboard Items List
+     */
     public List<CBreadBoardItem> cBreadBoardItemsList = new ArrayList<CBreadBoardItem>();
-
 
     /**
      * Okay, so there's three types of classes for our BreadBoard:
@@ -108,20 +132,37 @@ public class BreadBoard {
      *
      */
     //note: shortened (removed S and W and L
-    private String[] itemEnum = {
-            EMPTY_SYMBOL,
-            SWITCH_OFF_SYMBOL,
-            WIRE_OFF_SYMBOL,
-            CROSSWIRE_SYMBOL,
-            NOT_SYMBOL,
-            OR_SYMBOL,
-            AND_SYMBOL,
-            LED_OFF_SYMBOL,
-            RESISTOR_1_SYMBOL,
-            RESISTOR_3_SYMBOL,
-            RESISTOR_5_SYMBOL,
-            RESISTOR_10_SYMBOL
+//    private String[] itemEnum = {
+//            EMPTY_SYMBOL,
+//            SWITCH_OFF_SYMBOL,
+//            WIRE_OFF_SYMBOL,
+//            CROSSWIRE_SYMBOL,
+//            NOT_SYMBOL,
+//            OR_SYMBOL,
+//            AND_SYMBOL,
+//            LED_OFF_SYMBOL,
+//            RESISTOR_1_SYMBOL,
+//            RESISTOR_3_SYMBOL,
+//            RESISTOR_5_SYMBOL,
+//            RESISTOR_10_SYMBOL
+//    };
+
+    //note: shortened (removed S and W and L
+    private byte[] itemEnumBytes = {
+            EMPTY_BYTE,
+            SWITCH_OFF_BYTE,
+            WIRE_OFF_BYTE,
+            DOUBLE_WIRE_BYTE,
+            NOT_BYTE,
+            OR_BYTE,
+            AND_BYTE,
+            LED_OFF_BYTE,
+            RESISTOR_1_BYTE,
+            RESISTOR_3_BYTE,
+            RESISTOR_5_BYTE,
+            RESISTOR_10_BYTE
     };
+
 
     //full version
     //private String[] fullItemEnum = {"_","s", "w", "X", "N","O","A","l"};
@@ -140,9 +181,13 @@ public class BreadBoard {
     }
 
     //current breadboard stuff; different from default - I think.
-    private String[][][] breadboard;
+    //private String[][][] breadboard;
     private Direction[][][] breadboardDirection;
     private Direction[][][] breadboardDirection2;
+
+    private byte[][][] breadboardByte;
+    //private Direction[][][] breadboardDirectionByte;
+    //private Direction[][][] breadboardDirectionByte2;
 
     private String [][][] defaultBreadboard = {
             {//top
@@ -205,84 +250,87 @@ public class BreadBoard {
             return dU;
         }else if(s.equals("d")){
             return dD;
-        }else if(s.equals("n") || s.equals(EMPTY_SYMBOL)){
+        }else if(s.equals("n") || s.equals(" ")){
             return dN;
         }
         return null;
     }
 
-    public int convertToItemEnumOrdinal(final String s) {
-        String sym = s.trim();
-        if (sym.equals(EMPTY_SYMBOL)) {
-            return 0;
-        } else if (sym.equals(SWITCH_OFF_SYMBOL) || sym.equals(SWITCH_ON_SYMBOL)) {
-            return 1;
-        } else if (sym.equals(WIRE_OFF_SYMBOL) || sym.equals(WIRE_ON_SYMBOL)) {
-            return 2;
-        } else if (sym.equals(CROSSWIRE_SYMBOL)) {
-            return 3;
-        } else if (sym.equals(NOT_SYMBOL)) {
-            return 4;
-        } else if (sym.equals(OR_SYMBOL)) {
-            return 5;
-        } else if (sym.equals(AND_SYMBOL)) {
-            return 6;
-        } else if (sym.equals(LED_OFF_SYMBOL) || sym.equals(LED_ON_SYMBOL)) {
-            return 7;
-        } else if (sym.equals(RESISTOR_1_SYMBOL)) {
-            return 8;
-        } else if (sym.equals(RESISTOR_3_SYMBOL)) {
-            return 9;
-        }  else {
-            return -1;
-        }
+    public Direction convertToDirectionBytes(final byte s){
+        return Direction.fromSymbol(s);
     }
 
     /**
-     *
-     * @param ts tile string
+     * Converts given parameters into a new Breadboard Object
+     * @param tb tile byte
      * @param d direction1
      * @param d2 direction2
      * @param x
      * @param y
      * @return proper BreadBoardItemm
      */
-    private BreadBoardItem convertToType(final String ts, final Direction d, final Direction d2, int x, final int y, final int z){
-        if (ts.equals(SWITCH_OFF_SYMBOL)) {
+    private BreadBoardItem convertToTypeBytes(final byte tb, final Direction d, final Direction d2, final short x, final short y, final byte z) {
+        if (tb == SWITCH_OFF_BYTE) {
             return new Switch(false, d, x, y, z);
-        } else if (ts.equals(SWITCH_ON_SYMBOL)) {
+        } else if (tb == SWITCH_ON_BYTE) {
             return new Switch(true, d, x, y, z);
-        } else if (ts.equals(WIRE_OFF_SYMBOL) || ts.equals(WIRE_ON_SYMBOL)) {
-            return new Wire(d, x, y, z);
-        } else if (ts.equals(CROSSWIRE_SYMBOL)) {
+        } else if (tb == WIRE_OFF_BYTE || tb == WIRE_ON_BYTE) {
+            return new Wire(d, d2, x, y, z);
+        } else if (tb == DOUBLE_WIRE_BYTE) {
             return new DoubleWire(d, d2, x, y, z);
-        } else if (ts.equals(NOT_SYMBOL)) {
+        } else if (tb == NOT_BYTE) {
             return new Not(d, x, y, z);
-        } else if (ts.equals(AND_SYMBOL)) {
+        } else if (tb == AND_BYTE) {
             return new And(d, x, y, z);
-        } else if (ts.equals(OR_SYMBOL)) {
+        } else if (tb == OR_BYTE) {
             return new Or(d, x, y, z);
-        } else if (ts.equals(LED_ON_SYMBOL)) {
+        } else if (tb == XOR_BYTE) {
+            return new Xor(d, x, y, z);
+        } else if (tb == LED_ON_BYTE) {
             return new LED(true, d, x, y, z);
-        } else if (ts.equals(LED_OFF_SYMBOL)) {
+        } else if (tb == LED_OFF_BYTE) {
             return new LED(false, d, x, y, z);
-// Resistors
-        } else if (ts.equals(RESISTOR_1_SYMBOL)) {
+            // Resistors
+        } else if (tb == RESISTOR_1_BYTE) {
             return new Resistor1(d, x, y, z);
-        } else if (ts.equals(RESISTOR_3_SYMBOL)) {
+        } else if (tb == RESISTOR_3_BYTE) {
             return new Resistor3(d, x, y, z);
-        } else if (ts.equals(RESISTOR_5_SYMBOL)) {
+        } else if (tb == RESISTOR_5_BYTE) {
             return new Resistor5(d, x, y, z);
-        } else if (ts.equals(RESISTOR_10_SYMBOL)) {
+        } else if (tb == RESISTOR_10_BYTE) {
             return new Resistor10(d, x, y, z);
-
-        } else if (ts.equals(EMPTY_SYMBOL)) {
+        } else if (tb == EMPTY_BYTE) {
             return null;
         } else {
-            System.out.println("Unknown tile: " + breadboard[z][y][x] + " at " + x + "," + y);
+            System.out.println("Unknown tile: " + tb);
             return null;
         }
     }
+
+    /**
+     * Converts given parameters into a new CBreadBoardItem Object
+     * @param tb tile byte
+     * @param d direction1
+     * @param d2 direction2
+     * @param x
+     * @param y
+     * @return proper BreadBoardItemm
+     */
+    private CBreadBoardItem convertToClickableTypeBytes(final byte tb, final Direction d, final Direction d2, final short x, final short y, final byte z) {
+        if (tb == SWITCH_OFF_BYTE) {
+            return new Switch(false, d, x, y, z);
+        } else if (tb == SWITCH_ON_BYTE) {
+            return new Switch(true, d, x, y, z);
+        } if (tb == BUTTON_OFF_BYTE) {
+            return new Button(false, d, x, y, z);
+        } else if (tb == BUTTON_ON_BYTE) {
+            return new Button(true, d, x, y, z);
+        }else {
+            System.out.println("cTCTB(): Unknown tile: " + tb);
+            return null;
+        }
+    }
+
 
     /**
      * Returns the index of the current item if it matches the coordinates
@@ -292,6 +340,7 @@ public class BreadBoard {
      * @return index the item matches, or -1
      */
     public int getBreadBoardItemIndexAtCoordinates(final int x, final int y, final int z) {
+        //System.out.println("size of bbil: " + breadBoardItemsList.size());
         for (int index = 0; index < breadBoardItemsList.size(); index++) {
             if (breadBoardItemsList.get(index).getX() == x && breadBoardItemsList.get(index).getY() == y && breadBoardItemsList.get(index).getZ() == z) {
                 //System.out.println("got index " + index);
@@ -308,7 +357,7 @@ public class BreadBoard {
      * @param y position
      * @return index the item matches, or -1
      */
-    private int GetClickableBreadBoardItemAtCoordinates(final int x, final int y, final int z) {
+    private int getClickableBreadBoardItemIndexAtCoordinates(final short x, final short y, final byte z) {
         for (int index = 0; index < cBreadBoardItemsList.size(); index++) {
             if (cBreadBoardItemsList.get(index).getX() == x
                     && cBreadBoardItemsList.get(index).getY() == y
@@ -320,212 +369,221 @@ public class BreadBoard {
         return -1;
     }
 
-    public boolean changeBreadBoard(final int type, final Direction dir1,
-                                    final Direction dir2, final int x, final int y, final int z){
+    /**
+     * Sets the corresponding item lists based off the type, directions, and coordinates
+     * @param type
+     * @param dir1
+     * @param dir2
+     * @param x
+     * @param y
+     * @param z
+     * @return
+     */
+    public boolean changeBreadBoardBytes(final byte type, final Direction dir1,
+                                    final Direction dir2, final short x, final short y, final byte z){
 
-        if(x < 0 || y < 0 || y > breadboard[z].length || x > breadboard[z][y].length){
+        if(x < 0 || y < 0 || y > breadboardByte[z].length || x > breadboardByte[z][y].length){
             return false;
         }
 
-        if(type == -1) {//any type, changes every click
+        if(type == TileByte.Any.getSymbol()) {//any type, changes every click
             //first remove the existing object
             int theOne = 0;
+
+            if (getClickableBreadBoardItemIndexAtCoordinates(x, y, z) != -1) {
+                int index = getClickableBreadBoardItemIndexAtCoordinates(x, y, z);
+                cBreadBoardItemsList.remove(index);
+            }
+
             if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1) {
                 int index = getBreadBoardItemIndexAtCoordinates(x, y, z);
                 breadBoardItemsList.remove(index);
                 theOne = index;
             }
-            if (GetClickableBreadBoardItemAtCoordinates(x, y, z) != -1) {
-                int index = GetClickableBreadBoardItemAtCoordinates(x, y, z);
-                cBreadBoardItemsList.remove(index);
-            }
 
-            for (int index = 0; index < itemEnum.length; index++) {
-                if (breadboard[z][y][x].toUpperCase().equals(itemEnum[index])
-                        || breadboard[z][y][x].toLowerCase().equals(itemEnum[index])) {
-                    if (index + 1 >= itemEnum.length) {
+
+            for (byte index = 0; index < itemEnumBytes.length; index++) {
+                if (breadboardByte[z][y][x] == index){
+                        //|| breadboardByte[z][y][x].toLowerCase().equals(itemEnum[index])) { //HAVE TO CHECK FOR ON WIRES AND LEDS AND SWITCHES
+                    if (index + 1 >= itemEnumBytes.length) {
                         index = -1;
                     } else {
                         breadBoardItemsList.add(theOne,
-                                convertToType(itemEnum[index + 1], dN,dN, x, y, z));
+                                //convertToType(itemEnum[index + 1], dN,dN, x, y, z));
+                                convertToTypeBytes(index, dN,dN, x, y, z));
                     }
-                    breadboardDirection[z][y][x] = dN;//call this before cuz of repaint in next fn
-                    setBreadBoardTile(itemEnum[index + 1], x, y, z);
+                    breadboardDirection[z][y][x] = dN;//call this before return, cuz of repaint in next fn
+                    breadboardDirection2[z][y][x] = dN;
+                    setBreadBoardTileByte(type, x, y, z);
                     return true;
                 }
             }
-        }else if(type == 0) {//empty
+        }else if(type == TileByte.Empty.getSymbol()) {//empty
             //first remove the existing object if it's not a wire
             int theOne = 0;
-            if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1
-                    && !breadboard[z][y][x].toLowerCase().equals(itemEnum[type])) {
+            if (getClickableBreadBoardItemIndexAtCoordinates(x,y,z) != -1 && !(breadboardByte[z][y][x] == type))
+            {
+                int index = getClickableBreadBoardItemIndexAtCoordinates(x, y, z);
+                cBreadBoardItemsList.remove(index);
+            }
+            if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1 && !(breadboardByte[z][y][x] == type))
+            {
                 int index = getBreadBoardItemIndexAtCoordinates(x, y, z);
                 breadBoardItemsList.remove(index);
-                theOne = index;
             }
             breadboardDirection[z][y][x] = dN;//call this before cuz of repaint in next fn
             breadboardDirection2[z][y][x] = dN;//call this before cuz of repaint in next fn
-            setBreadBoardTile(itemEnum[type], x, y, z);
+            //setBreadBoardTile(itemEnum[type], x, y, z);
+            setBreadBoardTileByte(type, x, y, z);
         }else {//anything else
             //first remove the existing object if it's not a wire
             int theOne = 0;
-            if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1
-            && !breadboard[z][y][x].toLowerCase().equals(itemEnum[type])) {
+            int theCOne = -1;
+
+            //remove any "ClickableBreadBoardItems"
+            if (getClickableBreadBoardItemIndexAtCoordinates(x, y, z) != -1){
+                int index = getClickableBreadBoardItemIndexAtCoordinates(x, y, z);
+                cBreadBoardItemsList.remove(index);
+                theCOne = index;
+            }
+            //remove any general "BreadboardItems"
+            if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1){
                 int index = getBreadBoardItemIndexAtCoordinates(x, y, z);
                 breadBoardItemsList.remove(index);
                 theOne = index;
             }
+
             breadBoardItemsList.add(theOne,
-                    convertToType(itemEnum[type], dir1,dir2, x, y, z));
+                    //convertToType(itemEnum[type], dir1,dir2, x, y, z));
+                    convertToTypeBytes(type, dir1,dir2, x, y, z));
+            if(theCOne != -1 &&
+                    convertToClickableTypeBytes(type, dir1,dir2, x, y, z) != null) {
+                cBreadBoardItemsList.add(theCOne, convertToClickableTypeBytes(type, dir1,dir2, x, y, z));
+            }
             //System.out.println("changeBreadBoard(): breadBoardItemesList has been added to");
             breadboardDirection[z][y][x] = dir1;//call this before cuz of repaint in next fn
             breadboardDirection2[z][y][x] = dir2;
-            setBreadBoardTile(itemEnum[type], x, y, z);
+            //setBreadBoardTile(itemEnum[type], x, y, z);
+            setBreadBoardTileByte(type, x, y, z);
         }
         return true;//fix later for other cases
     }
 
     /**
-     * Sets all the arrays, preferably from BreadBoardFileLoader.java
+     * Byte version of setBreadBoardState
      * @param tiles
      * @param dir1
      * @param dir2
      */
-    public void setBreadBoardState(String[][][] tiles, Direction[][][] dir1, Direction[][][] dir2) {
-        for (int z = 0; z < ZHEIGHT; z++) {
-            for (int y = 0; y < HEIGHT; y++) {
-                for (int x = 0; x < WIDTH; x++) {
-                    String tile = tiles[z][y][x];
+    public void setBreadBoardStateByte(byte[][][] tiles, Direction[][][] dir1, Direction[][][] dir2) {
+        for (byte z = 0; z < ZHEIGHT; z++) {
+            for (short y = 0; y < HEIGHT; y++) {
+                for (short x = 0; x < WIDTH; x++) {
+                    byte tile = tiles[z][y][x];
                     Direction d1 = dir1[z][y][x];
                     Direction d2 = dir2[z][y][x];
 
-                    setBreadBoardTile(tile, x, y, z);
+                    setBreadBoardTileByte(tile, x, y, z);
+                    //System.out.println("called setBBTB");
                     setBreadBoardDirectionTile(d1, x, y, z);
                     setBreadBoardDirection2Tile(d2, x, y, z);
 
-                    int type = convertToItemEnumOrdinal(tile);
-                    if (type != -1) {
-                        changeBreadBoard(type, d1, d2, x, y, z);
-                    } else {
-                        String raw = tiles[z][y][x];
-                        System.out.printf("weoa: raw='%s' tile='%s' at (%d,%d,%d)%n",
-                                raw, tile, x, y, z);
-                        System.out.println("length = " + raw.length() + " char codes: " + Arrays.toString(raw.toCharArray()));
-                    }
+                    addNewItemToBreadBoardItemsListByte(x,y,z,d1,d2);
+
+                    //int type = convertToItemEnumOrdinal(tile);
+//                    if (tile != -1) {
+//                        changeBreadBoardBytes(tile, d1, d2, x, y, z);
+//                    } else {
+//                        byte raw = tiles[z][y][x];
+//                        System.out.printf("setBreadBoardState(): ERROR SETTING TILES raw='%s' tile='%s' at (%d,%d,%d)%n",
+//                                raw, tile, x, y, z);
+//                        //System.out.println("length = " + raw.length() + " char codes: " + Arrays.toString(raw.toCharArray()));
+//                    }
                 }
             }
         }
     }
 
+    public void addNewItemToBreadBoardItemsListByte(final short x, final short y, final byte z, final Direction d, final Direction d2) {
 
-    public BreadBoard(final int width, final int height, final int zHeight) {
+        switch (TileByte.fromSymbol(breadboardByte[z][y][x])) {
+            case TileByte.ButtonOn:
+                breadBoardItemsList.add(new Button(true, d, x, y, z));
+                break;
+            case TileByte.ButtonOff:
+                breadBoardItemsList.add(new Button(false, d, x, y, z));
+                break;
+            case TileByte.SwitchOn:
+                breadBoardItemsList.add(new Switch(true, d, x, y, z));
+                break;
+            case TileByte.SwitchOff:
+                breadBoardItemsList.add(new Switch(false, d, x, y, z));
+                break;
+            case TileByte.LEDOff:
+                breadBoardItemsList.add(new LED(false, d, x, y, z));
+                break;
+            case TileByte.LEDOn:
+                breadBoardItemsList.add(new LED(false, d, x, y, z));
+                break;
+            case TileByte.WireOff:
+                breadBoardItemsList.add(new Wire(d, d2, x, y, z));
+                //System.out.println("Placed wire at " + x + "," + y + "," + z);
+                break;
+            case TileByte.And:
+                breadBoardItemsList.add(new And(d, x, y, z));
+                break;
+            case TileByte.Not:
+                breadBoardItemsList.add(new Not(d, x, y, z));
+                break;
+            case TileByte.Or:
+                breadBoardItemsList.add(new Or(d, x, y, z));
+                break;
+            case TileByte.WireOn:
+                breadBoardItemsList.add(new Wire(d, d2, x, y, z));
+                break;
+            case TileByte.DoubleWire:
+                breadBoardItemsList.add(new DoubleWire(d, d2, x, y, z));
+                break;
+            case TileByte.Resistor1:
+                breadBoardItemsList.add(new Resistor1(d, x, y, z));
+                break;
+            case TileByte.Resistor3:
+                breadBoardItemsList.add(new Resistor3(d, x, y, z));
+                break;
+            case TileByte.Resistor5:
+                breadBoardItemsList.add(new Resistor5(d, x, y, z));
+                break;
+            case TileByte.Resistor10:
+                breadBoardItemsList.add(new Resistor10(d, x, y, z));
+                break;
+            case TileByte.Xor:
+                breadBoardItemsList.add(new Xor(d, x, y, z));
+                break;
+            case TileByte.Empty:
+                break;
+            default:
+                System.out.println("ERROR LOADING TILES IN BREADBOARD CONSTRUCTOR!");
+                break;
+        }
+
+    }
+
+
+    public BreadBoard(final short width, final short height, final byte zHeight) {
         WIDTH = width;
         HEIGHT = height;
         ZHEIGHT = zHeight;
-        System.out.println("WIDTH " + WIDTH + ", HEIGHT " + HEIGHT + ", ZHEIGHT " + ZHEIGHT);
-        TOP_Z = zHeight - 1;
+        System.out.println("Breadboard(): WIDTH " + WIDTH + ", HEIGHT " + HEIGHT + ", ZHEIGHT " + ZHEIGHT);
+        TOP_Z = (byte) (zHeight - 1);
         BOTTOM_Z = 0;
-        if(WIDTH != Main.DEFAULT_SCREEN_SIZE && HEIGHT != Main.DEFAULT_SCREEN_SIZE && ZHEIGHT != Main.DEFAULT_SCREEN_SIZE){
-            breadboard = new String[zHeight][height][width];
-            breadboardDirection = new Direction[zHeight][height][width];
-            breadboardDirection2 = new Direction[zHeight][height][width];
-            for (int i = 0; i < zHeight; i++) {
-                for (int j = 0; j < height; j++) {
-                    for (int k = 0; k < width; k++) {
+        //if(WIDTH != Main.DEFAULT_SCREEN_SIZE && HEIGHT != Main.DEFAULT_SCREEN_SIZE && ZHEIGHT != Main.DEFAULT_SCREEN_SIZE){
+        //breadboard = new String[zHeight][height][width];
+        breadboardByte = new byte[zHeight][height][width];
+        breadboardDirection = new Direction[zHeight][height][width];
+        breadboardDirection2 = new Direction[zHeight][height][width];
 
-                        breadboard[i][j][k] = EMPTY_SYMBOL;
-                        breadboardDirection[i][j][k] = dN;
-                        breadboardDirection2[i][j][k] = dN;
-
-                        if (i < defaultBreadboard.length && j < defaultBreadboard[i].length && k < defaultBreadboard[i][j].length) {
-                            breadboard[i][j][k] = defaultBreadboard[i][j][k];
-                            breadboardDirection[i][j][k] = defaultBreadboardDirection[i][j][k];
-                            breadboardDirection2[i][j][k] = defaultBreadboardDirection2[i][j][k];
-                        }
-                    }
-                }
-            }
-        }else{
-            breadboard = defaultBreadboard;
-            breadboardDirection = defaultBreadboardDirection;
-            breadboardDirection2 = defaultBreadboardDirection2;
-        }
-
-        setSignalArrayToNull();
-
-        //setTilesInMain(breadboard);
-        for (int i = 0; i < breadboard.length; i++){
-            for (int j = 0; j < breadboard[i].length; j++) {
-                for (int k = 0; k < breadboard[i][j].length; k++) {
-                    Direction d = breadboardDirection[i][j][k];
-                    Direction d2 = breadboardDirection2[i][j][k];
-                    switch (breadboard[i][j][k]) {
-                        case "BB":
-                            breadBoardItemsList.add(new Button(true, d, k, j, i));
-                            break;
-                        case "Bb":
-                            breadBoardItemsList.add(new Button(false, d, k, j, i));
-                            break;
-                        case "BS":
-                            breadBoardItemsList.add(new Switch(true, d, k, j, i));
-                            break;
-                        case "Bs":
-                            breadBoardItemsList.add(new Switch(false, d, k, j, i));
-                            break;
-                        case "BL":
-                            breadBoardItemsList.add(new LED(false, d, k, j, i));
-                            setBreadBoardTile("Bl", k, j, i);//no LED should be on by default
-                            break;
-                        case "Bl":
-                            breadBoardItemsList.add(new LED(false, d, k, j, i));
-                            break;
-                        case "Bw":
-                            breadBoardItemsList.add(new Wire(d, k, j, i));
-                            System.out.println("Placed wire at " + k + "," + j + "," + i);
-                            break;
-                        case "BA":
-                            breadBoardItemsList.add(new And(d, k, j, i));
-                            break;
-                        case "BN":
-                            breadBoardItemsList.add(new Not(d, k, j, i));
-                            break;
-                        case "BO":
-                            breadBoardItemsList.add(new Or(d, k, j, i));
-                            break;
-                        case "BW":
-                            breadBoardItemsList.add(new Wire(d, k, j, i));
-                            setBreadBoardTile("Bw",k, j, i);//no wire should be on by default
-                            break;
-                        case "BX":
-                            breadBoardItemsList.add(new DoubleWire(d, d2, k, j, i));
-                            break;
-                        case "R1":
-                            breadBoardItemsList.add(new Resistor1(d, k, j, i));
-                            break;
-                        case "R3":
-                            breadBoardItemsList.add(new Resistor3(d, k, j, i));
-                            break;
-                        case "R5":
-                            breadBoardItemsList.add(new Resistor5(d, k, j, i));
-                            break;
-                        case "R10":
-                            breadBoardItemsList.add(new Resistor10(d, k, j, i));
-                            break;
-                        case "__":
-                            break;
-                        default:
-                            System.out.println("ERROR LOADING TILES IN BREADBOARD CONSTRUCTOR!");
-                            break;
-                    }
-                }
-            }
-        }
-        //setTilesInMain();
+         setSignalArrayToNull();
     }
-
-//    private void setTilesInMain(final String[][] bb) {
-//        Main.setTiles(WIDTH, bb);
-//    }
 
     /**
      * Checks clicks and calls update breadboard
@@ -535,46 +593,52 @@ public class BreadBoard {
      * @param y
      * @return whether the program should repaint or not
      */
-    public boolean checkClick(final MouseEvent e, int x, final int y, final int layer) {
+    public boolean checkClick(final MouseEvent e, short x, final short y, final byte layer) {
         //System.out.println("checkClick at " + x + ", " + y);
         if(gamemode.equals(DEFAULT_KEYWORD))
         {
             for(CBreadBoardItem cbi:cBreadBoardItemsList)
             {
+                //check if it is within the width and height of the clickableBreadBoardItem
                 if(x >= cbi.getX() * MyGameScreen.tileWidth &&
                         x < cbi.getX() * MyGameScreen.tileWidth + MyGameScreen.tileWidth
                         && y >= cbi.getY() * MyGameScreen.tileHeight &&
                         y < cbi.getY() * MyGameScreen.tileHeight + MyGameScreen.tileHeight)
                 {
                     cbi.set(true);//true is just a necessary thing, not actually used
-                    setBreadBoardTile(cbi.returnTile(),cbi.getX(),cbi.getY(), cbi.getZ());
+                    //setBreadBoardTile(cbi.returnTile(),cbi.getX(),cbi.getY(), cbi.getZ());
+                    setBreadBoardTileByte(cbi.returnTile(),cbi.getX(),cbi.getY(), cbi.getZ());
                     return true;
                 }
             }
         }else if (gamemode.equals(EDITING_KEYWORD))
         {
-            if (!Main.getCopying()) {
+            if (!Main.getCopying() && !Main.getCutting()) {
                 //System.out.println("mouse click:" + e.getButton());
-                int tile_x = x / MyGameScreen.tileWidth;
-                int tile_y = y / MyGameScreen.tileHeight;
+                short tile_x = (short) (x / MyGameScreen.tileWidth);
+                short tile_y = (short) (y / MyGameScreen.tileHeight);
 
                 if (tile_x >= 0 && tile_x < MyGameScreen.xPixels
                         && tile_y >= 0 && tile_y < MyGameScreen.yPixels)
                 {
                     if (e.getButton() == MouseEvent.BUTTON3)
                     {//right click
-                        return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y, layer);//0 is empty space
+                        //return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y, layer);//0 is empty space
+                        return changeBreadBoardBytes(TileByte.Empty.getSymbol(), dN, dN, tile_x, tile_y, layer);//0 is empty space
                     } else if (e.getButton() == MouseEvent.BUTTON1)
-                    {
-                        return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y, layer);
+                    {//left click
+//                        return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y, layer);
+                        return changeBreadBoardBytes(itemCursor, dN, dN, tile_x, tile_y, layer);
                     }else if (e.getButton() == MouseEvent.NOBUTTON)
                     { // drag ======= MAY HAVE TO CHANGE ========
                         if(Main.mouseClickNumber[0] == MouseEvent.BUTTON1)
                         {//drag left click
-                            return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y, layer);
+//                            return changeBreadBoard(itemCursor, dN, dN, tile_x, tile_y, layer);
+                            return changeBreadBoardBytes(itemCursor, dN, dN, tile_x, tile_y, layer);
                         }else if (Main.mouseClickNumber[0] == MouseEvent.BUTTON3)
-                        {//drag left click
-                            return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y, layer);
+                        {//drag right click
+                            //return changeBreadBoard(EMPTY_TYPE, dN, dN, tile_x, tile_y, layer);
+                            return changeBreadBoardBytes(TileByte.Empty.getSymbol(), dN, dN, tile_x, tile_y, layer);
                         }
                     }
                 } else
@@ -587,15 +651,16 @@ public class BreadBoard {
             int sX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
             if(sX < 0) sX = 0;
 
-            int sY = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
+            int sY = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
             if(sY < 0) sY = 0;
 
             int eX = (int)(Main.mouseX[1] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
             if(eX > MyGameScreen.xPixels) eX = MyGameScreen.xPixels;
 
-            int eY = (int)(Main.mouseY[1] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
+            int eY = (int)(Main.mouseY[1] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
             if(eY > MyGameScreen.yPixels) eY = MyGameScreen.yPixels;
 
+            System.out.println("selecting entities with: sX" + sX + ", sY" + sY + ", eX" + eX + ", eY" + eY);
             selectEntities(sX,sY,BOTTOM_Z,eX,eY,TOP_Z);
 
             if(gamemode.equals(CUTTING_KEYWORD)) {
@@ -625,6 +690,16 @@ public class BreadBoard {
             return;
         }else if(sX == eX || sY == eY || sZ == eZ)
         {//one of the lengths is zero
+            if(sZ == eZ){
+                System.out.println("sZ == eZ");
+            }
+            if(sX == eX){
+                System.out.println("sX == eX");
+            }
+            if(sY == eY){
+                System.out.println("sY == eY");
+            }
+            //System.out.println("one of the lengths is zero");
             return;
         }
 
@@ -633,9 +708,14 @@ public class BreadBoard {
         int dY = eY - sY;
         int dZ = eZ - sZ;
 
-        String[][][] tempCutCopyPasteBoard = new String[dZ][dY][dX];
+//        String[][][] tempCutCopyPasteBoard = new String[dZ][dY][dX];
+//        Direction[][][] tempCutCopyPasteBoardDir1 = new Direction[dZ][dY][dX];
+//        Direction[][][] tempCutCopyPasteBoardDir2 = new Direction[dZ][dY][dX];
+
+        byte[][][] tempCutCopyPasteBoard = new byte[dZ][dY][dX];
         Direction[][][] tempCutCopyPasteBoardDir1 = new Direction[dZ][dY][dX];
         Direction[][][] tempCutCopyPasteBoardDir2 = new Direction[dZ][dY][dX];
+
 
 //        System.out.println("temp board at: "
 //                + sX
@@ -647,29 +727,29 @@ public class BreadBoard {
 //                + ", "
 //                + tempCutCopyPasteBoard.length);
 
+        //reset the temp lists in mgs
         Main.getMyGameScreen().tempCutCopyPasteBoardList.clear();
         Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.clear();
         Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.clear();
         //set the board to the actual breadboard pieces
         for(int i = 0; i < dZ; i++) {
+            Main.getMyGameScreen().tempCutCopyPasteBoardList.add(new ArrayList<>());
+            Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.add(new ArrayList<>());
+            Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.add(new ArrayList<>());
+
             for (int j = 0; j < dY; j++) {
+                Main.getMyGameScreen().tempCutCopyPasteBoardList.get(i).add(new ArrayList<>());
+                Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.get(i).add(new ArrayList<>());
+                Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.get(i).add(new ArrayList<>());
+
                 for (int k = 0; k < dX; k++) {
-                    tempCutCopyPasteBoard[i][j][k] = breadboard[i + sZ][j + sY][k + sX];
+                    tempCutCopyPasteBoard[i][j][k] = breadboardByte[i + sZ][j + sY][k + sX];
                     tempCutCopyPasteBoardDir1[i][j][k] = breadboardDirection[i + sZ][j + sY][k + sX];
                     tempCutCopyPasteBoardDir2[i][j][k] = breadboardDirection2[i + sZ][j + sY][k + sX];
 
-//                    //add the section of the board arrays to the board lists in mgs
-//                    Main.getMyGameScreen().tempCutCopyPasteBoardList.add(
-//                            new ArrayList<>(new ArrayList<>(Arrays.asList(tempCutCopyPasteBoard[i][j][k]))));
-//                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.add(
-//                            new ArrayList<>(Arrays.asList(tempCutCopyPasteBoardDir1[i][j][k])));
-//                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.add(
-//                            new ArrayList<>(Arrays.asList(tempCutCopyPasteBoardDir2[i][j][k])));
-
-                    Main.getMyGameScreen().tempCutCopyPasteBoard[i][j][k] = tempCutCopyPasteBoard[i][j][k];
-                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection1[i][j][k] = tempCutCopyPasteBoardDir1[i][j][k];
-                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection2[i][j][k] = tempCutCopyPasteBoardDir2[i][j][k];
-
+                    Main.getMyGameScreen().tempCutCopyPasteBoardList.get(i).get(j).add(tempCutCopyPasteBoard[i][j][k]);
+                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection1List.get(i).get(j).add(tempCutCopyPasteBoardDir1[i][j][k]);
+                    Main.getMyGameScreen().tempCutCopyPasteBoardDirection2List.get(i).get(j).add(tempCutCopyPasteBoardDir2[i][j][k]);
                 }
                 //System.out.println(Main.getMyGameScreen().tempCutCopyPasteBoardList.get(i));
             }
@@ -688,12 +768,13 @@ public class BreadBoard {
      * @param eX ending x
      * @param eY ending y
      */
-    public void eraseRegion(int sX, int sY, int sZ, int eX, int eY, int eZ) {
+    public void eraseRegion(short sX, short sY, byte sZ, short eX, short eY, byte eZ) {
         //System.out.println("called erase region");
-        for (int z = sZ; z < eZ; z++) {
-            for (int y = sY; y < eY; y++) {
-                for (int x = sX; x < eX; x++) {
-                    changeBreadBoard(EMPTY_TYPE, Direction.NONE, Direction.NONE, x, y, z); // sets to EMPTY
+        for (byte z = sZ; z < eZ; z++) {
+            for (short y = sY; y < eY; y++) {
+                for (short x = sX; x < eX; x++) {
+                    //changeBreadBoard(EMPTY_SYMBOL, Direction.NONE, Direction.NONE, x, y, z); // sets to EMPTY
+                    changeBreadBoardBytes(TileByte.Empty.getSymbol(), Direction.NONE, Direction.NONE, x, y, z); // sets to EMPTY
                 }
             }
         }
@@ -718,9 +799,9 @@ public class BreadBoard {
      * Rotates an item on the breadboard; only sif in editing mode.
      * for now just rotates 90 deg to the right
      */
-    public void rotateItem(final int layer, final int x, final int y, final int z) {
+    public void rotateItem(final int dirNumber, final int x, final int y, final int z) {
         if(gamemode.equals(EDITING_KEYWORD)) {
-            if(layer == 0) {//rotate for everything
+            if(dirNumber == 0) {//rotate dir1
                 int num = breadboardDirection[z][y][x].ordinal() + 1;//rotate by adding one to the ordinal
                 if (num >= Direction.values().length) num = 0;//reset to first one if > length
                 breadboardDirection[z][y][x] = Direction.values()[num];
@@ -733,7 +814,7 @@ public class BreadBoard {
             }else {//rotate the second output of DoubleWire
                 if (getBreadBoardItemIndexAtCoordinates(x, y, z) != -1) {
 
-                    if (locateBreadBoardItemOnBoard(x,y, z).returnTile().equals(CROSSWIRE_SYMBOL)) {
+                    if (locateBreadBoardItemOnBoard(x,y, z).returnTile() == TileByte.DoubleWire.getSymbol()) {
 
                         DoubleWire dw = (DoubleWire) locateBreadBoardItemOnBoard(x,y, z);
                         int dirNum = dw.getDir2().ordinal() + 1;
@@ -742,6 +823,16 @@ public class BreadBoard {
                         //to do: implement safety measure so that user cannot make d2 the opposite of d1
                         dw.setDir2(Direction.values()[dirNum]);
 
+                    }else if (locateBreadBoardItemOnBoard(x,y, z).returnTile() == TileByte.WireOn.getSymbol()
+                    || locateBreadBoardItemOnBoard(x,y, z).returnTile() == TileByte.WireOff.getSymbol()) {
+
+                        Wire w = (Wire) locateBreadBoardItemOnBoard(x,y, z);
+                        int dirNum = w.getDir2().ordinal() + 1;
+                        if (dirNum >= Direction.values().length) dirNum = 0;
+                        breadboardDirection2[z][y][x] = Direction.values()[dirNum];
+                        //to do: implement safety measure so that user cannot make d2 the opposite of d1
+                        w.setDir2(Direction.values()[dirNum]);
+
                     }
                     callPaint();
                 }
@@ -749,13 +840,31 @@ public class BreadBoard {
         }
     }
 
+    public void takeCareOfWASD() {
+        if (keys[KeyEvent.VK_W] || keys[KeyEvent.VK_UP]) {//dont work rn
+            Main.getMyGameScreen().yOffset += MyGameScreen.tileSize;
+            Main.SCREEN_Y_OFFSET = Main.getMyGameScreen().yOffset;
+        }else if (keys[KeyEvent.VK_S] || keys[KeyEvent.VK_DOWN]) {
+            Main.getMyGameScreen().yOffset -= MyGameScreen.tileSize;
+            Main.SCREEN_Y_OFFSET = Main.getMyGameScreen().yOffset;
+        }if (keys[KeyEvent.VK_D] || keys[KeyEvent.VK_RIGHT]) {
+            Main.getMyGameScreen().xOffset -= MyGameScreen.tileSize;
+            Main.SCREEN_X_OFFSET = Main.getMyGameScreen().xOffset;
+        }else if (keys[KeyEvent.VK_A] || keys[KeyEvent.VK_LEFT]) {
+            Main.getMyGameScreen().xOffset += MyGameScreen.tileSize;
+            Main.SCREEN_X_OFFSET = Main.getMyGameScreen().xOffset;
+        }
+        Main.getMyGameScreen().repaint();
+    }
+
     /**
      * Ticks
      */
     public void tick(final int tickNo) {
-        int i = 0;
+        takeCareOfWASD();
+        short i = 0;
         Object[][] signalArrayOnCall = new Object[signalArray.length][];
-        for (int j = 0; j < signalArray.length; j++) {
+        for (short j = 0; j < signalArray.length; j++) {
             if (signalArray[j] != null) {
                 signalArrayOnCall[j] = Arrays.copyOf(signalArray[j], signalArray[j].length);
             }
@@ -765,9 +874,9 @@ public class BreadBoard {
             if (signalArrayOnCall[i] != null) {
                 Direction d = (Direction) signalArrayOnCall[i][SIGNAL_ARRAY_D_PLACE];
                 boolean s = (boolean) signalArrayOnCall[i][SIGNAL_ARRAY_S_PLACE];
-                int x = (int) signalArrayOnCall[i][SIGNAL_ARRAY_X_PLACE];
-                int y = (int) signalArrayOnCall[i][SIGNAL_ARRAY_Y_PLACE];
-                int z = (int) signalArrayOnCall[i][SIGNAL_ARRAY_Z_PLACE];
+                short x = ((Integer) signalArrayOnCall[i][SIGNAL_ARRAY_X_PLACE]).shortValue();
+                short y = ((Integer) signalArrayOnCall[i][SIGNAL_ARRAY_Y_PLACE]).shortValue();
+                byte  z = ((Integer) signalArrayOnCall[i][SIGNAL_ARRAY_Z_PLACE]).byteValue();
                 /**
                  * Tick that the signal is supposed to be propagated
                  */
@@ -795,18 +904,19 @@ public class BreadBoard {
         Main.getMyFrame().repaint();
     }
 
-
     /**
      * Updates the breadBoard array by
-     * setting the array cell at x and y to given tile string
+     * setting the array cell at x and y to given tile byte
      * calls main.setTiles
      * then repaints //commented out
      * @param tile
      * @param x
      * @param y
      */
-    public void setBreadBoardTile(final String tile, final int x, final int y, final int z){
-        breadboard[z][y][x] = tile;
+    public void setBreadBoardTileByte(final byte tile, final short x, final short y, final short z){
+        if(tile != TileByte.Any.getSymbol()) {
+            breadboardByte[z][y][x] = tile;
+        }
         //Main.setTiles(SIZE, breadboard);
         //callPaint();
     }
@@ -840,65 +950,65 @@ public class BreadBoard {
     }
 
 
-    private void setWiresAndLeds(final boolean s, final int dx, final int dy, final int dz, final int x, final int y, final int z, final int t) {
+    private void setWiresAndLeds(final boolean s, final short dx, final short dy, final byte dz, final short x, final short y, final int z, final int t) {
         //System.out.println("called setWiresAndLeds going with dx " + dx + " dy " + dy + " dz " + dz + " going to x " + x + " y " + y + " z " + z);
-        String tile = breadboard[z][y][x];
+        //String tile = breadboard[z][y][x];
+        byte tile = breadboardByte[z][y][x];
 
         if (s) {
-            if (tile.equals(WIRE_OFF_SYMBOL)) {
+            if (tile == WIRE_OFF_BYTE) {
                 BreadBoardItem item = locateBreadBoardItemOnBoard(x, y, z);
                 if (item instanceof Wire wire) {
                     wire.setOut(dx, dy, dz, true, t);
                 } else {
-
                     System.out.println("Expected Wire at " + x + "," + y + "," + z + " but got null or different type.");
                 }
-            }else if (tile.equals(LED_OFF_SYMBOL)) {
+            } else if (tile == LED_OFF_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
-                led.setOut(true,t);
-            }else if(tile.equals(RESISTOR_1_SYMBOL)) {
+                led.setOut(true, t);
+            } else if (tile == RESISTOR_1_BYTE) {
                 Resistor1 r1 = (Resistor1) locateBreadBoardItemOnBoard(x, y, z);
                 assert r1 != null;
-                r1.setOut(dx,dy,true, t);
-            }else if(tile.equals(RESISTOR_3_SYMBOL)) {
+                r1.setOut(dx, dy, true, t);
+            } else if (tile == RESISTOR_3_BYTE) {
                 Resistor3 r3 = (Resistor3) locateBreadBoardItemOnBoard(x, y, z);
                 assert r3 != null;
-                r3.setOut(dx,dy,true, t);
-            }else if(tile.equals(RESISTOR_5_SYMBOL)) {
+                r3.setOut(dx, dy, true, t);
+            } else if (tile == RESISTOR_5_BYTE) {
                 Resistor5 r5 = (Resistor5) locateBreadBoardItemOnBoard(x, y, z);
                 assert r5 != null;
-                r5.setOut(dx,dy,true, t);
-            }else if(tile.equals(RESISTOR_10_SYMBOL)) {
+                r5.setOut(dx, dy, true, t);
+            } else if (tile == RESISTOR_10_BYTE) {
                 Resistor10 r10 = (Resistor10) locateBreadBoardItemOnBoard(x, y, z);
                 assert r10 != null;
-                r10.setOut(dx,dy,true, t);
+                r10.setOut(dx, dy, true, t);
             }
         } else {
-            if (tile.equals(WIRE_ON_SYMBOL)) {
+            if (tile == WIRE_ON_BYTE) {
                 Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y, z);
                 assert wire != null;
-                wire.setOut(dx, dy,dz,false, t);
-            }else if (tile.equals(LED_ON_SYMBOL)) {
+                wire.setOut(dx, dy, dz, false, t);
+            } else if (tile == LED_ON_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
-                led.setOut(false,t);
-            }else if(tile.equals(RESISTOR_1_SYMBOL)) {
+                led.setOut(false, t);
+            } else if (tile == RESISTOR_1_BYTE) {
                 Resistor1 r1 = (Resistor1) locateBreadBoardItemOnBoard(x, y, z);
                 assert r1 != null;
-                r1.setOut(dx,dy,false, t);
-            }else if(tile.equals(RESISTOR_3_SYMBOL)) {
+                r1.setOut(dx, dy, false, t);
+            } else if (tile == RESISTOR_3_BYTE) {
                 Resistor3 r3 = (Resistor3) locateBreadBoardItemOnBoard(x, y, z);
                 assert r3 != null;
-                r3.setOut(dx,dy,false, t);
-            }else if(tile.equals(RESISTOR_5_SYMBOL)) {
+                r3.setOut(dx, dy, false, t);
+            } else if (tile == RESISTOR_5_BYTE) {
                 Resistor5 r5 = (Resistor5) locateBreadBoardItemOnBoard(x, y, z);
                 assert r5 != null;
-                r5.setOut(dx,dy,false, t);
-            }else if(tile.equals(RESISTOR_10_SYMBOL)) {
+                r5.setOut(dx, dy, false, t);
+            } else if (tile == RESISTOR_10_BYTE) {
                 Resistor10 r10 = (Resistor10) locateBreadBoardItemOnBoard(x, y, z);
                 assert r10 != null;
-                r10.setOut(dx,dy,false, t);
+                r10.setOut(dx, dy, false, t);
             }
         }
     }
@@ -912,31 +1022,39 @@ public class BreadBoard {
      * @param x
      * @param y
      */
-    public void setGates(final boolean s, final int dx, final int dy, final int dz, final int x, final int y, final int z, final int t) {
-        String sBR = breadboard[z + dz][y + dy][x + dx]; // adjacent tile
+    public void setGates(final boolean s, final short dx, final short dy, final byte dz, final short x, final short y, final byte z, final int t) {
+        //String sBR = breadboard[z + dz][y + dy][x + dx]; // adjacent tile
+        byte sBR = breadboardByte[z + dz][y + dy][x + dx]; // adjacent tile
 
-        if (sBR.equals(NOT_SYMBOL)) {
+        if (sBR == TileByte.Not.getSymbol()) {
             Not not = (Not) locateBreadBoardItemOnBoard(x + dx, y + dy, z + dz);
             assert not != null;
             if (not.setRightGate(s, dx, dy, dz)) {
                 not.calculate();
                 not.signal(t);
             }
-        } else if (sBR.equals(AND_SYMBOL)) {
+        } else if (sBR == TileByte.And.getSymbol()) {
             And and = (And) locateBreadBoardItemOnBoard(x + dx, y + dy,z + dz);
             assert and != null;
             if (and.setRightGate(s, dx, dy, dz)) {
                 and.calculate();
                 and.signal(t);
             }
-        } else if (sBR.equals(OR_SYMBOL)) {
+        } else if (sBR == TileByte.Or.getSymbol()) {
             Or or = (Or) locateBreadBoardItemOnBoard(x + dx, y + dy, z + dz);
             assert or != null;
             if (or.setRightGate(s, dx, dy, dz)) {
                 or.calculate();
                 or.signal(t);
             }
-        } else if (sBR.equals(CROSSWIRE_SYMBOL)) {
+        } else if (sBR == TileByte.Xor.getSymbol()) {
+            Xor xor = (Xor) locateBreadBoardItemOnBoard(x + dx, y + dy, z + dz);
+            assert xor != null;
+            if (xor.setRightGate(s, dx, dy, dz)) {
+                xor.calculate();
+                xor.signal(t);
+            }
+        } else if (sBR == TileByte.DoubleWire.getSymbol()) {
             DoubleWire dw = (DoubleWire) locateBreadBoardItemOnBoard(x + dx, y + dy, z + dz);
             dw.setRightInput(s, dx, dy, t);
         }
@@ -949,13 +1067,20 @@ public class BreadBoard {
      * @param x
      * @param y
      */
-    private int propagateSignal(final Direction d, final boolean s, final int x, final int y, final int z, final int t) {
+    private int propagateSignal(final Direction d, final boolean s, final short x, final short y, final byte z, final int t) {
+        short sn1 = (short)-1;
+        short s0 = (short)0;
+        short s1 = (short)1;
+        byte bn1 = (byte)-1;
+        byte b0 = (byte)0;
+        byte b1 = (byte)1;
+
         if(t == Main.tickNumber) {
             //System.out.println("pS(): signal " + s + " from " + x + " " + y + " on tick " + t);
             if (d == Direction.NONE) {
-                for (int i = z - 1; i <= z + 1; i++) {
-                    for (int j = y - 1; j <= y + 1; j++) {
-                        for (int k = x - 1; k <= x + 1; k++) {
+                for (byte i = (byte) (z - 1); i <= z + 1; i++) {
+                    for (short j = (short) (y - 1); j <= y + 1; j++) {
+                        for (short k = (short) (x - 1); k <= x + 1; k++) {
                             //might have to change to <= ZHEIGHT
                             if (i >= 0 && j >= 0 && k >= 0 && i < ZHEIGHT && j < HEIGHT && k < WIDTH &&
                                     //check for corner cases
@@ -968,17 +1093,17 @@ public class BreadBoard {
                                     //check for centre case if i == z
                                     if(!(j == y && k == x)) {
                                         if (k == x + 1) {
-                                            setGates(s, 1, 0, 0, x, y, z, t);
-                                            setWiresAndLeds(s, 1, 0, 0, k, j, i, t);
+                                            setGates(s, s1, s0, b0, x, y, z, t);
+                                            setWiresAndLeds(s, s1, s0, b0, k, j, i, t);
                                         } else if (k == x - 1) {
-                                            setGates(s, -1, 0, 0, x, y, z, t);
-                                            setWiresAndLeds(s, -1, 0, 0, k, j, i, t);
+                                            setGates(s, sn1, s0, b0, x, y, z, t);
+                                            setWiresAndLeds(s, sn1, s0, b0, k, j, i, t);
                                         } else if (j == y + 1) {
-                                            setGates(s, 0, 1, 0, x, y, z, t);
-                                            setWiresAndLeds(s, 0, 1, 0, k, j, i, t);
+                                            setGates(s, s0, s1, b0, x, y, z, t);
+                                            setWiresAndLeds(s, s0, s1, b0, k, j, i, t);
                                         } else if (j == y - 1) {
-                                            setGates(s, 0, -1, 0, x, y, z, t);
-                                            setWiresAndLeds(s, 0, -1, 0, k, j, i, t);
+                                            setGates(s, s0, sn1, b0, x, y, z, t);
+                                            setWiresAndLeds(s, s0, sn1, b0, k, j, i, t);
                                         }
                                     }
                                 }else {
@@ -987,8 +1112,8 @@ public class BreadBoard {
                                     if(j == y && k == x) {
                                         //System.out.println("x " + x + " y " + y + " z " + z);
                                         //System.out.println("k " + k + " j " + j + " i " + i);
-                                        setGates(s, k - x, j - y, i - z, x, y, z, t);
-                                        setWiresAndLeds(s, k - x, j - y, i - z, k, j, i, t);
+                                        setGates(s, (short) (k - x), (short) (j - y), (byte) (i - z), x, y, z, t);
+                                        setWiresAndLeds(s, (short) (k - x), (short) (j - y), (byte) (i - z), k, j, i, t);
                                     }
                                 }
                             }
@@ -996,17 +1121,23 @@ public class BreadBoard {
                     }
                 }
             } else if (d == Direction.RIGHT && x + 1 < WIDTH) {
-                setWiresAndLeds(s, 1, 0, 0,x + 1, y, z, t);
-                setGates(s, 1, 0, 0, x, y, z, t);
+                setWiresAndLeds(s, s1, s0, b0, (short) (x + 1), y, z, t);
+                setGates(s, s1, s0, b0, x, y, z, t);
             } else if (d == Direction.LEFT && x - 1 >= 0) {
-                setWiresAndLeds(s, -1, 0, 0, x - 1, y, z, t);
-                setGates(s, -1, 0, 0, x, y, z, t);
+                setWiresAndLeds(s, sn1, s0, b0, (short) (x - 1), y, z, t);
+                setGates(s, sn1, s0, b0, x, y, z, t);
             } else if (d == Direction.DOWN && y + 1 < HEIGHT) {
-                setWiresAndLeds(s, 0, 1, 0, x, y + 1, z, t);
-                setGates(s, 0, 1, 0, x, y, z, t);
+                setWiresAndLeds(s, s0, s1, b0, x, (short) (y + 1), z, t);
+                setGates(s, s0, s1, b0, x, y, z, t);
             } else if (d == Direction.UP && y - 1 >= 0) {
-                setWiresAndLeds(s, 0, -1, 0, x, y - 1, z, t);
-                setGates(s, 0, -1, 0, x, y, z, t);
+                setWiresAndLeds(s, s0, sn1, b0, x, (short) (y - 1), z, t);
+                setGates(s, s0, sn1, b0, x, y, z, t);
+            } else if (d == Direction.INTO && z - 1 >= 0) {
+                setWiresAndLeds(s, s0, s0, bn1, x, y, (short) (z - 1), t);
+                setGates(s, s0, s0, bn1, x, y, z, t);
+            } else if (d == Direction.OUTOF && z + 1 < ZHEIGHT) {
+                setWiresAndLeds(s, s0, s0, b1, x, y, (short) (z + 1), t);
+                setGates(s, s0, s0, b1, x, y, z, t);
             }
             return 0;//this saved me
         }else if(t < Main.tickNumber) {
@@ -1017,23 +1148,6 @@ public class BreadBoard {
             return 1;//and this, it allows future ones to be held
         }
     }
-
-//Defunct
-//    private void cleanEmptyOrOldSignalsAtBeginningOfSignalArray(int currentTick) {
-//        int writeIndex = 0;
-//        for (int readIndex = 0; readIndex < signalArray.length; readIndex++) {
-//            Object[] signal = signalArray[readIndex];
-//            if (signal != null && (int) signal[4] >= currentTick) {
-//                if (writeIndex != readIndex) {
-//                    signalArray[writeIndex] = signal;
-//                }
-//                writeIndex++;
-//            }
-//        }
-//        for (int i = writeIndex; i < signalArray.length; i++) {
-//            signalArray[i] = null;
-//        }
-//    }
 
     /**
      * Queues a signal
@@ -1091,7 +1205,7 @@ public class BreadBoard {
 
         private boolean out  = false;
 
-        public Button(final boolean out, final Direction dir, final int x, final int y, final int z) {
+        public Button(final boolean out, final Direction dir, final short x, final short y, final byte z) {
             super(dir,x,y,z);
             this.out = out;
         }
@@ -1100,11 +1214,11 @@ public class BreadBoard {
             this.out = out;
         }
 
-        public String returnTile(){
+        public byte returnTile(){
             if(out){
-                return TileString.ButtonOn.getSymbol();
+                return TileByte.ButtonOn.getSymbol();
             }else {
-                return TileString.ButtonOff.getSymbol();
+                return TileByte.ButtonOff.getSymbol();
             }
         }
 
@@ -1121,7 +1235,7 @@ public class BreadBoard {
 
         private boolean out  = false;
 
-        public Switch(boolean out, Direction dir, final int x, final int y, final int z) {
+        public Switch(boolean out, Direction dir, final short x, final short y, final byte z) {
             super(dir,x,y,z);
             this.out = out;
         }
@@ -1131,11 +1245,11 @@ public class BreadBoard {
             this.signal(Main.tickNumber + 1);
         }
 
-        public String returnTile() {
+        public byte returnTile() {
             if (out) {
-                return SWITCH_ON_SYMBOL;
+                return TileByte.SwitchOn.getSymbol();
             } else {
-                return SWITCH_OFF_SYMBOL;
+                return TileByte.SwitchOff.getSymbol();
             }
         }
 
@@ -1180,7 +1294,7 @@ public class BreadBoard {
         boolean B = false;
         boolean C = false;
 
-        public Gate(final Direction dir, final int x, final int y, final int z) {
+        public Gate(final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
         }
 
@@ -1195,7 +1309,7 @@ public class BreadBoard {
          * B is always 180deg away from the output
          * C is always 90 deg to the right of output
          */
-        public boolean setRightGate(final boolean s, final int deltax, final int deltay, final int deltaz){
+        public boolean setRightGate(final boolean s, final short deltax, final short deltay, final byte deltaz){
             //this gate is to the right of the input (ex. wire)
             if(deltax == 1){
                 if(this.getDir() == Direction.RIGHT) {
@@ -1276,7 +1390,7 @@ public class BreadBoard {
      */
     private class And extends Gate {
 
-        public And(final Direction dir, final int x, final int y, final int z) {
+        public And(final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
         }
 
@@ -1312,7 +1426,7 @@ public class BreadBoard {
      */
     private class Not extends Gate {
 
-        public Not(final Direction dir, final int x, final int y, final int z) {
+        public Not(final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
         }
 
@@ -1350,7 +1464,7 @@ public class BreadBoard {
      */
     private class Or extends Gate {
 
-        public Or(final Direction dir, final int x, final int y, final int z) {
+        public Or(final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
         }
 
@@ -1375,8 +1489,56 @@ public class BreadBoard {
             }
         }
 
-        public String returnTile(){
-            return OR_SYMBOL;
+        public byte returnTile(){
+            return TileByte.Or.getSymbol();
+        }
+
+        public void signal(int tick_when_set) {
+            //BreadBoard.this.signal(this.getDir(),out,this.getX(),this.getY());
+            super.signal(tick_when_set);
+        }
+
+    }
+
+    private class Xor extends Gate {
+
+        public Xor(final Direction dir, final short x, final short y, final byte z) {
+            super(dir, x, y, z);
+        }
+
+        public void setA(final boolean on) {
+            this.A = on;
+        }
+
+        public void setB(final boolean on) {
+            this.B = on;
+        }
+
+        public void setC(final boolean on) {
+            this.C = on;
+        }
+
+
+        public void calculate(){
+            //THIS IS JUST A AND C, CHANGE IF NECESSARY
+            if(xor(A,C)){
+                out = true;
+            } else {
+                out = false;
+            }
+        }
+
+        private boolean xor(boolean A, boolean B){
+            if(A || B) {
+                if(!(A && B)){
+                    return true;
+                }
+            }
+            return false;
+        }
+
+        public byte returnTile(){
+            return TileByte.Xor.getSymbol();
         }
 
         public void signal(int tick_when_set) {
@@ -1393,13 +1555,12 @@ public class BreadBoard {
 
         private boolean out = false;
 
-        public LED(final boolean out, final Direction dir, final int x, final int y, final int z) {
+        public LED(final boolean out, final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
             this.out = out;
         }
 
         public void setOut(final boolean s, int t) {
-            boolean[] signal = new boolean[4];
             int nx = getX();
             int ny = getY();
             int nz = getZ();
@@ -1445,9 +1606,9 @@ public class BreadBoard {
 
         public void signal(int tick_when_set) {
             if (this.out) {
-                setBreadBoardTile(LED_ON_SYMBOL, getX(), getY(), getZ());
+                setBreadBoardTileByte(TileByte.LEDOn.getSymbol(), getX(), getY(), getZ());
             } else {
-                setBreadBoardTile(LED_OFF_SYMBOL, getX(), getY(), getZ());
+                setBreadBoardTileByte(TileByte.LEDOff.getSymbol(), getX(), getY(), getZ());
             }
             Main.getMyFrame().repaint();
         }
@@ -1456,11 +1617,11 @@ public class BreadBoard {
             //delay
         }
 
-        public String returnTile(){
+        public byte returnTile(){
             if(out){
-                return LED_ON_SYMBOL;
+                return TileByte.LEDOn.getSymbol();
             }else {
-                return LED_OFF_SYMBOL;
+                return TileByte.LEDOff.getSymbol();
             }
         }
     }
@@ -1472,33 +1633,30 @@ public class BreadBoard {
      */
     public class DoubleWire extends Wire {
 
-        private Direction dir2;
-
-        public DoubleWire(final Direction dir1, final Direction dir2, final int x, final int y, final int z) {
-            super(dir1, x, y, z);
-            this.dir2 = dir2;
+        public DoubleWire(final Direction dir1, final Direction dir2, final short x, final short y, final byte z) {
+            super(dir1, dir2, x, y, z);
         }
 
-        public void setDir2(final Direction dir2) {
-            this.dir2 = dir2;
-        }
-
-        public void setRightInput(final boolean s, final int deltax, final int deltay, final int t){
+        public void setRightInput(final boolean s, final short deltax, final short deltay, final int t){
             //this doubleWire is to the right of the input (ex. wire)
             if(deltax == 1){
-                if(this.getDir() == Direction.RIGHT || this.getDir2() == Direction.RIGHT) {
+                if(this.getDir() == Direction.RIGHT || this.getDir2() == Direction.RIGHT
+                || this.getDir() == Direction.NONE || this.getDir2() == Direction.NONE) {
                     signal(dR, s, t);
                 }
             }else if(deltax == -1){//this gate is to the left of the input (ex. wire)
-                if(this.getDir() == dL || this.getDir2() == dL) {
+                if(this.getDir() == dL || this.getDir2() == dL
+                || this.getDir() == Direction.NONE || this.getDir2() == Direction.NONE) {
                     signal(dL, s, t);
                 }
             }else if(deltay == 1){//this gate is below the input (ex. wire)
-                if(this.getDir() == dD || this.getDir2() == dD) {
+                if(this.getDir() == dD || this.getDir2() == dD
+                || this.getDir() == Direction.NONE || this.getDir2() == Direction.NONE) {
                     signal(dD, s, t);
                 }
             }else if(deltay == -1){//this gate is above the input (ex. wire)
-                if(this.getDir() == dU || this.getDir2() == dU) {
+                if(this.getDir() == dU || this.getDir2() == dU
+                || this.getDir() == Direction.NONE || this.getDir2() == Direction.NONE) {
                     signal(dU, s,t);
                 }
             }
@@ -1516,12 +1674,12 @@ public class BreadBoard {
             BreadBoard.this.signal(d, s, this.getX(),this.getY(), this.getZ(), t+1);
         }
 
-        public Direction getDir2(){
-            return dir2;
-        }
+        //public Direction getDir2(){
+        //    return dir2;
+        //}
 
-        public String returnTile(){
-            return CROSSWIRE_SYMBOL;
+        public byte returnTile(){
+            return TileByte.DoubleWire.getSymbol();
         }
 
     }
@@ -1532,12 +1690,17 @@ public class BreadBoard {
     public class Wire extends BreadBoardItem {
 
         private boolean out = false;
+        private Direction dir2;
+        private short dx = 0;
+        private short dy = 0;
+        private byte dz = 0;
 
-        public Wire(final Direction dir, final int x, final int y, final int z) {
+        public Wire(final Direction dir, final Direction dir2, final short x, final short y, final byte z) {
             super(dir, x, y, z);
+            this.dir2 = dir2;
         }
 
-        public void setOut(final int dx, final int dy, final int dz, final boolean out, final int t) {
+        public void setOut(final short dx, final short dy, final byte dz, final boolean out, final int t) {
             this.out = out;
             //check first if this signal is coming from the right input direction
             //ie if this wire is facing right, then this should not be taking input
@@ -1547,26 +1710,35 @@ public class BreadBoard {
             (this.getDir() == dR && dx != -1) ||
             (this.getDir() == dU && dy != 1) ||
             (this.getDir() == dD && dy != -1) ||
+            (this.getDir() == dO && dz != 1) || //out of the screen
+            (this.getDir() == dI && dz != -1) ||//into the screen
             this.getDir() == dN) {
                 if (out) {
-                    setBreadBoardTile(WIRE_ON_SYMBOL, getX(), getY(), getZ());
+                    setBreadBoardTileByte(TileByte.WireOn.getSymbol(), getX(), getY(), getZ());
                 } else {
-                    setBreadBoardTile(WIRE_OFF_SYMBOL, getX(), getY(), getZ());
+                    setBreadBoardTileByte(TileByte.WireOff.getSymbol(), getX(), getY(), getZ());
                 }
                 Main.getMyGameScreen().repaint();
+                this.dx = dx;
+                this.dy = dy;
+                this.dz = dz;
                 this.signal(t);
             }
+        }
+
+        public void setDir2(final Direction dir2) {
+            this.dir2 = dir2;
         }
 
         public boolean getOut(){
             return out;
         }
 
-        public String returnTile(){
+        public byte returnTile(){
             if(out){
-                return WIRE_ON_SYMBOL;
+                return TileByte.WireOn.getSymbol();
             }else {
-                return WIRE_OFF_SYMBOL;
+                return TileByte.WireOff.getSymbol();
             }
         }
 
@@ -1575,10 +1747,17 @@ public class BreadBoard {
          */
         public void signal(final int t) {
             //if(Main.tick_true) {
-                BreadBoard.this.signal(this.getDir(), out, this.getX(), this.getY(), this.getZ(), t + 1);
+            BreadBoard.this.signal(this.getDir(), out, this.getX(), this.getY(), this.getZ(), t + 1);
+            if(this.getDir2() != this.getDir() && this.getDir2() != Direction.NONE){
+                BreadBoard.this.signal(this.getDir2(), out, this.getX(), this.getY(), this.getZ(), t + 1);
+            }
                 //System.out.println("wire.signal(): at " + this.getX() + " " + this.getY()
                 //+ " which will be called on tick " + (t + 1));
             //}
+        }
+
+        public Direction getDir2(){
+            return dir2;
         }
 
     }
@@ -1587,12 +1766,12 @@ public class BreadBoard {
         protected int delayTicks;
         protected boolean out = false;
 
-        public Resistor(Direction dir, int delayTicks, int x, int y, final int z) {
+        public Resistor(Direction dir, int delayTicks, short x, short y, final byte z) {
             super(dir, x, y, z);
             this.delayTicks = delayTicks;
         }
 
-        public void setOut(final int dx, final int dy, final boolean out, final int t) {
+        public void setOut(final short dx, final short dy, final boolean out, final int t) {
             this.out = out;
             //check first if this signal is coming from the right input direction
             //ie if this wire is facing right, then this should not be taking input
@@ -1614,90 +1793,81 @@ public class BreadBoard {
          */
         @Override
         public void signal(final int t) {
-            System.out.println("Resistor.signal() delayTicks " + delayTicks);
+            //System.out.println("Resistor.signal() delayTicks " + delayTicks);
             BreadBoard.this.signal(this.getDir(), out, this.getX(), this.getY(), this.getZ(),t + 1 + delayTicks);
         }
 
         public int getDelayTicks() {
             return delayTicks;
         }
-        public abstract String returnTile();
+        public abstract byte returnTile();
     }
 
     public class Resistor1 extends Resistor {
-        public Resistor1(Direction dir, int x, int y, int z) {
+        public Resistor1(Direction dir, short x, short y, byte z) {
             super(dir, 1, x, y, z);
         }
 
         @Override
-        public void setOut(final int dx, final int dy, final boolean out, final int t){
+        public void setOut(final short dx, final short dy, final boolean out, final int t){
             super.setOut(dx, dy, out, t);
             //setBreadBoardTile(RESISTOR_1_SYMBOL, getX(), getY());
         }
 
-//        /**
-//         * Like the signal in Switch, searches for other board members.
-//         */
-//        @Override
-//        public void signal(final int t) {
-//            System.out.println("Resistor1.signal() delayTicks " + delayTicks);
-//            BreadBoard.this.signal(this.getDir(), out, this.getX(), this.getY(), t + 1 + delayTicks);
-//        }
-
         @Override
-        public String returnTile() {
-            return RESISTOR_1_SYMBOL;
+        public byte returnTile() {
+            return TileByte.Resistor1.getSymbol();
         }
     }
 
     public class Resistor3 extends Resistor {
-        public Resistor3(Direction dir, int x, int y, int z) {
+        public Resistor3(Direction dir, short x, short y, byte z) {
             super(dir, 3, x, y, z);
         }
 
         @Override
-        public void setOut(final int dx, final int dy, final boolean out, final int t){
+        public void setOut(final short dx, final short dy, final boolean out, final int t){
             super.setOut(dx, dy, out, t);
             //setBreadBoardTile(RESISTOR_1_SYMBOL, getX(), getY());
         }
 
         @Override
-        public String returnTile() {
-            return RESISTOR_3_SYMBOL;
+        public byte returnTile() {
+                return TileByte.Resistor3.getSymbol();
         }
     }
 
     public class Resistor5 extends Resistor {
-        public Resistor5(Direction dir, int x, int y, final int z) {
+        public Resistor5(Direction dir, short x, short y, final byte z) {
             super(dir, 5, x, y, z);
         }
 
         @Override
-        public void setOut(final int dx, final int dy, final boolean out, final int t){
+        public void setOut(final short dx, final short dy, final boolean out, final int t){
             super.setOut(dx, dy, out, t);
             //setBreadBoardTile(RESISTOR_1_SYMBOL, getX(), getY());
         }
 
         @Override
-        public String returnTile() {
-            return "5";
+        public byte returnTile() {
+            return TileByte.Resistor5.getSymbol();
         }
     }
 
     public class Resistor10 extends Resistor {
-        public Resistor10(Direction dir, final int x, final int y, final int z) {
+        public Resistor10(Direction dir, final short x, final short y, final byte z) {
             super(dir, 10, x, y, z);
         }
 
         @Override
-        public void setOut(final int dx, final int dy, final boolean out, final int t){
+        public void setOut(final short dx, final short dy, final boolean out, final int t){
             super.setOut(dx, dy, out, t);
             //setBreadBoardTile(RESISTOR_1_SYMBOL, getX(), getY());
         }
 
         @Override
-        public String returnTile() {
-            return RESISTOR_5_SYMBOL;
+        public byte returnTile() {
+            return TileByte.Resistor10.getSymbol();
         }
     }
 
@@ -1705,13 +1875,13 @@ public class BreadBoard {
      * Abstract Parent Class for the breadboard
      */
     public abstract class BreadBoardItem { //extends Thread {
-        private int x = 0;
-        private int y = 0;
-        private int z = 1;//1 is middle in a 3 block tall array
+        private short x = 0;
+        private short y = 0;
+        private short z = 1;//1 is middle in a 3 block tall array
         private boolean out = false;
         private Direction dir = Direction.RIGHT;
 
-        public BreadBoardItem(final Direction dir, final int x, final int y, final int z) {
+        public BreadBoardItem(final Direction dir, final short x, final short y, final short z) {
             this.dir = dir;
             this.x = x;
             this.y = y;
@@ -1720,15 +1890,15 @@ public class BreadBoard {
 
         public abstract void signal(int t);
 
-        public int getX(){
+        public short getX(){
             return x;
         }
 
-        public int getY(){
+        public short getY(){
             return y;
         }
 
-        public int getZ() {
+        public short getZ() {
             return z;
         }
 
@@ -1744,14 +1914,15 @@ public class BreadBoard {
             this.dir = dir;
         }
 
-        public String returnTile(){
-            return EMPTY_SYMBOL;
+        public byte returnTile(){
+            return TileByte.Empty.getSymbol();
         }
+
     }
 
     public abstract class CBreadBoardItem extends BreadBoardItem {
 
-        public CBreadBoardItem(Direction dir, int x, int y, final int z) {
+        public CBreadBoardItem(Direction dir, short x, short y, final short z) {
             super(dir, x, y, z);
             cBreadBoardItemsList.add(this);
         }
@@ -1771,11 +1942,11 @@ public class BreadBoard {
     }
 
     /**
-     * Returns the default breadboard
+     * Returns the default breadboardByte
      * @return breadboard array
      */
-    public String[][][] getBreadboard(){
-        return breadboard;
+    public byte[][][] getBreadboardByte(){
+        return breadboardByte;
     }
 
     /**
@@ -1791,37 +1962,17 @@ public class BreadBoard {
      * can be direction one or two depending on the given array
      * @return symobl breadboardDirection array
      */
-    public String[][] get2DBreadboardDirectionAsStringArray(final Direction[][][] dA, final int z){
+    public byte[][] get2DBreadboardDirectionAsByteArray(final Direction[][][] dA, final int z){
         //zyx
-        String[][] arr = new String[dA[0].length][dA[0][0].length];
-            for(int j = 0; j < dA[z].length; j++){
-                for(int k = 0; k < dA[z][j].length; k++){
-                    arr[j][k] = dA[z][j][k].getSymbol();
-                }
-            }
-
-        return arr;
-    }
-
-
-    /**
-     * Returns the string array of directions of items in the Breadboard
-     * can be direction one or two depending on the given array
-     * @return symobl breadboardDirection array
-     */
-    public String[][][] getBreadboardDirectionAsStringArray(final Direction[][][] dA){
-        //zyx
-        String[][][] arr = new String[dA.length][dA[0].length][dA[0][0].length];
-        for(int i = 0; i < dA.length; i++){
-            for(int j = 0; j < dA[i].length; j++){
-                for(int k = 0; k < dA[i][j].length; k++){
-                    arr[i][j][k] = dA[i][j][k].getSymbol();
-                }
+        byte[][] arr = new byte[dA[0].length][dA[0][0].length];
+        for(int j = 0; j < dA[z].length; j++){
+            for(int k = 0; k < dA[z][j].length; k++){
+                arr[j][k] = dA[z][j][k].getSymbol();
             }
         }
+
         return arr;
     }
-
 
     /**
      * Returns the array of the second directions of items in the Breadboard
@@ -1856,30 +2007,57 @@ public class BreadBoard {
         this.gamemode = gamemode;
     }
 
-    public void printTiles(final int x, final int y, final int z) {
+    public void printTilesBytes(final int w, final int h, final int d)
+    {
 
-        String s = "";
-        s += x + "," + y + "," + z + "\n";
-        for(int i = 0; i < z; i++) {
-            s += "LAYER " + i + "\n";
-            s += "TILES\n";
-            s += convertTilesInto2DArrayString(
-                    breadboard[i],
-                    x,
-                    y);
-            s += "DIR1\n";
-            s += convertTilesInto2DArrayString(
-                    get2DBreadboardDirectionAsStringArray(breadboardDirection, i),
-                    x,
-                    y);
-            s += "DIR2\n";
-            s += convertTilesInto2DArrayString(
-                    get2DBreadboardDirectionAsStringArray(breadboardDirection2, i),
-                    x,
-                    y);
+        int length = FileCreator.X_BYTES + FileCreator.Y_BYTES + FileCreator.Z_BYTES + FileCreator.SUBLAYERS * w * h * d;
 
+        byte[] b = new byte[length];
+        //b += x + "," + y + "," + z + "\n";
+        b[0] = (byte) (w / 128);
+        b[1] = (byte) (w % 128);
+        b[2] = (byte) (h / 128);
+        b[3] = (byte) (h % 128);
+        b[4] = (byte) (d / 128);
+        b[5] = (byte) (d % 128);
+
+        //b[] = [xx, yy, zz, all tiles, all dir1s, all dir2s]
+        for (int i = 0; i < FileCreator.SUBLAYERS; i++) {
+            for (int j = 0; j < d; j++) {
+                if(i == 0){
+                    for (int k = 0; k < h; k++) {
+                        for (int l = 0; l < w; l++) {
+                            b[6+ i * d * h * w + j * h * w + k * w + l] = breadboardByte[j][k][l];
+                        }
+                    }
+                }else if (i == 1){
+                    for (int k = 0; k < h; k++) {
+                        for (int l = 0; l < w; l++) {
+                            b[6+ i * d * h * w + j * h * w + k * w + l] = breadboardDirection[j][k][l].getSymbol();
+                        }
+                    }
+                }else if (i == 2){
+                    for (int k = 0; k < h; k++) {
+                        for (int l = 0; l < w; l++) {
+                            b[6+ i * d * h * w + j * h * w + k * w + l] = breadboardDirection2[j][k][l].getSymbol();
+                        }
+                    }
+                }
+            }
         }
-        System.out.println(s);
+
+        Date now = new Date();
+        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
+        String formattedDateTime = formatter.format(now);
+        String saveName = "src/saves/" + w + "," + h + "," + d + " " + formattedDateTime + ".bin";
+
+        try {
+            FileCreator.saveToFileBytes(b, saveName);
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+
+        System.out.println("Saved breadboard to " + saveName + ".");
     }
 
     /**
@@ -1897,39 +2075,12 @@ public class BreadBoard {
         for (int j = 0; j < numY; j++) {
             for (int k = 0; k < numX; k++) {
                 s += array[j][k];
-                if(k != numX -1){
-                    s += ",";
-                }
+                s += ",";
             }
+            s = s.substring(0, s.length() - 1);//remove the last ","
             s += "\n";
         }
-
-        //s += "\n";
-
-
-        return s;
-    }
-
-    private String convertTilesIntoArrayString(final String[][][] array, final int numX, final int numY, final int numZ) {
-        String s = "";
-
-        for (int i = 0; i < numZ; i++) {
-            for (int j = 0; j < numY; j++) {
-                for (int k = 0; k < numX; k++) {
-                    s += array[i][j][k];
-                    if(k != numX -1){
-                        s += ",";
-                    }
-
-                }
-                s += "\n";
-            }
-
-            s += "\n";
-        }
-
         return s;
     }
 
 }
-

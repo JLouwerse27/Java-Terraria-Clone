@@ -11,6 +11,7 @@ public enum TileString {
     Empty("  "),
 
     //BreadBoard
+    BreadBoardEmpty("__"),
     Not("BN"),
     Or("BO"),
     And("BA"),
