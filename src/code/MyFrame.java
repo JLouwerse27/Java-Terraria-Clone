@@ -1,5 +1,16 @@
 package src.code;
 
+import static src.code.Main.DEFAULT_SCREEN_X_OFFSET;
+import static src.code.Main.DEFAULT_SCREEN_Y_OFFSET;
+import static src.code.Main.SCREEN_X_OFFSET;
+import static src.code.Main.SCREEN_Y_OFFSET;
+import static src.code.Main.mouseX;
+import static src.code.Main.mouseY;
+
+import java.awt.Color;
+import java.awt.Font;
+import java.awt.Graphics2D;
+
 import javax.swing.JFrame;
 
 /**
@@ -9,6 +20,8 @@ import javax.swing.JFrame;
 public class MyFrame extends JFrame {
     
     private MyGameScreen mgs;
+    
+    private Graphics2D g2d;
 
     /**
      * Default constructor for MyFrame.
@@ -16,6 +29,7 @@ public class MyFrame extends JFrame {
      */
     public MyFrame() {
         super();
+        g2d = (Graphics2D) this.getGraphics();
     }
 
     /**
@@ -28,9 +42,25 @@ public class MyFrame extends JFrame {
         setSize(width, height);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("MyFrame");
-        setVisible(true);
+        
+        setVisible(true);   
+        g2d = (Graphics2D) this.getGraphics();
     }
-
+    
+    
+    /**
+     * Paints the mouse coordinates at the bottom right of the screen
+     * Uses MyGameScreen.getGraphics, not Frame.getGraphics!
+     */
+    public void paintFPS(int fps) {
+        int fontSize = (int) (mgs.originalTileSize / 1.5);
+        g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
+        g2d.setColor(Color.WHITE);
+        int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
+        int y = mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET;
+        g2d.drawString("FPS: " + fps, WIDTH - 270, HEIGHT - 30);
+    }
+    
     /**
      * Sets the game screen for this frame.
      * 

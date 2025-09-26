@@ -88,7 +88,7 @@ public class BreadBoardFileLoader {
         }
 
 
-        board.setBreadBoardStateByte(tiles, dir1, dir2);
+        board.setBreadBoardStateByteInitial(tiles, dir1, dir2);
 //        for (int i = 6; i < zHeight + 6; i++) {
 //            for (int j = 6; j < height + 6; j++) {
 //                for (int k = 6; k < width + 6; k++) {

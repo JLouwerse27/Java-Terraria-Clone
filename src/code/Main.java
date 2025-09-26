@@ -1,5 +1,6 @@
 package src.code;
 
+import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.nio.file.Path;
@@ -12,7 +13,7 @@ import javax.swing.*;
 // import punchcard.Assembler;
 
 
-public class Main {
+public class Main implements Runnable{
     
     // private static char[][] tiles;
     private static String[][] tiles;
@@ -21,7 +22,16 @@ public class Main {
     private static MyFrame mf;
     private static MyGameScreen mgs;
     private static BreadBoard b;
-
+    private static Graphics repeatedGraphics;
+    
+    //new Thread stuff
+    private Thread thread;
+	private boolean running = false;
+	private int frames = 0;
+	private double tickspersecond = 8;
+	//private double paintTicksPerSecond = 64;
+	private double ns = 1_000_000_000 / tickspersecond;
+    	
     //magic numbers
     static final int PUNCHCARD_DISPLAY_WIDTH = 32;
 
@@ -41,7 +51,7 @@ public class Main {
     private static byte LOGIC_SCREEN_ZHEIGHT;
 
     static byte LOGIC_SCREEN_LAYER;
-    private static byte DEFAULT_LOGIC_SCREEN_LAYER = 1;
+    private static byte DEFAULT_LOGIC_SCREEN_LAYER = 0;
 
 
     static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
@@ -88,7 +98,15 @@ public class Main {
      * Speed at which the game runs at; in ms.
      */
     private static int TICK_SPEED = DEFAULT_TICK_SPEED;//in ms
-
+    
+    /**
+     * Main object, inits logic gates
+     */
+    public Main() {
+    	initLogicGates(this);
+        System.out.println("Initialized LogicGates");
+    }
+    
     /**
      * The main entry point for the Java Terraria Clone application.
      * Initializes players, game objects, and the game frame.
@@ -110,21 +128,90 @@ public class Main {
                 System.out.println("Initialized Punch Card");
             }
         }else {
-
-            gameMode = GATES_GAMEMODE_NUMBER;
-            initLogicGates();
-            System.out.println("Initialized LogicGates");
+        	gameMode = GATES_GAMEMODE_NUMBER;
+        	Main m = new Main();            
         }
 
     }
 
-    private static void initLogicGates() {
+    /**
+     * A method within Main.java to start the thread and set "running" to true.
+     */
+    public synchronized void start() {
+        System.out.println("called start");
+		thread = new Thread(this);
+		thread.start();
+		running = true;
+	}
+
+    /**
+     * A method within Main.java to join the thread and set "running" to false.
+     */
+	public synchronized void stop() {
+        System.out.println("called stop");
+		try {
+			thread.join();//kills off thread
+			running = false;
+		}catch(Exception e) {
+			e.printStackTrace();
+			System.out.println("OOPS");
+		}
+	}
+	
+	public void run() {
+		long lastTime = System.nanoTime();
+		int lastTick = tickNumber;
+		//double amountOfTicks = 240.0;
+		double delta = 0;
+		int deltaTick = 0;
+		long timer = System.currentTimeMillis();
+
+		while(running) {
+			long now = System.nanoTime();
+			int currentTick = tickNumber;
+			delta += (now- lastTime) / ns; 
+			deltaTick = currentTick - lastTick;
+			lastTime = now;
+			
+			
+			
+			while(delta >= 1) {
+				b.tick(tickNumber);
+				tickNumber++;
+                //change to 1 if want paint every tick
+				if (tickNumber % 4 == 0) {
+			        mgs.repaint(); // paint every 4 ticks
+			    }
+				delta--;
+			}
+			
+			
+			
+			if(running) {
+				frames++;
+			}
+			if(System.currentTimeMillis() - timer >= 1000) {
+				//checks frames every second
+				timer += 1000;
+				System.out.println("TICKS: "+deltaTick+" FPS: " + mgs.paintsPerSecond + " "+ frames);
+				//mgs.paintFPS(frames);
+				mgs.paintsPerSecond = 0;
+				frames = 0;
+				lastTick = tickNumber;
+			}
+		}
+	}
+    
+    
+    
+    private void initLogicGates(Main m) {
         short width;
         short height;
         byte zHeight;
+        //String fileName = "src/saves/4,4,1 2025-06-14 12-45-05.bin";
 
-        //old one with multiplexer
-        String fileName = "src/saves/500,500,15 2025-07-11 13-26-00.bin";
+        //main one
+        String fileName = "src/saves/500,500,15 2025-09-17 16-57-42.bin";
         //new one with depth of 6 tiles
         String newFileName = "src/saves/bigUn.bin";
         //src/saves/10,10,3 2025-06-14 21-33-17.bin";
@@ -178,35 +265,38 @@ public class Main {
             throw new RuntimeException(e);
         }
 
-        mgs = new MyGameScreen(width, height, zHeight, b);
+        mgs = new MyGameScreen(width, height, zHeight, b, m);
         mf.setGameScreen(mgs);
         mf.setVisible(true);
 
-        Timer timer = new Timer(0, new ActionListener() {
+        //b.memorizeWireRoutes(0);
+        addAllListeners(m);
+        
+//        Timer timer = new Timer(0, new ActionListener() {
+//
+//            @Override
+//            public void actionPerformed(ActionEvent e) {
+//                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+//                    tickNumber++;
+//                    b.tick(tickNumber);
+//                }
+//            }
+//        });
+//        timer.start();
 
+        m.start();
+
+    }
+
+    private void addAllListeners(Main m) {
+        mf.addComponentListener(new ComponentAdapter() {
             @Override
-            public void actionPerformed(ActionEvent e) {
-                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
-                    tickNumber++;
-                    b.tick(tickNumber);
-                    mgs.repaint();
-                }
+            public void componentResized(ComponentEvent e) {
+                //System.out.println("Window resized to: " + mf.getSize());
+            	mf.getGameScreen().updateSize();
+            	mgs.repaint();
             }
         });
-        timer.start();
-
-
-
-
-        //int initialSpeed = TICK_SPEED;
-        //if(TICK_SPEED != initialSpeed){
-
-        //}
-
-//        MouseHandler mh = new MouseHandler(mf, b);
-//        MouseHandler.MouseListenerHandler mlh = mh.new MouseListenerHandler();
-
-        //mf.addMouseListener(mlh);
 
         mf.addMouseListener(new MouseListener() {
             @Override
@@ -219,9 +309,12 @@ public class Main {
                             (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
                             (byte) LOGIC_SCREEN_LAYER)
                     ) {
-                        mf.getContentPane().repaint();
+                    	mgs.repaint();
                     }
                 }
+
+
+
             }
 
             @Override
@@ -262,7 +355,6 @@ public class Main {
                         mgs.repaint();
                         return;
                     }
-
                     mf.getContentPane().repaint();
                 }
             }
@@ -276,6 +368,8 @@ public class Main {
             public void mouseExited(MouseEvent e) {
 
             }
+
+
         });
 
 
@@ -315,7 +409,8 @@ public class Main {
 
                             mf.getGameScreen().xOffset = (int) SCREEN_X_OFFSET;
                             mf.getGameScreen().yOffset = (int) SCREEN_Y_OFFSET;
-                            mf.getContentPane().repaint();
+                            
+                            mgs.repaint();
                         } else if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
                             //System.out.println(e.getButton()); is 0 in this case, for all clicks
                             if (mouseClickNumber[0] == MouseEvent.BUTTON1) {//left button tapped and then dragged
@@ -324,8 +419,8 @@ public class Main {
                                         (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
                                         (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
                                         (byte) LOGIC_SCREEN_LAYER)) {
-
-                                    mf.getContentPane().repaint();
+                                	
+                                    mgs.repaint();
                                 }
                             } else if (mouseClickNumber[0] == MouseEvent.BUTTON3) {//right button tapped and then dragged
                                 if (b.checkClick(
@@ -333,8 +428,8 @@ public class Main {
                                         (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
                                         (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
                                         LOGIC_SCREEN_LAYER)) {
-
-                                    mf.getContentPane().repaint();
+                                	
+                                	mgs.repaint();
                                 }
                             }
                         }
@@ -346,6 +441,7 @@ public class Main {
                             mouseY[1] = (short) e.getY();
 
                             b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
+                             
                             mgs.repaint();
                         } else if (b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)
                                 || b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
@@ -362,6 +458,7 @@ public class Main {
                             mouseY[1] = (short) e.getY();
 
                             b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
+                             
                             mgs.repaint();
                         } else if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
                             copying = false;
@@ -388,9 +485,13 @@ public class Main {
             public void keyTyped(KeyEvent e) {
                 if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
                     if(gameMode == GATES_GAMEMODE_NUMBER) {
-                        gameMode = PAUSED_GAMEMODE_NUMBER;
+                        //running = false;
+                        //gameMode = PAUSED_GAMEMODE_NUMBER;
+                        //kill the thread
+
                     }else {
-                        gameMode = GATES_GAMEMODE_NUMBER;
+                        //running = true;
+                        //gameMode = GATES_GAMEMODE_NUMBER;
                     }
                 }
             }
@@ -401,7 +502,10 @@ public class Main {
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     if (gameMode == GATES_GAMEMODE_NUMBER) {
                         gameMode = PAUSED_GAMEMODE_NUMBER;
+                        running = false;
                     } else {
+                        System.out.println("pressed escape to resume");
+                        m.start();
                         gameMode = GATES_GAMEMODE_NUMBER;
                     }
                 }
@@ -448,6 +552,7 @@ public class Main {
 
                                 }
                                 mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                                
                                 mgs.repaint();
                                 mouseScrollDown[0] = false;
                             } else if (mouseScrollUp[0]) {
@@ -471,6 +576,7 @@ public class Main {
                                     mgs.yOffset = (int) SCREEN_Y_OFFSET;
                                 }
                                 mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
+                                
                                 mgs.repaint();
                                 mouseScrollUp[0] = false;
                             }
@@ -479,6 +585,7 @@ public class Main {
                             cutting = false;
                             pasting = false;
                             b.setGamemode(BreadBoard.COPYING_KEYWORD);
+                            
                             mgs.repaint();
                         } else if (keys[KeyEvent.VK_V]) {
                             copying = false;
@@ -487,12 +594,14 @@ public class Main {
                             System.out.println("paste from main");
                             b.setGamemode(BreadBoard.PASTING_KEYWORD);
                             paste();
+                            
                             mgs.repaint();
                         } else if (keys[KeyEvent.VK_X]) {
                             copying = false;
                             //cutting = true;
                             pasting = false;
                             b.setGamemode(BreadBoard.CUTTING_KEYWORD);
+                            
                             mgs.repaint();
                         }
                     } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
@@ -502,7 +611,7 @@ public class Main {
                     } else if (e.getKeyCode() == KeyEvent.VK_1) {
                         b.itemCursor = 1;
                     } else if (e.getKeyCode() == KeyEvent.VK_2) {
-                        b.itemCursor = 2;
+                        b.itemCursor = 52;//2 is a negative wire, 52 is a dead wire
                     } else if (e.getKeyCode() == KeyEvent.VK_3) {
                         b.itemCursor = 3;
                     } else if (e.getKeyCode() == KeyEvent.VK_4) {
@@ -535,28 +644,37 @@ public class Main {
 
 
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        double speedup = 1.2;
-                        if (!keys[KeyEvent.VK_SHIFT]) {
-                            if ((int) (TICK_SPEED / speedup) > 0) {
-                                TICK_SPEED = (int) (TICK_SPEED / speedup);//lower number = faster speed
-                                System.out.println(TICK_SPEED);
-                                timer.setDelay(TICK_SPEED);
+                        double speedup = 2;
+                        if (keys[KeyEvent.VK_SHIFT]) {
+                            if ((int) (tickspersecond / speedup) > 0.25) {//four seconds per tick
+                                tickspersecond = (int) (tickspersecond / speedup);//lower number = slower speed
+                                ns = 1_000_000_000 / tickspersecond;
+                                System.out.println(tickspersecond);
+                                //timer.setDelay(TICK_SPEED);
                             }
                         } else {
-                            if (TICK_SPEED <= 4) speedup = 2;
-                            if (TICK_SPEED * speedup <= 3000) {
-                                TICK_SPEED = (int) (TICK_SPEED * speedup);
-                                System.out.println(TICK_SPEED);
-                                timer.setDelay(TICK_SPEED);
+                            if (tickspersecond <= 4) speedup = 2;
+                            if (tickspersecond * speedup <= 64000) {//64000 tps
+                            	tickspersecond = (int) (tickspersecond * speedup);
+                            	ns = 1_000_000_000 / tickspersecond;
+                            	System.out.println(tickspersecond);
+                                //timer.setDelay(TICK_SPEED);
                             }
                         }
+                    }
+
+                    //clear signal queue
+                    if(e.getKeyCode() == KeyEvent.VK_BACK_SLASH){
+                        b.setSignalArrayToNull();
                     }
                 }
                 if (keys[KeyEvent.VK_S] && keys[KeyEvent.VK_CONTROL]) {//print or "save"
                     //b.printTiles(LOGIC_SCREEN_WIDTH,LOGIC_SCREEN_HEIGHT,LOGIC_SCREEN_ZHEIGHT);
-                    b.printTilesBytes(LOGIC_SCREEN_WIDTH, LOGIC_SCREEN_HEIGHT, LOGIC_SCREEN_ZHEIGHT);
+                    b.saveTileBytes(LOGIC_SCREEN_WIDTH, LOGIC_SCREEN_HEIGHT, LOGIC_SCREEN_ZHEIGHT);
                 }
 
+                 
+                mgs.repaint();
 
             }
 
@@ -565,17 +683,17 @@ public class Main {
                 //I think fn key is 524, so update keys to that number if you want the function key
                 //its either that or f6
                 keys[e.getKeyCode()] = false;
-                System.out.println("key " + e.getKeyCode() + " released");
+                //System.out.println("key " + e.getKeyCode() + " released");
                 if(e.getKeyCode() == KeyEvent.VK_CONTROL && (b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD))){
 
                     //b.eraseRegion(sX, sY, eX, eY);
 
                     //b.setGamemode(BreadBoard.EDITING_KEYWORD);
+                     
                     mgs.repaint();
                 }
             }
         });
-
     }
 
     /**
@@ -590,8 +708,8 @@ public class Main {
 
         if(pasting && b.getGamemode().equals(BreadBoard.PASTING_KEYWORD)){
             for(byte i = 0; i < mgs.tempCutCopyPasteBoardList.size(); i++) {
-                for (short j = 0; j < mgs.tempCutCopyPasteBoardList.getFirst().size(); j++) {
-                    for (short k = 0; k < mgs.tempCutCopyPasteBoardList.getFirst().getFirst().size(); k++) {
+                for (short j = 0; j < mgs.tempCutCopyPasteBoardList.get(0).size(); j++) {
+                    for (short k = 0; k < mgs.tempCutCopyPasteBoardList.get(0).get(0).size(); k++) {
 
                         //dont delete this three
 //                        b.setBreadBoardTileByte(mgs.tempCutCopyPasteBoardList.get(i).get(j).get(k), (short) (k + sX), (short) (j + sY), i);
@@ -627,6 +745,7 @@ public class Main {
                     }
                 }
             }
+             
             mgs.repaint();
             b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
             pasting = false;
@@ -753,13 +872,7 @@ public class Main {
         });
         
 
-        mf.addComponentListener(new ComponentAdapter() {
-            @Override
-            public void componentResized(ComponentEvent e) {
-                System.out.println("Window resized to: " + mf.getSize());
-                mf.getGameScreen().updateSize();
-            }
-        });
+
         
         //MyFrame mf = new MyFrame(500,300);
     }
@@ -890,6 +1003,14 @@ public class Main {
      */
     public static boolean getCutting(){
         return cutting;
+    }
+
+    public static BreadBoard getBreadBoard() {
+        return b;
+    }
+    
+    public int getFrames() {
+    	return frames;
     }
 
 }

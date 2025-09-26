@@ -25,7 +25,8 @@ public enum TileByte {
     LEDOn((byte) 14),
     ButtonOff((byte) 15),
     ButtonOn((byte) 16),
-    Xor((byte) 17);
+    Xor((byte) 17),
+    WireDead((byte) 52);
 
 
 
