@@ -172,9 +172,7 @@ public class Main implements Runnable{
 			delta += (now- lastTime) / ns; 
 			deltaTick = currentTick - lastTick;
 			lastTime = now;
-			
-			
-			
+
 			while(delta >= 1) {
 				b.tick(tickNumber);
 				tickNumber++;
@@ -184,9 +182,7 @@ public class Main implements Runnable{
 			    }
 				delta--;
 			}
-			
-			
-			
+            
 			if(running) {
 				frames++;
 			}
@@ -211,7 +207,7 @@ public class Main implements Runnable{
         //String fileName = "src/saves/4,4,1 2025-06-14 12-45-05.bin";
 
         //main one
-        String fileName = "src/saves/500,500,15 2025-09-17 16-57-42.bin";
+        String fileName = "src/saves/500,500,15 2025-09-27 22-47-43.bin";
         //new one with depth of 6 tiles
         String newFileName = "src/saves/bigUn.bin";
         //src/saves/10,10,3 2025-06-14 21-33-17.bin";
