@@ -1,11 +1,16 @@
 package src.code;
 
+import org.w3c.dom.ls.LSOutput;
+
 import java.awt.*;
 import java.awt.event.*;
+import java.io.FileNotFoundException;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.*;
@@ -35,10 +40,11 @@ public class Main implements Runnable{
     //magic numbers
     static final int PUNCHCARD_DISPLAY_WIDTH = 32;
 
-    static final int PAUSED_GAMEMODE_NUMBER = -1;
-    static final int TERRARIA_GAMEMODE_NUMBER = 1;
-    static final int PUNCHCARD_GAMEMODE_NUMBER = 2;
-    static final int GATES_GAMEMODE_NUMBER = 3;
+    static final int PAUSED_GAMEMODE = -1;
+    static final int TERRARIA_GAMEMODE = 1;
+    static final int PUNCHCARD_GAMEMODE = 2;
+    static final int GATES_GAMEMODE = 3;
+    static final int FILE_REQUEST = 50;
     //static final String GATES_GAMEMODE_STRING = "";
 
     static final int DEFAULT_SCREEN_SIZE = 10;//ARCHAIC: TERRARIA AND SUCH
@@ -73,6 +79,10 @@ public class Main implements Runnable{
     static final String sS = "S";
     static final String sA = "A";
     static final String sD = "D";
+    /** full file name:<br>
+     *  including src/saves/ and .bin
+     */
+    static String fileName = "";
 
     static final short[] mouseX = new short[2];
     static final short[] mouseY = new short[2];
@@ -87,6 +97,8 @@ public class Main implements Runnable{
     private static boolean cutting = false;
     private static boolean copying = false;
     private static boolean pasting = false;
+    private static boolean savePressed = false;
+
 
     static int gameMode;
     static short numTiles;
@@ -103,7 +115,14 @@ public class Main implements Runnable{
      * Main object, inits logic gates
      */
     public Main() {
-    	initLogicGates(this);
+
+        mf = new MyFrame();
+        mf.setSize(500 + 16, 500 + 38);
+        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        mf.setTitle("muh gates");
+
+        askforFile();
+        //initLogicGates(this);
         System.out.println("Initialized LogicGates");
     }
     
@@ -116,19 +135,19 @@ public class Main implements Runnable{
      */
     public static void main(final String[] args) {
         if(args != null && args.length > 0) {
-            if (args[0].equals(Integer.toString(TERRARIA_GAMEMODE_NUMBER))) {
+            if (args[0].equals(Integer.toString(TERRARIA_GAMEMODE))) {
                 numTiles = DEFAULT_SCREEN_SIZE;
-                gameMode = TERRARIA_GAMEMODE_NUMBER;
+                gameMode = TERRARIA_GAMEMODE;
                 initTerrariaClone();
                 System.out.println("Initialized Terraria Clone");
-            } else if (args[0].equals(Integer.toString(PUNCHCARD_GAMEMODE_NUMBER))) {
+            } else if (args[0].equals(Integer.toString(PUNCHCARD_GAMEMODE))) {
                 numTiles = PUNCHCARD_DISPLAY_WIDTH;
-                gameMode = PUNCHCARD_GAMEMODE_NUMBER;
+                gameMode = PUNCHCARD_GAMEMODE;
                 initPunchCard();
                 System.out.println("Initialized Punch Card");
             }
         }else {
-        	gameMode = GATES_GAMEMODE_NUMBER;
+        	gameMode = GATES_GAMEMODE;
         	Main m = new Main();            
         }
 
@@ -176,10 +195,9 @@ public class Main implements Runnable{
 			while(delta >= 1) {
 				b.tick(tickNumber);
 				tickNumber++;
-                //change to 1 if want paint every tick
-				if (tickNumber % 4 == 0) {
+				//if (tickNumber % 4 == 0) {
 			        mgs.repaint(); // paint every 4 ticks
-			    }
+			    //}
 				delta--;
 			}
             
@@ -197,17 +215,208 @@ public class Main implements Runnable{
 			}
 		}
 	}
+
+
+    private void askforFile() {
+        gameMode = FILE_REQUEST;
+
+        JPanel masterPanel = new JPanel();
+        masterPanel.setLayout(new BoxLayout(masterPanel, BoxLayout.Y_AXIS));
+        JPanel topPanel = new JPanel();
+        JLabel topLabel = new JLabel("LOAD OR CREATE FILE");
+        topPanel.add(topLabel);
+        masterPanel.add(topPanel);
+
+
+        JPanel buttons = new JPanel();
+        JButton load = new JButton("Load File");
+        buttons.add(load);
+        JButton create = new JButton("Create File");
+        buttons.add(create);
+        masterPanel.add(buttons);
+
+        mf.add(masterPanel);
+
+        mf.setVisible(true);
+
+        ActionListener gListener = new ActionListener() {
+
+            @Override
+            public void actionPerformed(ActionEvent e) {
+
+                buttons.removeAll();
+                masterPanel.remove(buttons);
+
+                if(e.getSource() == load) {
+                    topLabel.setText("<html>LOAD FILE; LEAVE EMPTY FOR DEFAULT FILE.<br>PRESS ENTER TO SUBMIT.</html>");
+                    JPanel txtPanel = new JPanel();
+                    JTextArea txt = new JTextArea(1, 20);
+                    txtPanel.add(txt);
+                    masterPanel.add(txtPanel);
+
+                    txt.requestFocusInWindow();
+                    masterPanel.revalidate();
+                    masterPanel.repaint();
+
+
+                    txt.addKeyListener(new KeyAdapter() {
+                        public void keyPressed(KeyEvent e) {
+                            if(e.getKeyCode() == KeyEvent.VK_ENTER) {
+                                e.consume();
+
+                                if (!txt.getText().isBlank()) {
+                                    int length = txt.getText().length();
+                                    //if(txt.getText().contains("src/saves/"))
+                                    final int length_of_file_directory = ("src/saves").length() + 1;
+                                    int start = (txt.getText().startsWith("src/saves/"))
+                                                ? txt.getText().lastIndexOf("src/saves/") + length_of_file_directory
+                                                : 0;
+                                    int end = (txt.getText().endsWith(".bin"))
+                                                ? txt.getText().lastIndexOf(".bin")
+                                                : txt.getText().length();
+                                    fileName = txt.getText().substring(start, end);
+                                    System.out.println("fileName is " + fileName);
+                                    fileName = "src/saves/" + fileName + ".bin";
+                                    System.out.println("fileName is " + fileName);
+
+                                    Path p = Paths.get(fileName);
+                                    if(Files.exists(p)) {
+                                        txt.removeKeyListener(this);
+                                        mf.remove(txt);
+                                        mf.remove(masterPanel);
+                                        initLogicGates(Main.this, fileName);
+                                    }else {
+                                        topLabel.setText("FILE INVALID, TRY AGAIN");
+                                        txt.setText("");
+                                        txt.requestFocusInWindow();
+                                        masterPanel.revalidate();
+                                        masterPanel.repaint();
+
+                                    }
+                                }else {
+
+                                    fileName = "src/saves/500,500,15 2025-10-19 02-00-08.bin";
+                                    if (Files.exists(Paths.get(fileName))) {
+                                        mf.remove(txt);
+                                        mf.remove(masterPanel);
+                                        initLogicGates(Main.this, fileName);
+                                    } else {
+                                        topLabel.setText("FILE INVALID, TRY AGAIN");
+                                    }
+                                }
+
+                            }
+                        }
+                    });
+                }
+
+                if(e.getSource() == create) {
+                    topLabel.setText("<html>CREATE FILE<br>DO NOT PUT A DIRECTORY OR FILE TYPE</html>");
+
+                    masterPanel.add(Box.createRigidArea(new Dimension(0, 10))); // spacing
+
+                    // Name
+                    JPanel namePanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    JLabel nameLabel = new JLabel("Name:");
+                    JTextField nameField = new JTextField(20);
+                    namePanel.add(nameLabel);
+                    namePanel.add(nameField);
+                    masterPanel.add(namePanel);
+
+                    // Width
+                    JPanel widthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    JLabel widthLabel = new JLabel("Width:");
+                    JTextField widthField = new JTextField(10);
+                    widthPanel.add(widthLabel);
+                    widthPanel.add(widthField);
+                    masterPanel.add(widthPanel);
+
+                    // Height
+                    JPanel heightPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    JLabel heightLabel = new JLabel("Height:");
+                    JTextField heightField = new JTextField(10);
+                    heightPanel.add(heightLabel);
+                    heightPanel.add(heightField);
+                    masterPanel.add(heightPanel);
+
+                    // Depth
+                    JPanel depthPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+                    JLabel depthLabel = new JLabel("Depth:");
+                    JTextField depthField = new JTextField(10);
+                    depthPanel.add(depthLabel);
+                    depthPanel.add(depthField);
+                    masterPanel.add(depthPanel);
+
+                    // Create Button
+                    JButton createButton = new JButton("Create File");
+                    createButton.setAlignmentX(Component.CENTER_ALIGNMENT);
+                    masterPanel.add(Box.createRigidArea(new Dimension(0, 10))); // spacing
+                    masterPanel.add(createButton);
+
+                    createButton.addActionListener(new ActionListener() {
+
+                        @Override
+                        public void actionPerformed(ActionEvent e) {
+                            String widthText = widthField.getText().trim();
+                            String heightText = heightField.getText().trim();
+                            String depthText = depthField.getText().trim();
+                            String nameText = nameField.getText().trim();
+
+                            if(nameText.isEmpty()) {
+                                JOptionPane.showMessageDialog(null, "Please enter a name. \nDo not put a file directory or file type.");
+                                return;
+                            }
+
+                            try {
+                                int width = Integer.parseInt(widthText);
+                                int height = Integer.parseInt(heightText);
+                                int depth = Integer.parseInt(depthText);
+
+                                // Optional: check for positive numbers
+                                if(width <= 0 || height <= 0 || depth <= 0) {
+                                    JOptionPane.showMessageDialog(null, "Width, Height, and Depth must be positive numbers.");
+                                    return;
+                                }
+
+                                // Everything is valid, create the file
+                                fileName = "src/saves/" + nameText + ".bin";
+                                new FileCreator(width, height, depth, fileName);
+                                mf.remove(masterPanel);
+                                initLogicGates(Main.this, fileName);
+
+                            } catch(NumberFormatException ex) {
+                                // Inform the user without crashing
+                                JOptionPane.showMessageDialog(null, "Width, Height, and Depth must be valid numbers.");
+                            }
+                        }
+                    });
+
+                }
+
+
+
+
+                mf.setVisible(true);
+
+            }
+        };
+        load.addActionListener(gListener);
+        create.addActionListener(gListener);
+
+
+    }
     
     
-    
-    private void initLogicGates(Main m) {
+    private void initLogicGates(Main m, final String fileName) {
+        gameMode = GATES_GAMEMODE;
+
         short width;
         short height;
         byte zHeight;
         //String fileName = "src/saves/4,4,1 2025-06-14 12-45-05.bin";
 
         //main one
-        String fileName = "src/saves/500,500,15 2025-09-27 22-47-43.bin";
+        //String fileName = "src/saves/500,500,15 2025-10-19 02-00-08.bin";
         //new one with depth of 6 tiles
         String newFileName = "src/saves/bigUn.bin";
         //src/saves/10,10,3 2025-06-14 21-33-17.bin";
@@ -219,6 +428,11 @@ public class Main implements Runnable{
 
         //USE THIS IF YOU WANT TO CREATE A NEW FILE
         //FileCreator fs = new FileCreator(500,500,15, newFileName);
+
+
+
+        //String fileName = askforFile();
+
 
         Path file = Paths.get(fileName);
 
@@ -246,10 +460,10 @@ public class Main implements Runnable{
             throw new RuntimeException(e);
         }
 
-        mf = new MyFrame();
-        mf.setSize(500 + 16, 500 + 38);
-        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mf.setTitle("muh gates");
+//        mf = new MyFrame();
+//        mf.setSize(500 + 16, 500 + 38);
+//        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        mf.setTitle("muh gates");
 
         b = new BreadBoard(width, height, zHeight);
 
@@ -266,13 +480,17 @@ public class Main implements Runnable{
         mf.setVisible(true);
 
         //b.memorizeWireRoutes(0);
+
+        mf.revalidate();
+        mf.repaint();
+        mf.requestFocusInWindow(); // restore focus to game screen
         addAllListeners(m);
         
 //        Timer timer = new Timer(0, new ActionListener() {
 //
 //            @Override
 //            public void actionPerformed(ActionEvent e) {
-//                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+//                if(gameMode != PAUSED_GAMEMODE) {
 //                    tickNumber++;
 //                    b.tick(tickNumber);
 //                }
@@ -285,6 +503,7 @@ public class Main implements Runnable{
     }
 
     private void addAllListeners(Main m) {
+        //System.out.println("called addAllListeners");
         mf.addComponentListener(new ComponentAdapter() {
             @Override
             public void componentResized(ComponentEvent e) {
@@ -298,7 +517,7 @@ public class Main implements Runnable{
             @Override
             public void mouseClicked(MouseEvent e) {
                 //checks if mouse is clicked and draws the screen accordingly
-                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+                if(gameMode != PAUSED_GAMEMODE) {
                     if (b.checkClick(
                             e,
                             (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
@@ -315,7 +534,7 @@ public class Main implements Runnable{
 
             @Override
             public void mousePressed(MouseEvent e) {
-                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+                if(gameMode != PAUSED_GAMEMODE) {
                     mouseClickNumber[0] = (byte) e.getButton();
                     mouseX[0] = (short) e.getX();
                     mouseY[0] = (short) e.getY();
@@ -326,7 +545,7 @@ public class Main implements Runnable{
 
             @Override
             public void mouseReleased(MouseEvent e) {
-                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+                if(gameMode != PAUSED_GAMEMODE) {
                     if (copying && b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)) {
                         copying = false;
                         b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
@@ -391,7 +610,7 @@ public class Main implements Runnable{
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if(gameMode != PAUSED_GAMEMODE_NUMBER) {
+                if(gameMode != PAUSED_GAMEMODE) {
                     //DO NOT USE "!(cutting || copying)": these will be used for actual cutting and pasting
                     //i.e. when the mouse is being dragged to cut/copy
                     //This if must check whether I've not clicked CTL C or CTL X
@@ -476,36 +695,25 @@ public class Main implements Runnable{
 
 
         mf.addKeyListener(new KeyListener() {
-
             @Override
             public void keyTyped(KeyEvent e) {
-                if(e.getKeyCode() == KeyEvent.VK_ESCAPE){
-                    if(gameMode == GATES_GAMEMODE_NUMBER) {
-                        //running = false;
-                        //gameMode = PAUSED_GAMEMODE_NUMBER;
-                        //kill the thread
 
-                    }else {
-                        //running = true;
-                        //gameMode = GATES_GAMEMODE_NUMBER;
-                    }
-                }
             }
 
             @Override
             public void keyPressed(KeyEvent e) {
                 keys[e.getKeyCode()] = true;
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
-                    if (gameMode == GATES_GAMEMODE_NUMBER) {
-                        gameMode = PAUSED_GAMEMODE_NUMBER;
+                    if (gameMode == GATES_GAMEMODE) {
+                        gameMode = PAUSED_GAMEMODE;
                         running = false;
                     } else {
                         System.out.println("pressed escape to resume");
                         m.start();
-                        gameMode = GATES_GAMEMODE_NUMBER;
+                        gameMode = GATES_GAMEMODE;
                     }
                 }
-                if (gameMode != PAUSED_GAMEMODE_NUMBER) {
+                if (gameMode != PAUSED_GAMEMODE) {
                     if (keys[KeyEvent.VK_E]) {
                         if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
                             b.setGamemode(BreadBoard.EDITING_KEYWORD);
@@ -528,6 +736,10 @@ public class Main implements Runnable{
                                 (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
                                 (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
                                 LOGIC_SCREEN_LAYER);
+                    } else if (keys[KeyEvent.VK_L]){
+//                        gameMode = FILE_REQUEST;
+//                        running = false;
+
                     } else if (keys[KeyEvent.VK_CONTROL]) {
                         if (!(keys[KeyEvent.VK_C] || keys[KeyEvent.VK_V] || keys[KeyEvent.VK_X])) {//zoom in and out if not copying, cutting, or pasting
                             if (mouseScrollDown[0]) {
@@ -628,7 +840,29 @@ public class Main implements Runnable{
                         b.itemCursor = 11;
                     } else if (e.getKeyCode() == KeyEvent.VK_P) {
                         b.itemCursor = 17;//XOR
-                    } else if (e.getKeyCode() == KeyEvent.VK_EQUALS) {
+                    } else if (e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
+                        //cycle down
+                        if(b.itemCursor == 52){
+                            b.itemCursor = 1;
+                        }else if(b.itemCursor == 3){
+                            b.itemCursor = 52;
+                        }else if(b.itemCursor == 17) {
+                            b.itemCursor = 11;
+                        }else {
+                            b.itemCursor = (b.itemCursor > 0) ? (byte) (b.itemCursor - 1) : b.itemCursor;//XOR
+                        }
+                    } else if (e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
+                        //cycle up
+                        if(b.itemCursor == 52){
+                            b.itemCursor = 3;
+                        }else if(b.itemCursor == 1){
+                            b.itemCursor = 52;
+                        }else if(b.itemCursor == 11) {
+                            b.itemCursor = 17;
+                        }else {
+                            b.itemCursor = (b.itemCursor < 23) ? (byte) (b.itemCursor + 1) : b.itemCursor;//XOR
+                        }
+                    }else if (e.getKeyCode() == KeyEvent.VK_EQUALS) {
                         if (LOGIC_SCREEN_LAYER + 1 <= b.TOP_Z) {
                             LOGIC_SCREEN_LAYER++;
                         }
@@ -664,9 +898,31 @@ public class Main implements Runnable{
                         b.setSignalArrayToNull();
                     }
                 }
-                if (keys[KeyEvent.VK_S] && keys[KeyEvent.VK_CONTROL]) {//print or "save"
-                    //b.printTiles(LOGIC_SCREEN_WIDTH,LOGIC_SCREEN_HEIGHT,LOGIC_SCREEN_ZHEIGHT);
-                    b.saveTileBytes(LOGIC_SCREEN_WIDTH, LOGIC_SCREEN_HEIGHT, LOGIC_SCREEN_ZHEIGHT);
+                //this happens regardless if game is paused or not
+                if (keys[KeyEvent.VK_CONTROL] && keys[KeyEvent.VK_S]) {
+                    if (!savePressed) {
+                        savePressed = true; // prevent repeat
+
+                        if (keys[KeyEvent.VK_SHIFT]) {
+                            fileName = JOptionPane.showInputDialog("Enter name to save as.");
+                            final int length_of_file_directory = ("src/saves").length() + 1;
+                            int start = (fileName.startsWith("src/saves/"))
+                                    ? fileName.lastIndexOf("src/saves/") + length_of_file_directory
+                                    : 0;
+                            int end = (fileName.endsWith(".bin"))
+                                    ? fileName.lastIndexOf(".bin")
+                                    : fileName.length();
+                            fileName = fileName.substring(start, end);
+                            fileName = "src/saves/" + fileName + ".bin";
+                        }
+                        b.saveTileBytes(LOGIC_SCREEN_WIDTH, LOGIC_SCREEN_HEIGHT, LOGIC_SCREEN_ZHEIGHT);
+                        // reset after dialog (focus lost causes stuck keys)
+                        keys[KeyEvent.VK_CONTROL] = false;
+                        keys[KeyEvent.VK_S] = false;
+                        keys[KeyEvent.VK_SHIFT] = false;
+                    }
+                } else {
+                    savePressed = false; // reset when Ctrl+S released
                 }
 
                  
@@ -1007,6 +1263,14 @@ public class Main implements Runnable{
     
     public int getFrames() {
     	return frames;
+    }
+
+    public String getFileName() {
+        return fileName;
+    }
+
+    public void setFileName(String fileName) {
+        this.fileName = fileName;
     }
 
 }

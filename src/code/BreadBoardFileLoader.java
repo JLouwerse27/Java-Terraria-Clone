@@ -27,7 +27,7 @@ public class BreadBoardFileLoader {
 
         System.out.println("BreadBoardFileLoader.load(): width = " + width + ", height = " + height + ", zHeight = " + zHeight);
 
-        System.out.println(Arrays.toString(dimensions()));
+        System.out.println("BreadBoardFileLoader.load(): dimensions array: "+Arrays.toString(dimensions()));
 
         byte[][][] tiles = new byte[zHeight][height][width];
         byte[][][] dir1Raw = new byte[zHeight][height][width];

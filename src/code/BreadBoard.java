@@ -39,7 +39,7 @@ public class BreadBoard {
     final byte TOP_Z;
     final byte BOTTOM_Z;
 
-    final static short SIGNAL_ARRAY_LENGTH = 100;
+    final static short SIGNAL_ARRAY_LENGTH = 400;
     final static byte SIGNAL_ARRAY_D_PLACE = 0;
     final static byte SIGNAL_ARRAY_S_PLACE = 1;
     final static byte SIGNAL_ARRAY_X_PLACE = 2;
@@ -79,7 +79,12 @@ public class BreadBoard {
     final static byte RESISTOR_3_BYTE   = TileByte.Resistor3.getSymbol();
     final static byte RESISTOR_5_BYTE   = TileByte.Resistor5.getSymbol();
     final static byte RESISTOR_10_BYTE  = TileByte.Resistor10.getSymbol();
-
+    final static byte RED_LED_ON_BYTE = TileByte.RedLEDOn.getSymbol();
+    final static byte RED_LED_OFF_BYTE = TileByte.RedLEDOff.getSymbol();
+    final static byte GREEN_LED_ON_BYTE = TileByte.GreenLEDOn.getSymbol();
+    final static byte GREEN_LED_OFF_BYTE = TileByte.GreenLEDOff.getSymbol();
+    final static byte BLUE_LED_ON_BYTE = TileByte.BlueLEDOn.getSymbol();
+    final static byte BLUE_LED_OFF_BYTE = TileByte.BlueLEDOff.getSymbol();
 
     private String gamemode = DEFAULT_KEYWORD;
     public byte itemCursor  = 0;
@@ -141,7 +146,10 @@ public class BreadBoard {
             RESISTOR_1_BYTE,
             RESISTOR_3_BYTE,
             RESISTOR_5_BYTE,
-            RESISTOR_10_BYTE
+            RESISTOR_10_BYTE,
+            RED_LED_OFF_BYTE,
+            GREEN_LED_OFF_BYTE,
+            BLUE_LED_OFF_BYTE
     };
 
 
@@ -239,7 +247,22 @@ public class BreadBoard {
             return new Resistor5(d, x, y, z);
         } else if (tb == RESISTOR_10_BYTE) {
             return new Resistor10(d, x, y, z);
-        } else if (tb == EMPTY_BYTE) {
+        } else if (tb == RED_LED_ON_BYTE) {
+            return new RedLED(TState.POSITIVE, d, x, y, z);
+        } else if (tb == RED_LED_OFF_BYTE) {
+            return new RedLED(TState.NEGATIVE, d, x, y, z);
+            // Resistors
+        } else if (tb == GREEN_LED_ON_BYTE) {
+            return new GreenLED(TState.POSITIVE, d, x, y, z);
+        } else if (tb == GREEN_LED_OFF_BYTE) {
+            return new GreenLED(TState.NEGATIVE, d, x, y, z);
+            // Resistors
+        } else if (tb == BLUE_LED_ON_BYTE) {
+            return new BlueLED(TState.POSITIVE, d, x, y, z);
+        } else if (tb == BLUE_LED_OFF_BYTE) {
+            return new BlueLED(TState.NEGATIVE, d, x, y, z);
+            // Resistors
+        }else if (tb == EMPTY_BYTE) {
             return null;
         } else {
             System.out.println("Unknown tile: " + tb);
@@ -350,7 +373,7 @@ public class BreadBoard {
                     } else {
                         breadBoardItemsList.add(theOne,
                                 //convertToType(itemEnum[index + 1], dN,dN, x, y, z));
-                                convertToTypeBytes(index, dN,dN, x, y, z));
+                                convertToTypeBytes(itemEnumBytes[index], dN,dN, x, y, z));
                     }
                     breadboardDirection[z][y][x] = dN;//call this before return, cuz of repaint in next fn
                     breadboardDirection2[z][y][x] = dN;
@@ -504,6 +527,15 @@ public class BreadBoard {
             case Xor:
                 breadBoardItemsList.add(new Xor(d, x, y, z));
                 break;
+            case RedLEDOff, RedLEDOn:
+                breadBoardItemsList.add(new RedLED(TState.DEAD, d, x, y, z));
+                break;
+            case GreenLEDOff, GreenLEDOn:
+                breadBoardItemsList.add(new GreenLED(TState.DEAD, d, x, y, z));
+                break;
+            case BlueLEDOff, BlueLEDOn:
+                breadBoardItemsList.add(new BlueLED(TState.DEAD, d, x, y, z));
+                break;
             case Empty:
                 break;
             default:
@@ -548,7 +580,8 @@ public class BreadBoard {
                 if(x >= cbi.getX() * MyGameScreen.tileWidth &&
                         x < cbi.getX() * MyGameScreen.tileWidth + MyGameScreen.tileWidth
                         && y >= cbi.getY() * MyGameScreen.tileHeight &&
-                        y < cbi.getY() * MyGameScreen.tileHeight + MyGameScreen.tileHeight)
+                        y < cbi.getY() * MyGameScreen.tileHeight + MyGameScreen.tileHeight
+                        && layer == cbi.getZ())
                 {
                     cbi.set();
                     //setBreadBoardTile(cbi.returnTile(),cbi.getX(),cbi.getY(), cbi.getZ());
@@ -791,7 +824,8 @@ public class BreadBoard {
             Main.getMyGameScreen().yOffset += MyGameScreen.tileSize;
             Main.SCREEN_Y_OFFSET = Main.getMyGameScreen().yOffset;
             Main.getMyGameScreen().repaint();
-        }else if (keys[KeyEvent.VK_S] || keys[KeyEvent.VK_DOWN]) {
+        }else if ((keys[KeyEvent.VK_S] || keys[KeyEvent.VK_DOWN])
+                    && !keys[KeyEvent.VK_CONTROL] && !keys[KeyEvent.VK_SHIFT]) {
             Main.getMyGameScreen().yOffset -= MyGameScreen.tileSize;
             Main.SCREEN_Y_OFFSET = Main.getMyGameScreen().yOffset;
             Main.getMyGameScreen().repaint();
@@ -914,52 +948,104 @@ public class BreadBoard {
                 } else {
                     System.out.println("Expected Wire at " + x + "," + y + "," + z + " but got null or different type.");
                 }
-            } else if (tile == LED_OFF_BYTE) {
+            }
+            else if (tile == LED_OFF_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
                 led.setOut(TState.POSITIVE, t);
-            } else if (tile == RESISTOR_1_BYTE) {
+            }
+            else if (tile == RED_LED_OFF_BYTE) {
+                RedLED rled = (RedLED) locateBreadBoardItemOnBoard(x, y, z);
+                if (rled == null) {
+                    System.err.println("RedLED missing at " + x + "," + y + "," + z);
+                    return;
+                }
+                int ran = (int) (Math.random() * 255);
+                rled.setBrightness(ran);
+                rled.setOut(TState.POSITIVE, t);
+            }
+            else if (tile == GREEN_LED_OFF_BYTE) {
+                GreenLED gled = (GreenLED) locateBreadBoardItemOnBoard(x, y, z);
+                assert gled != null;
+                gled.setOut(TState.POSITIVE, t);
+            }
+            else if (tile == BLUE_LED_OFF_BYTE) {
+                BlueLED bled = (BlueLED) locateBreadBoardItemOnBoard(x, y, z);
+                assert bled != null;
+                bled.setOut(TState.POSITIVE, t);
+            }
+            else if (tile == RESISTOR_1_BYTE) {
                 Resistor1 r1 = (Resistor1) locateBreadBoardItemOnBoard(x, y, z);
                 assert r1 != null;
                 r1.setOut(dx, dy, TState.POSITIVE, t);
-            } else if (tile == RESISTOR_3_BYTE) {
+            }
+            else if (tile == RESISTOR_3_BYTE) {
                 Resistor3 r3 = (Resistor3) locateBreadBoardItemOnBoard(x, y, z);
                 assert r3 != null;
                 r3.setOut(dx, dy, TState.POSITIVE, t);
-            } else if (tile == RESISTOR_5_BYTE) {
+            }
+            else if (tile == RESISTOR_5_BYTE) {
                 Resistor5 r5 = (Resistor5) locateBreadBoardItemOnBoard(x, y, z);
                 assert r5 != null;
                 r5.setOut(dx, dy, TState.POSITIVE, t);
-            } else if (tile == RESISTOR_10_BYTE) {
+            }
+            else if (tile == RESISTOR_10_BYTE) {
                 Resistor10 r10 = (Resistor10) locateBreadBoardItemOnBoard(x, y, z);
                 assert r10 != null;
                 r10.setOut(dx, dy, TState.POSITIVE, t);
+            }else {
+                //--note: bug with RGB LEDs; this prints out 4x
+                //System.out.println("setWiresAndLeds(): trying to turn on unknown wire or LED");
             }
         } else if(s.equals(TState.NEGATIVE)){
             if (tile == WIRE_ON_BYTE || tile == WIRE_DEAD_BYTE) {
                 Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y, z);
                 assert wire != null;
                 wire.setOut(dx, dy, dz, TState.NEGATIVE, t);
-            } else if (tile == LED_ON_BYTE) {
+            }
+            else if (tile == LED_ON_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
                 led.setOut(TState.NEGATIVE, t);
-            } else if (tile == RESISTOR_1_BYTE) {
+            }
+            else if (tile == RED_LED_ON_BYTE) {
+                RedLED rled = (RedLED) locateBreadBoardItemOnBoard(x, y, z);
+                assert rled != null;
+                rled.setOut(TState.NEGATIVE, t);
+            }
+            else if (tile == GREEN_LED_ON_BYTE) {
+                GreenLED gled = (GreenLED) locateBreadBoardItemOnBoard(x, y, z);
+                assert gled != null;
+                gled.setOut(TState.NEGATIVE, t);
+            }
+            else if (tile == BLUE_LED_ON_BYTE) {
+                BlueLED bled = (BlueLED) locateBreadBoardItemOnBoard(x, y, z);
+                assert bled != null;
+                bled.setOut(TState.NEGATIVE, t);
+            }
+            else if (tile == RESISTOR_1_BYTE) {
                 Resistor1 r1 = (Resistor1) locateBreadBoardItemOnBoard(x, y, z);
                 assert r1 != null;
                 r1.setOut(dx, dy, TState.NEGATIVE, t);
-            } else if (tile == RESISTOR_3_BYTE) {
+            }
+            else if (tile == RESISTOR_3_BYTE) {
                 Resistor3 r3 = (Resistor3) locateBreadBoardItemOnBoard(x, y, z);
                 assert r3 != null;
                 r3.setOut(dx, dy, TState.NEGATIVE, t);
-            } else if (tile == RESISTOR_5_BYTE) {
+            }
+            else if (tile == RESISTOR_5_BYTE) {
                 Resistor5 r5 = (Resistor5) locateBreadBoardItemOnBoard(x, y, z);
                 assert r5 != null;
                 r5.setOut(dx, dy, TState.NEGATIVE, t);
-            } else if (tile == RESISTOR_10_BYTE) {
+            }
+            else if (tile == RESISTOR_10_BYTE) {
                 Resistor10 r10 = (Resistor10) locateBreadBoardItemOnBoard(x, y, z);
                 assert r10 != null;
                 r10.setOut(dx, dy, TState.NEGATIVE, t);
+            }
+            else {
+                //--note: bug with RGB LEDs; this prints out 4x
+                //System.out.println("setWiresAndLeds(): trying to turn off unknown wire or LED");
             }
         }
         //else tstate = dead {error}
@@ -1377,15 +1463,35 @@ public class BreadBoard {
             this.C = on;
         }
 
-        public void calculate(){
-            if(TState.and(A,B) || TState.and(A,C) || TState.and(B,C)
-            && A.ordinal() * B.ordinal() * C.ordinal() == 0){
-                //only checking for 2 way and -- that is why == 0 is there
+        @Override
+        public void setD(TState on) {
+            this.D = on;
+        }
+
+        @Override
+        public void setE(TState on) {
+            this.E = on;
+        }
+
+        @Override
+        public void setF(TState on) {
+            this.F = on;
+        }
+
+        public void calculate() {
+//            if(TState.and(A,B) || TState.and(A,C) || TState.and(B,C)
+//            && A.ordinal() * B.ordinal() * C.ordinal() == 0){
+//                //only checking for 2 way and -- that is why == 0 is there
+//                out = TState.POSITIVE;
+//            }
+            if (A.value + B.value + C.value + D.value + E.value + F.value < 50
+            && A.value + B.value + C.value + D.value + E.value + F.value >= 2) {
+                //check that theres no negatives, and that we at least have two positives
+                //-----DON'T do one gated ands, whats the point lol --------------------------
                 out = TState.POSITIVE;
-            } else if (A.ordinal() == 0 && B.ordinal() == 0 && C.ordinal() == 0){
-                //anything multiplied by 0 is 0; the DEAD ordinal is 0
+            }else if (TState.dead(A, B, C, D, E, F)){//might be able to take this out, but keeping it for safety
                 out = TState.DEAD;
-            }else {
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value >= 1){
                 out = TState.NEGATIVE;
             }
         }
@@ -1425,25 +1531,35 @@ public class BreadBoard {
             this.C = on;
         }
 
+        @Override
+        public void setD(final TState on) {
+            this.D = on;
+        }
+
+        @Override
+        public void setE(TState on) {
+            this.E = on;
+        }
+
+        @Override
+        public void setF(TState on) {
+            this.F = on;
+        }
+
         public void calculate(){
             //this.out = !B; old
-            if(A.ordinal() + B.ordinal() + C.ordinal() == 1){
+            if(A.value + B.value + C.value + D.value + E.value + F.value == 1){
                 //notting from A
                 //if only one ordinal is one AKA positive, then output should be negative
                 this.out = TState.NEGATIVE;
-            }
-//            if(!A && B && !C){//notting from B
-//                this.out = TState.NEGATIVE;
-//            }
-//            if(!A && !B && C){//notting from C
-//                this.out = TState.NEGATIVE;
-//            }
-            if(A.ordinal() + B.ordinal() + C.ordinal() == 2 &&
-                    A.ordinal() * B.ordinal() * C.ordinal() == 0){//notting from C
-                //if only one ordinal is two AKA negative and the others are zero,
-                //AKA dead, then output should be positive
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value == 50){//notting from C
+                //if only one value is 50 AKA "TState.NEGATIVE" and the others are "0",
+                //AKA "TState.DEAD", then output should be positive
                 this.out = TState.POSITIVE;
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value != -255){//one dead input
+                this.out = TState.NEGATIVE;
             }
+
         }
 
         public void signal(int tick_when_set) {
@@ -1473,11 +1589,26 @@ public class BreadBoard {
             this.C = on;
         }
 
+        @Override
+        public void setD(final TState on) {
+            this.D = on;
+        }
+
+        @Override
+        public void setE(final TState on) {
+            this.E = on;
+        }
+
+        @Override
+        public void setF(final TState on) {
+            this.F = on;
+        }
+
 
         public void calculate(){
-            if(TState.or(A,B,C)){
+            if(TState.or(A,B,C,D,E,F)){
                 out = TState.POSITIVE;
-            } else if(TState.dead(A,B,C)){
+            } else if(TState.dead(A,B,C,D,E,F)){//ALL are dead
                 out = TState.DEAD;
             } else {
                 out = TState.NEGATIVE;
@@ -1516,24 +1647,34 @@ public class BreadBoard {
             this.C = on;
         }
 
-
-        public void calculate(){
-            //THIS IS JUST A AND C, CHANGE IF NECESSARY
-            out = xor(A,C);
+        @Override
+        public void setD(final TState on) {
+            this.D = on;
         }
 
-        private TState xor(TState A, TState B){
-            if(A.equals(TState.POSITIVE) || B.equals(TState.POSITIVE)) {
-                if(!(A.equals(TState.POSITIVE) && B.equals(TState.POSITIVE))){
-                    return TState.POSITIVE;
-                }
-            }else if(A.equals(TState.DEAD) || B.equals(TState.DEAD)){
-                return TState.DEAD;
-            }else {
-                return TState.NEGATIVE;
+        @Override
+        public void setE(final TState on) {
+            this.E = on;
+        }
+
+        @Override
+        public void setF(final TState on) {
+            this.F = on;
+        }
+
+
+        public void calculate(){
+            if(A.value + B.value + C.value + D.value + E.value + F.value == 2){//xoring
+                //if two values are "1" AKA "TState.POSITIVE" and the others are "0" and not 50,
+                this.out = TState.NEGATIVE;
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value == 51){//xoring
+                //one negative and one postive adds up to 51
+                this.out = TState.POSITIVE;
             }
-            System.out.println("Reached a no no place in Xor.xor()");
-            return null;//shouldn't reach here
+
+            if(A.value + B.value + C.value + D.value + E.value + F.value < 0){//at least one dead wire
+                this.out = TState.DEAD;
+            }
         }
 
         public byte returnTile(){
@@ -1552,7 +1693,7 @@ public class BreadBoard {
      */
     private class LED extends BreadBoardItem {
 
-        private TState out = TState.DEAD;
+        protected TState out = TState.DEAD;
 
         public LED(final TState out, final Direction dir, final short x, final short y, final byte z) {
             super(dir, x, y, z);
@@ -1629,6 +1770,99 @@ public class BreadBoard {
                 return TileByte.LEDOn.getSymbol();
             }else {
                 return TileByte.LEDOff.getSymbol();
+            }
+        }
+    }
+
+    private abstract class ColourLED extends LED {
+
+        protected int brightness = 0;
+
+        public ColourLED(TState out, Direction dir, short x, short y, byte z) {
+            super(out, dir, x, y, z);
+        }
+
+        public void setBrightness(final int brightness) {
+            this.brightness = brightness;
+        }
+
+        public int getBrightness() {
+            return brightness;
+        }
+
+    }
+
+    public class RedLED extends ColourLED {
+
+        public RedLED(TState out, Direction dir, short x, short y, byte z) {
+            super(out, dir, x, y, z);
+        }
+
+        public void signal(int tick_when_set) {
+            if (this.out.equals(TState.POSITIVE)) {
+                setBreadBoardTileByte(TileByte.RedLEDOn.getSymbol(), getX(), getY(), getZ());
+            } else {
+                setBreadBoardTileByte(TileByte.RedLEDOff.getSymbol(), getX(), getY(), getZ());
+            }
+
+            Main.getMyFrame().repaint();
+        }
+
+        public byte returnTile(){
+            if(out.equals(TState.POSITIVE)){
+                return TileByte.RedLEDOn.getSymbol();
+            }else {
+                return TileByte.RedLEDOff.getSymbol();
+            }
+        }
+    }
+
+    public class GreenLED extends ColourLED {
+
+        public GreenLED(TState out, Direction dir, short x, short y, byte z) {
+            super(out, dir, x, y, z);
+        }
+
+        public void signal(int tick_when_set) {
+            if (this.out.equals(TState.POSITIVE)) {
+                setBreadBoardTileByte(TileByte.GreenLEDOn.getSymbol(), getX(), getY(), getZ());
+            } else {
+                setBreadBoardTileByte(TileByte.GreenLEDOff.getSymbol(), getX(), getY(), getZ());
+            }
+
+            Main.getMyFrame().repaint();
+        }
+
+        public byte returnTile(){
+            if(out.equals(TState.POSITIVE)){
+                return TileByte.GreenLEDOn.getSymbol();
+            }else {
+                return TileByte.GreenLEDOff.getSymbol();
+            }
+        }
+    }
+
+    public class BlueLED extends ColourLED {
+
+        public BlueLED(TState out, Direction dir, short x, short y, byte z) {
+            super(out, dir, x, y, z);
+        }
+
+        public void signal(int tick_when_set) {
+            if (this.out.equals(TState.POSITIVE)) {
+                setBreadBoardTileByte(TileByte.BlueLEDOn.getSymbol(), getX(), getY(), getZ());
+            } else {
+                setBreadBoardTileByte(TileByte.BlueLEDOff.getSymbol(), getX(), getY(), getZ());
+            }
+
+            Main.getMyFrame().repaint();
+        }
+
+        public byte returnTile(){
+            if(out.equals(TState.POSITIVE)){
+                return TileByte.BlueLEDOn.getSymbol();
+            }else {
+                return TileByte.BlueLEDOff.getSymbol();
             }
         }
     }
@@ -2005,19 +2239,13 @@ public class BreadBoard {
                 }
             }
         }
-
-        Date now = new Date();
-        SimpleDateFormat formatter = new SimpleDateFormat("yyyy-MM-dd HH-mm-ss");
-        String formattedDateTime = formatter.format(now);
-        String saveName = "src/saves/" + w + "," + h + "," + d + " " + formattedDateTime + ".bin";
-
         try {
-            FileCreator.saveToFileBytes(b, saveName);
+            FileCreator.saveToFileBytes(b, Main.fileName);
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
 
-        System.out.println("Saved breadboard to " + saveName + ".");
+        System.out.println("Saved breadboard to " + Main.fileName);
     }
 
     /**

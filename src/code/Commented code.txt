@@ -246,3 +246,101 @@ public void signal(Direction d, boolean s, int x, int y, int t) {
         Main.getMyGameScreen().repaint();
     }
 }
+
+
+/**
+     * Same as writeToFile but for multiples of 100
+     * @param w
+     * @param h
+     * @param d
+     */
+    public void writeToFile100(int w, int h, final int d) {
+        System.out.println("Writing to file with a multiple of 100.");
+        String s = "";
+
+        s += w + "," + h + "," + d + "\n";
+        w/=100;//needs to be done
+        //h/=100;
+        for (int i = 0; i < d; i++) {
+            s += "LAYER " + i + "\n";
+            for (int j = 0; j < 3; j++) {
+                for (int k = 0; k < h; k++) {
+                    if(j == 0) {//actual gates "layer"
+                        if(k == 0) s+= "TILES\n";
+                        for (int l = 0; l < w; l++) {
+                            s += s100by1t;
+                            s += ",";
+                        }
+                    }else {//direction "layer"
+                        if(j == 1){
+                            if(k == 0) s+= "DIR1\n"; //NO SPACE BETWEEN DIR AND 1 FOR NOW
+                        }else {
+                            if(k == 0) s+= "DIR2\n"; //NO SPACE BETWEEN DIR AND 2 FOR NOW
+                        }
+                        for (int l = 0; l < w; l++) {
+                            s += s100by1d;
+                            s += ",";
+                        }
+                    }
+                    s = s.substring(0, s.length() - 1);
+                    s += "\n";
+                }
+            }
+            //s+="\n";
+        }
+        s = s.substring(0, s.length() - 1);//remove very last newline character
+
+        System.out.println("done calculating what to output");
+
+        try (FileWriter writer = new FileWriter("src/saves/testoutput.txt")) {
+            writer.write(s);
+            System.out.println("File wrote to.");
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+    }
+    public void writeToFile(final int w, final int h, final int d) {
+            System.out.println("Writing to file.");
+            String s = "";
+
+            s += w + "," + h + "," + d + "\n";
+            for (int i = 0; i < d; i++) {
+                s += "LAYER " + i + "\n";
+                for (int j = 0; j < 3; j++) {
+                    for (int k = 0; k < h; k++) {
+                        if(j == 0) {//actual gates "layer"
+                            if(k == 0) s+= "TILES\n";
+                            for (int l = 0; l < w; l++) {
+                                s += TileString.BreadBoardEmpty.getSymbol();
+                                s += ",";
+                            }
+                        }else {//direction "layer"
+                            if(j == 1){
+                                if(k == 0) s+= "DIR1\n"; //NO SPACE BETWEEN DIR AND 1 FOR NOW
+                            }else {
+                                if(k == 0) s+= "DIR2\n"; //NO SPACE BETWEEN DIR AND 2 FOR NOW
+                            }
+                            for (int l = 0; l < w; l++) {
+                                s += Direction.NONE.getSymbol();
+                                s += ",";
+                            }
+                        }
+                        s = s.substring(0, s.length() - 1);
+                        s += "\n";
+                    }
+                }
+                //s+="\n";
+            }
+            s = s.substring(0, s.length() - 1);//remove very last newline character
+
+            System.out.println("done calculating what to output");
+
+            try (FileWriter writer = new FileWriter("src/saves/testoutput.txt")) {
+                writer.write(s);
+                System.out.println("File wrote to.");
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+
+        }

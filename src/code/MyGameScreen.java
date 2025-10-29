@@ -175,7 +175,7 @@ public class MyGameScreen extends JComponent {
         //System.out.println("fbx " + fbx + ", fby " + fby + "lbx " + lbx + ", lby " + lby);
         
         
-        if(Main.gameMode == Main.GATES_GAMEMODE_NUMBER) {
+        if(Main.gameMode == Main.GATES_GAMEMODE) {
             //noinspection DuplicatedCode
             int fontSize = (int) (th / 1.5);
             g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
@@ -189,7 +189,7 @@ public class MyGameScreen extends JComponent {
                 for (int k = fbx; k < lbx; k++) {
 
                     //draw the individual tile
-                    g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k]));
+                    g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k], k, j, layer));
                     g2d.fillRect(k * tw + xOffset, j * th + yOffset, tw, th);
 
                     g2d.setColor(Color.WHITE);
@@ -244,7 +244,7 @@ public class MyGameScreen extends JComponent {
 //============== COPYING CUTTING AND PASTING OVERLAY (and mode strings) =======================================
             //-- draw a string to show if you're in default or editing mode ----
             paintCommandStuff();
-        }else //PAUSED
+        }else if(gameMode == PAUSED_GAMEMODE)
         {
             g2d.setColor(Color.BLACK);
             g2d.drawString("PAUSED", WIDTH - 140, HEIGHT - 30);
@@ -459,7 +459,7 @@ public class MyGameScreen extends JComponent {
         for (int i = 0; i < tempCutCopyPasteBoardList.size(); i++) {
             for (int j = 0; j < tempCutCopyPasteBoardList.get(0).size(); j++) {
                 for (int k = 0; k < tempCutCopyPasteBoardList.get(0).get(0).size(); k++) {
-                    g2d.setColor(getColour(tempCutCopyPasteBoardList.get(i).get(j).get(k)));
+                    g2d.setColor(getColour(tempCutCopyPasteBoardList.get(i).get(j).get(k), k, j, i));
                     g2d.fillRect(
                             WIDTH - 500 + k*MINIMAP_TILE_SIZE,
                             21 + i*(tempCutCopyPasteBoardList.get(0).size()+MINIMAP_TILE_SIZE) + j*MINIMAP_TILE_SIZE,
@@ -474,7 +474,7 @@ public class MyGameScreen extends JComponent {
 //                }
     }
 
-    public Color getColour(byte c) {
+    public Color getColour(byte c, int x, int y, int z) {
         //TERRARIA
         if (c == TileByte.Not.getSymbol()) {
             return Color.ORANGE;
@@ -512,6 +512,23 @@ public class MyGameScreen extends JComponent {
             return new Color(10,100,10);
         }else if (c == TileByte.Resistor10.getSymbol()) {
             return new Color(10,80,10);
+        }else if (c == TileByte.RedLEDOn.getSymbol()) {
+            BreadBoard.RedLED rled = (BreadBoard.RedLED) breadBoard.locateBreadBoardItemOnBoard(x,y,z);
+            if(rled != null) {
+                return new Color(rled.getBrightness(), 0, 0);
+            }else {
+                return Color.pink;
+            }
+        }else if (c == TileByte.RedLEDOff.getSymbol()) {
+            return new Color(10,0,0);
+        }else if (c == TileByte.GreenLEDOn.getSymbol()) {
+            return new Color(0,255,0);
+        }else if (c == TileByte.GreenLEDOff.getSymbol()) {
+            return new Color(0,10,0);
+        }else if (c == TileByte.BlueLEDOn.getSymbol()) {
+            return new Color(0,0,255);
+        }else if (c == TileByte.BlueLEDOff.getSymbol()) {
+            return new Color(0,0,10);
         }else if (c == TileByte.Xor.getSymbol()) {
             return new Color(200,120,20);
         }else {
