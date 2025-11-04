@@ -3,6 +3,8 @@
     <output-path>$PROJECT_DIR$/out/artifacts/Java_Terraria_Clone_jar2</output-path>
     <root id="archive" name="Java-Terraria-Clone.jar">
       <element id="module-output" name="Java-Terraria-Clone" />
+      <element id="dir-copy" path="$PROJECT_DIR$/src/saves" />
+      <element id="file-copy" path="$PROJECT_DIR$/src/saves/TLW.bin" />
     </root>
   </artifact>
 </component>
