@@ -295,7 +295,7 @@ public class Main implements Runnable{
                                     }
                                 }else {
 
-                                    fileName = "src/saves/500,500,15 2025-10-19 02-00-08.bin";
+                                    fileName = "src/saves/TLW.bin";
                                     if (Files.exists(Paths.get(fileName))) {
                                         mf.remove(txt);
                                         mf.remove(masterPanel);
@@ -419,12 +419,6 @@ public class Main implements Runnable{
         //String fileName = "src/saves/500,500,15 2025-10-19 02-00-08.bin";
         //new one with depth of 6 tiles
         String newFileName = "src/saves/bigUn.bin";
-        //src/saves/10,10,3 2025-06-14 21-33-17.bin";
-        //String fileName = "src/saves/medium_test.bin";
-        //String fileName = "src/saves/b.bin";
-        //String fileName = "src/saves/b.txt";
-        //String fileName = "src/saves/400,400,3 2025-06-14 02-38-29.txt";
-        //String fileName = "src/saves/add1movement.txt";
 
         //USE THIS IF YOU WANT TO CREATE A NEW FILE
         //FileCreator fs = new FileCreator(500,500,15, newFileName);
