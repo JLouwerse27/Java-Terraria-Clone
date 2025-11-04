@@ -188,7 +188,7 @@ public class Main implements Runnable{
 		while(running) {
 			long now = System.nanoTime();
 			int currentTick = tickNumber;
-			delta += (now- lastTime) / ns; 
+			delta += (now- lastTime) / ns;
 			deltaTick = currentTick - lastTick;
 			lastTime = now;
 
@@ -200,7 +200,7 @@ public class Main implements Runnable{
 			    //}
 				delta--;
 			}
-            
+
 			if(running) {
 				frames++;
 			}
@@ -708,6 +708,21 @@ public class Main implements Runnable{
                     }
                 }
                 if (gameMode != PAUSED_GAMEMODE) {
+                    if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                        if (running) {
+                            running = false;
+                        } else {
+                            System.out.println("pressed space to resume");
+                            m.start();
+                            gameMode = GATES_GAMEMODE;
+                        }
+                    }
+                    if(!running){
+                        if(e.getKeyCode() == KeyEvent.VK_PERIOD){
+                            b.tick(tickNumber);
+                            tickNumber++;
+                        }
+                    }
                     if (keys[KeyEvent.VK_E]) {
                         if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
                             b.setGamemode(BreadBoard.EDITING_KEYWORD);
@@ -806,8 +821,6 @@ public class Main implements Runnable{
                             
                             mgs.repaint();
                         }
-                    } else if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                        b.itemCursor = 0;
                     } else if (e.getKeyCode() == KeyEvent.VK_0) {
                         b.itemCursor = 0;
                     } else if (e.getKeyCode() == KeyEvent.VK_1) {
@@ -870,16 +883,16 @@ public class Main implements Runnable{
                     if (e.getKeyCode() == KeyEvent.VK_ENTER) {
                         double speedup = 2;
                         if (keys[KeyEvent.VK_SHIFT]) {
-                            if ((int) (tickspersecond / speedup) > 0.25) {//four seconds per tick
-                                tickspersecond = (int) (tickspersecond / speedup);//lower number = slower speed
+                            if ((tickspersecond / speedup) >= 0.25) {//four seconds per tick
+                                tickspersecond = (tickspersecond / speedup);//lower number = slower speed
                                 ns = 1_000_000_000 / tickspersecond;
                                 System.out.println(tickspersecond);
                                 //timer.setDelay(TICK_SPEED);
                             }
                         } else {
-                            if (tickspersecond <= 4) speedup = 2;
+                            if (tickspersecond <= 0.25) speedup = 2;
                             if (tickspersecond * speedup <= 64000) {//64000 tps
-                            	tickspersecond = (int) (tickspersecond * speedup);
+                            	tickspersecond = (tickspersecond * speedup);
                             	ns = 1_000_000_000 / tickspersecond;
                             	System.out.println(tickspersecond);
                                 //timer.setDelay(TICK_SPEED);
