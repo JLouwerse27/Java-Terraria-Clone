@@ -85,6 +85,10 @@ public abstract class Gate extends BreadBoardItem {
         return false;
     }
 
+    /**
+     *
+     * @param tick_when_set
+     */
     public void signal(final int tick_when_set){
 //            System.out.println("Gate.signal(): going " +
 //                            this.getDir() + ", " +

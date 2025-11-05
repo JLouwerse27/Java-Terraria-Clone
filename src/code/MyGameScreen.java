@@ -77,7 +77,6 @@ public class MyGameScreen extends JComponent {
     Direction[][][] cutCopyPasteBoardDirection1;
     Direction[][][] cutCopyPasteBoardDirection2;
 
-
     private Graphics2D g2d;
     private Graphics ng;
 
@@ -386,6 +385,10 @@ public class MyGameScreen extends JComponent {
         {
             g2d.setColor(Color.WHITE);
             g2d.drawString("EDITING", WIDTH - 140, HEIGHT - 30);
+            g2d.drawString(TileByte.fromSymbol(breadBoard.itemCursor).toString(), WIDTH - 505, HEIGHT - 50);
+            g2d.drawString("DIRECTION 1: " + Main.getTheDirection(), WIDTH - 505 , HEIGHT - 30);
+            g2d.drawString("DIRECTION 2: " + Main.getTheSecondDirection(), WIDTH - 505 , HEIGHT - 10);
+
         }else if(breadBoard.getGamemode() == BreadBoard.COPYING_KEYWORD ||
                 breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD ) //IF THE USER HAS CLICKED CTL C OR CTL V
         {

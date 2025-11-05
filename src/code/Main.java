@@ -84,6 +84,9 @@ public class Main implements Runnable{
      */
     static String fileName = "";
 
+    private static Direction theDirection = Direction.NONE;
+    private static Direction theSecondDirection = Direction.NONE;
+
     static final short[] mouseX = new short[2];
     static final short[] mouseY = new short[2];
     static final byte[] mouseClickNumber = new byte[2];
@@ -721,6 +724,7 @@ public class Main implements Runnable{
                         if(e.getKeyCode() == KeyEvent.VK_PERIOD){
                             b.tick(tickNumber);
                             tickNumber++;
+                            mgs.repaint();
                         }
                     }
                     if (keys[KeyEvent.VK_E]) {
@@ -745,6 +749,14 @@ public class Main implements Runnable{
                                 (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
                                 (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
                                 LOGIC_SCREEN_LAYER);
+                    } else if (keys[KeyEvent.VK_C]){
+                        byte symbol = (byte) (theDirection.getSymbol() + 1);
+                        if (symbol >= Direction.values().length) symbol = 0;
+                        theDirection = Direction.fromSymbol(symbol);
+                    }else if (keys[KeyEvent.VK_X]){
+                        byte symbol = (byte) (theSecondDirection.getSymbol() + 1);
+                        if (symbol >= Direction.values().length) symbol = 0;
+                        theSecondDirection = Direction.fromSymbol(symbol);
                     } else if (keys[KeyEvent.VK_L]){
 //                        gameMode = FILE_REQUEST;
 //                        running = false;
@@ -1280,4 +1292,19 @@ public class Main implements Runnable{
         this.fileName = fileName;
     }
 
+    public static Direction getTheDirection() {
+        return theDirection;
+    }
+
+    public static void setTheDirection(Direction theDirection) {
+        Main.theDirection = theDirection;
+    }
+
+    public static Direction getTheSecondDirection() {
+        return theSecondDirection;
+    }
+
+    public static void setTheSecondDirection(Direction theSecondDirection) {
+        Main.theSecondDirection = theSecondDirection;
+    }
 }
