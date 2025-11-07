@@ -67,7 +67,10 @@ public class Main implements Runnable{
 
     static int P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
     static int P_SCREEN_X_OFFSET = SCREEN_X_OFFSET;
-    
+
+    public static final int SELECTION_BIAS_X = 1;
+    public static final int SELECTION_BIAS_Y = 1;
+
     static final String sP = TileString.Player.getSymbol();
     static final String sWall = TileString.Wall.getSymbol();
     static final String sEmpty = TileString.Empty.getSymbol();
@@ -101,7 +104,7 @@ public class Main implements Runnable{
     private static boolean copying = false;
     private static boolean pasting = false;
     private static boolean savePressed = false;
-
+    private static boolean allLayers = false;
 
     static int gameMode;
     static short numTiles;
@@ -474,7 +477,7 @@ public class Main implements Runnable{
 
         mgs = new MyGameScreen(width, height, zHeight, b, m);
         mf.setGameScreen(mgs);
-        mf.setVisible(true);
+
 
         //b.memorizeWireRoutes(0);
 
@@ -482,6 +485,10 @@ public class Main implements Runnable{
         mf.repaint();
         mf.requestFocusInWindow(); // restore focus to game screen
         addAllListeners(m);
+        mf.setVisible(true);
+
+        mf.getGameScreen().updateSize();
+        mgs.repaint();
         
 //        Timer timer = new Timer(0, new ActionListener() {
 //
@@ -515,13 +522,19 @@ public class Main implements Runnable{
             public void mouseClicked(MouseEvent e) {
                 //checks if mouse is clicked and draws the screen accordingly
                 if(gameMode != PAUSED_GAMEMODE) {
-                    if (b.checkClick(
-                            e,
-                            (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
-                            (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
-                            (byte) LOGIC_SCREEN_LAYER)
-                    ) {
-                    	mgs.repaint();
+                    if(!pasting) {
+                        if (b.checkClick(
+                                e,
+                                (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
+                                (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
+                                (byte) LOGIC_SCREEN_LAYER)
+                        ) {
+                            mgs.repaint();
+                        }
+                    }else {
+                        paste();
+                        b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+                        pasting = false;
                     }
                 }
 
@@ -550,18 +563,29 @@ public class Main implements Runnable{
                         return;
                     }
                     if (cutting && b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
-                        short sX = (short) ((Main.mouseX[0] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
-                        if (sX < 0) sX = 0;
 
-                        short sY = (short) ((Main.mouseY[0] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
-                        if (sY < 0) sY = 0;
+                        short sX = (short) ((Main.mouseX[0] - Main.SCREEN_X_OFFSET + Main.DEFAULT_SCREEN_X_OFFSET)
+                                / MyGameScreen.tileWidth + Main.SELECTION_BIAS_X);
+                        if (sX - Main.SELECTION_BIAS_X <= 0) sX = 0;
 
-                        short eX = (short) ((Main.mouseX[1] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
+                        short sY = (short) ((Main.mouseY[0] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET)
+                                / MyGameScreen.tileHeight + Main.SELECTION_BIAS_Y);
+                        if (sY - Main.SELECTION_BIAS_Y <= 0) sY = 0;
+
+                        short eX = (short) ((Main.mouseX[1] - Main.SCREEN_X_OFFSET + Main.DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
                         if (eX > MyGameScreen.xPixels) eX = MyGameScreen.xPixels;
 
-                        short eY = (byte) ((Main.mouseY[1] - Main.SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
+                        short eY = (short) ((Main.mouseY[1] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
                         if (eY > MyGameScreen.yPixels) eY = MyGameScreen.yPixels;
-                        b.eraseRegion(sX, sY, b.BOTTOM_Z, eX, eY, b.TOP_Z);
+                        System.out.println("mouseY0=" + Main.mouseY[0] + " mouseY1=" + Main.mouseY[1]);
+                        System.out.println("SCREEN_Y_OFFSET=" + Main.SCREEN_Y_OFFSET);
+                        System.out.println("tileHeight=" + MyGameScreen.tileHeight);
+                        if(allLayers) {
+                            b.eraseRegion((short)(sX), (short)(sY), b.BOTTOM_Z, eX, eY, b.TOP_Z);
+                        }else {
+                            b.eraseRegion((short)(sX), (short)(sY), LOGIC_SCREEN_LAYER, eX, eY, (byte)(LOGIC_SCREEN_LAYER + 1));
+                            System.out.println("attempted to erase region");
+                        }
                         cutting = false;
                         b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
                         mgs.repaint();
@@ -686,6 +710,9 @@ public class Main implements Runnable{
             public void mouseMoved(MouseEvent e) {
                 mouseX[0] = (short) e.getX();
                 mouseY[0] = (short) e.getY();
+                if(pasting){
+                    mgs.repaint();
+                }
             }
         });
 
@@ -711,55 +738,146 @@ public class Main implements Runnable{
                     }
                 }
                 if (gameMode != PAUSED_GAMEMODE) {
-                    if (e.getKeyCode() == KeyEvent.VK_SPACE) {
-                        if (running) {
-                            running = false;
-                        } else {
-                            System.out.println("pressed space to resume");
-                            m.start();
-                            gameMode = GATES_GAMEMODE;
+                    if (!keys[KeyEvent.VK_CONTROL]) {
+                        if (e.getKeyCode() == KeyEvent.VK_SPACE) {
+                            if (running) {
+                                running = false;
+                            } else {
+                                System.out.println("pressed space to resume");
+                                m.start();
+                                gameMode = GATES_GAMEMODE;
+                            }
                         }
-                    }
-                    if(!running){
-                        if(e.getKeyCode() == KeyEvent.VK_PERIOD){
-                            b.tick(tickNumber);
-                            tickNumber++;
-                            mgs.repaint();
+                        if (!running) {
+                            if (e.getKeyCode() == KeyEvent.VK_PERIOD) {
+                                b.tick(tickNumber);
+                                tickNumber++;
+                                mgs.repaint();
+                            }
                         }
-                    }
-                    if (keys[KeyEvent.VK_E]) {
-                        if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
-                            b.setGamemode(BreadBoard.EDITING_KEYWORD);
-                        } else if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
-                            b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+                        if (keys[KeyEvent.VK_E]) {
+                            if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
+                                b.setGamemode(BreadBoard.EDITING_KEYWORD);
+                            } else if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
+                                b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+                            }
+                            mf.getContentPane().repaint();
+                        } else if (keys[KeyEvent.VK_R]) {//rotate with "R"
+                            b.rotateItem(
+                                    0,
+                                    (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
+                                    (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
+                                    LOGIC_SCREEN_LAYER);
+                            //                    if (keys[KeyEvent.VK_SHIFT]) {//rotate second dir with "shift + R"
+                            //
+                            //                    }
+                        } else if (keys[KeyEvent.VK_Q]) {
+                            b.rotateItem(
+                                    1,
+                                    (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
+                                    (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
+                                    LOGIC_SCREEN_LAYER);
+                        } else if (keys[KeyEvent.VK_C] && !keys[KeyEvent.VK_CONTROL]) {
+                            byte symbol = (byte) (theDirection.getSymbol() + 1);
+                            if (symbol >= Direction.values().length) symbol = 0;
+                            theDirection = Direction.fromSymbol(symbol);
+                        } else if (keys[KeyEvent.VK_X] && !keys[KeyEvent.VK_CONTROL]) {
+                            byte symbol = (byte) (theSecondDirection.getSymbol() + 1);
+                            if (symbol >= Direction.values().length) symbol = 0;
+                            theSecondDirection = Direction.fromSymbol(symbol);
+                        } else if (keys[KeyEvent.VK_L]) {
+                            //                        gameMode = FILE_REQUEST;
+                            //                        running = false;
+                        } else if (e.getKeyCode() == KeyEvent.VK_0) {
+                            b.itemCursor = 0;
+                        } else if (e.getKeyCode() == KeyEvent.VK_1) {
+                            b.itemCursor = 1;
+                        } else if (e.getKeyCode() == KeyEvent.VK_2) {
+                            b.itemCursor = 52;//2 is a negative wire, 52 is a dead wire
+                        } else if (e.getKeyCode() == KeyEvent.VK_3) {
+                            b.itemCursor = 3;
+                        } else if (e.getKeyCode() == KeyEvent.VK_4) {
+                            b.itemCursor = 4;
+                        } else if (e.getKeyCode() == KeyEvent.VK_5) {
+                            b.itemCursor = 5;
+                        } else if (e.getKeyCode() == KeyEvent.VK_6) {
+                            b.itemCursor = 6;
+                        } else if (e.getKeyCode() == KeyEvent.VK_7) {
+                            b.itemCursor = 7;
+                        } else if (e.getKeyCode() == KeyEvent.VK_8) {
+                            b.itemCursor = 8;
+                        } else if (e.getKeyCode() == KeyEvent.VK_9) {
+                            b.itemCursor = 9;
+                        } else if (e.getKeyCode() == KeyEvent.VK_I) {
+                            b.itemCursor = 10;
+                        } else if (e.getKeyCode() == KeyEvent.VK_O) {
+                            b.itemCursor = 11;
+                        } else if (e.getKeyCode() == KeyEvent.VK_P) {
+                            b.itemCursor = 17;//XOR
+                        } else if (e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
+                            //cycle down
+                            if (b.itemCursor == 52) {
+                                b.itemCursor = 1;
+                            } else if (b.itemCursor == 3) {
+                                b.itemCursor = 52;
+                            } else if (b.itemCursor == 17) {
+                                b.itemCursor = 11;
+                            } else {
+                                b.itemCursor = (b.itemCursor > 0) ? (byte) (b.itemCursor - 1) : b.itemCursor;//XOR
+                            }
+                        } else if (e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
+                            //cycle up
+                            if (b.itemCursor == 52) {
+                                b.itemCursor = 3;
+                            } else if (b.itemCursor == 1) {
+                                b.itemCursor = 52;
+                            } else if (b.itemCursor == 11) {
+                                b.itemCursor = 17;
+                            } else {
+                                b.itemCursor = (b.itemCursor < 23) ? (byte) (b.itemCursor + 1) : b.itemCursor;//XOR
+                            }
+                        } else if (e.getKeyCode() == KeyEvent.VK_EQUALS) {
+                            if (LOGIC_SCREEN_LAYER + 1 <= b.TOP_Z) {
+                                LOGIC_SCREEN_LAYER++;
+                            }
+                        } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
+                            if (LOGIC_SCREEN_LAYER - 1 >= b.BOTTOM_Z) {
+                                LOGIC_SCREEN_LAYER--;
+                            }
                         }
-                        mf.getContentPane().repaint();
-                    } else if (keys[KeyEvent.VK_R]) {//rotate with "R"
-                        b.rotateItem(
-                                0,
-                                (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
-                                (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
-                                LOGIC_SCREEN_LAYER);
-//                    if (keys[KeyEvent.VK_SHIFT]) {//rotate second dir with "shift + R"
-//
-//                    }
-                    } else if (keys[KeyEvent.VK_Q]) {
-                        b.rotateItem(
-                                1,
-                                (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
-                                (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
-                                LOGIC_SCREEN_LAYER);
-                    } else if (keys[KeyEvent.VK_C]){
-                        byte symbol = (byte) (theDirection.getSymbol() + 1);
-                        if (symbol >= Direction.values().length) symbol = 0;
-                        theDirection = Direction.fromSymbol(symbol);
-                    }else if (keys[KeyEvent.VK_X]){
-                        byte symbol = (byte) (theSecondDirection.getSymbol() + 1);
-                        if (symbol >= Direction.values().length) symbol = 0;
-                        theSecondDirection = Direction.fromSymbol(symbol);
-                    } else if (keys[KeyEvent.VK_L]){
-//                        gameMode = FILE_REQUEST;
-//                        running = false;
+
+
+                        if (e.getKeyCode() == KeyEvent.VK_ENTER) {
+                            if(!pasting) {
+                                double speedup = 2;
+                                if (keys[KeyEvent.VK_SHIFT]) {
+                                    if ((tickspersecond / speedup) >= 0.25) {//four seconds per tick
+                                        tickspersecond = (tickspersecond / speedup);//lower number = slower speed
+                                        ns = 1_000_000_000 / tickspersecond;
+                                        System.out.println(tickspersecond);
+                                        //timer.setDelay(TICK_SPEED);
+                                    }
+                                } else {
+                                    if (tickspersecond <= 0.25) speedup = 2;
+                                    if (tickspersecond * speedup <= 64000) {//64000 tps
+                                        tickspersecond = (tickspersecond * speedup);
+                                        ns = 1_000_000_000 / tickspersecond;
+                                        System.out.println(tickspersecond);
+                                        //timer.setDelay(TICK_SPEED);
+                                    }
+                                }
+                            }else {
+                                //finalize the paste
+                                paste();
+                                b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+                                pasting = false;
+                            }
+                        }
+
+                        //clear signal queue
+                        if (e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
+                            b.setSignalArrayToNull();
+                        }
 
                     } else if (keys[KeyEvent.VK_CONTROL]) {
                         if (!(keys[KeyEvent.VK_C] || keys[KeyEvent.VK_V] || keys[KeyEvent.VK_X])) {//zoom in and out if not copying, cutting, or pasting
@@ -771,9 +889,9 @@ public class Main implements Runnable{
                                     int oldTileSize = MyGameScreen.tileSize;
                                     MyGameScreen.tileSize = (byte) (MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT);
 
-                                    SCREEN_X_OFFSET = (int)(mouseX[0] + DEFAULT_SCREEN_X_OFFSET
+                                    SCREEN_X_OFFSET = (int) (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
                                             - (dx * MyGameScreen.tileSize / oldTileSize));
-                                    SCREEN_Y_OFFSET = (int)(mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
+                                    SCREEN_Y_OFFSET = (int) (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
                                             - (dy * MyGameScreen.tileSize / oldTileSize));
 
                                     mgs.xOffset = (int) SCREEN_X_OFFSET;
@@ -781,7 +899,7 @@ public class Main implements Runnable{
 
                                 }
                                 mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
-                                
+
                                 mgs.repaint();
                                 mouseScrollDown[0] = false;
                             } else if (mouseScrollUp[0]) {
@@ -796,127 +914,60 @@ public class Main implements Runnable{
                                     }
 
 
-                                    SCREEN_X_OFFSET = (int)(mouseX[0] + DEFAULT_SCREEN_X_OFFSET
+                                    SCREEN_X_OFFSET = (int) (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
                                             - (dx * (double) MyGameScreen.tileSize / (double) oldTileSize));
-                                    SCREEN_Y_OFFSET = (int)(mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
+                                    SCREEN_Y_OFFSET = (int) (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
                                             - (dy * (double) MyGameScreen.tileSize / (double) oldTileSize));
 
                                     mgs.xOffset = (int) SCREEN_X_OFFSET;
                                     mgs.yOffset = (int) SCREEN_Y_OFFSET;
                                 }
                                 mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
-                                
+
                                 mgs.repaint();
                                 mouseScrollUp[0] = false;
                             }
-                        } else if (keys[KeyEvent.VK_C]) {
-                            //copying = true; must be set while dragging
-                            cutting = false;
-                            pasting = false;
-                            b.setGamemode(BreadBoard.COPYING_KEYWORD);
-                            
-                            mgs.repaint();
-                        } else if (keys[KeyEvent.VK_V]) {
-                            copying = false;
-                            cutting = false;
-                            pasting = true;//this should be set to true because we don't need to drag in order to paste
-                            System.out.println("paste from main");
-                            b.setGamemode(BreadBoard.PASTING_KEYWORD);
-                            paste();
-                            
-                            mgs.repaint();
-                        } else if (keys[KeyEvent.VK_X]) {
-                            copying = false;
-                            //cutting = true;
-                            pasting = false;
-                            b.setGamemode(BreadBoard.CUTTING_KEYWORD);
-                            
-                            mgs.repaint();
-                        }
-                    } else if (e.getKeyCode() == KeyEvent.VK_0) {
-                        b.itemCursor = 0;
-                    } else if (e.getKeyCode() == KeyEvent.VK_1) {
-                        b.itemCursor = 1;
-                    } else if (e.getKeyCode() == KeyEvent.VK_2) {
-                        b.itemCursor = 52;//2 is a negative wire, 52 is a dead wire
-                    } else if (e.getKeyCode() == KeyEvent.VK_3) {
-                        b.itemCursor = 3;
-                    } else if (e.getKeyCode() == KeyEvent.VK_4) {
-                        b.itemCursor = 4;
-                    } else if (e.getKeyCode() == KeyEvent.VK_5) {
-                        b.itemCursor = 5;
-                    } else if (e.getKeyCode() == KeyEvent.VK_6) {
-                        b.itemCursor = 6;
-                    } else if (e.getKeyCode() == KeyEvent.VK_7) {
-                        b.itemCursor = 7;
-                    } else if (e.getKeyCode() == KeyEvent.VK_8) {
-                        b.itemCursor = 8;
-                    } else if (e.getKeyCode() == KeyEvent.VK_9) {
-                        b.itemCursor = 9;
-                    } else if (e.getKeyCode() == KeyEvent.VK_I) {
-                        b.itemCursor = 10;
-                    } else if (e.getKeyCode() == KeyEvent.VK_O) {
-                        b.itemCursor = 11;
-                    } else if (e.getKeyCode() == KeyEvent.VK_P) {
-                        b.itemCursor = 17;//XOR
-                    } else if (e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
-                        //cycle down
-                        if(b.itemCursor == 52){
-                            b.itemCursor = 1;
-                        }else if(b.itemCursor == 3){
-                            b.itemCursor = 52;
-                        }else if(b.itemCursor == 17) {
-                            b.itemCursor = 11;
-                        }else {
-                            b.itemCursor = (b.itemCursor > 0) ? (byte) (b.itemCursor - 1) : b.itemCursor;//XOR
-                        }
-                    } else if (e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
-                        //cycle up
-                        if(b.itemCursor == 52){
-                            b.itemCursor = 3;
-                        }else if(b.itemCursor == 1){
-                            b.itemCursor = 52;
-                        }else if(b.itemCursor == 11) {
-                            b.itemCursor = 17;
-                        }else {
-                            b.itemCursor = (b.itemCursor < 23) ? (byte) (b.itemCursor + 1) : b.itemCursor;//XOR
-                        }
-                    }else if (e.getKeyCode() == KeyEvent.VK_EQUALS) {
-                        if (LOGIC_SCREEN_LAYER + 1 <= b.TOP_Z) {
-                            LOGIC_SCREEN_LAYER++;
-                        }
-                    } else if (e.getKeyCode() == KeyEvent.VK_MINUS) {
-                        if (LOGIC_SCREEN_LAYER - 1 >= b.BOTTOM_Z) {
-                            LOGIC_SCREEN_LAYER--;
-                        }
-                    }
-
-
-                    if (e.getKeyCode() == KeyEvent.VK_ENTER) {
-                        double speedup = 2;
-                        if (keys[KeyEvent.VK_SHIFT]) {
-                            if ((tickspersecond / speedup) >= 0.25) {//four seconds per tick
-                                tickspersecond = (tickspersecond / speedup);//lower number = slower speed
-                                ns = 1_000_000_000 / tickspersecond;
-                                System.out.println(tickspersecond);
-                                //timer.setDelay(TICK_SPEED);
-                            }
                         } else {
-                            if (tickspersecond <= 0.25) speedup = 2;
-                            if (tickspersecond * speedup <= 64000) {//64000 tps
-                            	tickspersecond = (tickspersecond * speedup);
-                            	ns = 1_000_000_000 / tickspersecond;
-                            	System.out.println(tickspersecond);
-                                //timer.setDelay(TICK_SPEED);
+                            if (keys[KeyEvent.VK_C]) {
+                                //copying = true; must be set while dragging
+                                cutting = false;
+                                pasting = false;
+
+                                if(keys[KeyEvent.VK_SHIFT]) {
+                                    allLayers = true;
+                                } else {
+                                    allLayers = false;
+                                }
+
+                                b.setGamemode(BreadBoard.COPYING_KEYWORD);
+
+                                mgs.repaint();
+                            } else if (keys[KeyEvent.VK_X]) {
+                                copying = false;
+                                //cutting = true;
+                                pasting = false;
+
+                                if(keys[KeyEvent.VK_SHIFT]) {
+                                    allLayers = true;
+                                } else {
+                                    allLayers = false;
+                                }
+
+                                b.setGamemode(BreadBoard.CUTTING_KEYWORD);
+
+                                mgs.repaint();
+                            } else if (keys[KeyEvent.VK_V]) {
+                                copying = false;
+                                cutting = false;
+                                pasting = true;//this should be set to true because we don't need to drag in order to paste
+                                System.out.println("paste from main");
+                                b.setGamemode(BreadBoard.PASTING_KEYWORD);
+                                //paste();
+                                mgs.repaint();
                             }
                         }
-                    }
-
-                    //clear signal queue
-                    if(e.getKeyCode() == KeyEvent.VK_BACK_SLASH){
-                        b.setSignalArrayToNull();
-                    }
-                }
+                    }//control
+                }//paused
                 //this happens regardless if game is paused or not
                 if (keys[KeyEvent.VK_CONTROL] && keys[KeyEvent.VK_S]) {
                     if (!savePressed) {
@@ -947,7 +998,7 @@ public class Main implements Runnable{
                  
                 mgs.repaint();
 
-            }
+            }//keypressed
 
             @Override
             public void keyReleased(KeyEvent e) {
@@ -971,18 +1022,26 @@ public class Main implements Runnable{
      * Pastes the stuff from the clipboard onto the breadboard
      */
     private static void paste(){
-        short sX = (short) ((mouseX[0] - SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
+
+        short sX = (short) ((mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
         if(sX < 0) sX = 0;
 
-        short sY = (short) ((mouseY[0] - SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
+        short sY = (short) ((mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
         if(sY < 0) sY = 0;
 
+        byte sz = 0;
+        byte ez = (byte) mgs.tempCutCopyPasteBoardList.size();
+        if(!allLayers) {
+            sz = 0;
+            ez = 1;
+        }
+
         if(pasting && b.getGamemode().equals(BreadBoard.PASTING_KEYWORD)){
-            for(byte i = 0; i < mgs.tempCutCopyPasteBoardList.size(); i++) {
+            for(byte i = sz; i < ez; i++) {
                 for (short j = 0; j < mgs.tempCutCopyPasteBoardList.get(0).size(); j++) {
                     for (short k = 0; k < mgs.tempCutCopyPasteBoardList.get(0).get(0).size(); k++) {
 
-                        //dont delete this three
+                        //dont delete these three
 //                        b.setBreadBoardTileByte(mgs.tempCutCopyPasteBoardList.get(i).get(j).get(k), (short) (k + sX), (short) (j + sY), i);
 //                        b.setBreadBoardDirectionTile(mgs.cutCopyPasteBoardDirection1[i][j + sY][k + sX],k + sX, j + sY, i);
 //                        b.setBreadBoardDirection2Tile(mgs.cutCopyPasteBoardDirection2[i][j + sY][k + sX],k + sX, j + sY, i);
@@ -1009,17 +1068,17 @@ public class Main implements Runnable{
                                 mgs.tempCutCopyPasteBoardList.get(i).get(j).get(k),
                                 mgs.tempCutCopyPasteBoardDirection1List.get(i).get(j).get(k),
                                 mgs.tempCutCopyPasteBoardDirection2List.get(i).get(j).get(k),
-                                (short) (k + sX),
-                                (short) (j + sY),
-                                i);
+                                (short) (k + sX + SELECTION_BIAS_X),
+                                (short) (j + sY + SELECTION_BIAS_Y),
+                                (allLayers)?i:(byte) (i + LOGIC_SCREEN_LAYER));
 
                     }
                 }
             }
              
             mgs.repaint();
-            b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
-            pasting = false;
+            //b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+            //pasting = false;
         }
     }
 
@@ -1276,6 +1335,10 @@ public class Main implements Runnable{
         return cutting;
     }
 
+    public static boolean getPasting(){
+        return pasting;
+    }
+
     public static BreadBoard getBreadBoard() {
         return b;
     }
@@ -1306,5 +1369,17 @@ public class Main implements Runnable{
 
     public static void setTheSecondDirection(Direction theSecondDirection) {
         Main.theSecondDirection = theSecondDirection;
+    }
+
+    public static BreadBoard getB(){
+        return b;
+    }
+
+    public static void setB(BreadBoard b){
+        Main.b = b;
+    }
+
+    public static boolean getAllLayers(){
+        return allLayers;
     }
 }

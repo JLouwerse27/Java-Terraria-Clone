@@ -7,6 +7,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
 
+import static src.code.Main.LOGIC_SCREEN_LAYER;
 import static src.code.Main.keys;
 
 /**
@@ -87,6 +88,7 @@ public class BreadBoard {
     private String gamemode = DEFAULT_KEYWORD;
     public byte itemCursor  = 0;
 
+    private boolean gatesAllowedToSignalOut = false;
 
     public List<BreadBoardItem> breadBoardItemsList = new ArrayList<BreadBoardItem>();
     /**
@@ -634,24 +636,35 @@ public class BreadBoard {
             }
         }else if (gamemode.equals(COPYING_KEYWORD) || gamemode.equals(CUTTING_KEYWORD))
         {//copying and pasting
-            int sX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
-            if(sX < 0) sX = 0;
+            int sX = (int)(Main.mouseX[0] - Main.SCREEN_X_OFFSET + Main.DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
+            if(sX < Main.SELECTION_BIAS_X) sX = 0 - Main.SELECTION_BIAS_X;
 
             int sY = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
-            if(sY < 0) sY = 0;
+            if(sY < Main.SELECTION_BIAS_X) sY = 0 - Main.SELECTION_BIAS_Y;
 
-            int eX = (int)(Main.mouseX[1] - Main.SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
+            int eX = (int)(Main.mouseX[1] - Main.SCREEN_X_OFFSET + Main.DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
             if(eX > MyGameScreen.xPixels) eX = MyGameScreen.xPixels;
 
             int eY = (int)(Main.mouseY[1] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
             if(eY > MyGameScreen.yPixels) eY = MyGameScreen.yPixels;
 
-            System.out.println("selecting entities with: sX" + sX + ", sY" + sY + ", eX" + eX + ", eY" + eY);
-            selectEntities(sX,sY,BOTTOM_Z,eX,eY,TOP_Z);
 
-            if(gamemode.equals(CUTTING_KEYWORD)) {
+
+            if(Main.getAllLayers()) {
+                System.out.println(
+                        "selecting entities from: " + (sX + Main.SELECTION_BIAS_X) + ", " + (sY + Main.SELECTION_BIAS_Y) + ", " + BOTTOM_Z
+                        + eX + ", " + eY + ", " + TOP_Z);
+                selectEntities(sX+Main.SELECTION_BIAS_X, sY+Main.SELECTION_BIAS_Y, BOTTOM_Z, eX, eY, TOP_Z);
+            }else {
+                System.out.println(
+                        "selecting entities from: " + (sX + Main.SELECTION_BIAS_X) + ", " + (sY + Main.SELECTION_BIAS_Y) + ", " + LOGIC_SCREEN_LAYER + " to "
+                                + eX + ", " + eY + ", " + (LOGIC_SCREEN_LAYER + 1));
+                selectEntities(sX+Main.SELECTION_BIAS_X, sY+Main.SELECTION_BIAS_Y, LOGIC_SCREEN_LAYER, eX, eY, LOGIC_SCREEN_LAYER + 1);
 
             }
+//            if(gamemode.equals(CUTTING_KEYWORD)) {
+//
+//            }
 
         }
 
@@ -660,6 +673,7 @@ public class BreadBoard {
 
     /**
      * Selects entities and tiles within a given space
+     * Used within cutting and copying
      * @param sX
      * @param sY
      * @param eX
@@ -755,7 +769,7 @@ public class BreadBoard {
      * @param eY ending y
      */
     public void eraseRegion(short sX, short sY, byte sZ, short eX, short eY, byte eZ) {
-        //System.out.println("called erase region");
+        System.out.println("eraseRegion(): Erasing region: " + sX + "," + sY + "," + sZ + " to " + eX + "," + eY + "," + eZ);
         for (byte z = sZ; z < eZ; z++) {
             for (short y = sY; y < eY; y++) {
                 for (short x = sX; x < eX; x++) {
@@ -891,6 +905,8 @@ public class BreadBoard {
             i++;
         }
 
+        gatesAllowedToSignalOut = true;
+
         //clear fo real, THIS STEP IS NECESSARY DO NOT DELETE
         for (int ind = 0; ind < signalArray.length; ind++) {
 //====================CHANGE "<=" TO "<" IF THERE ARE PROBLEMS ================================================
@@ -975,7 +991,7 @@ public class BreadBoard {
         byte tile = breadboardByte[z][y][x];
 
         if (s.equals(TState.POSITIVE)) {
-            if (tile == WIRE_OFF_BYTE || tile == WIRE_DEAD_BYTE){ //|| tile == WIRE_ON_BYTE) {
+            if (tile == WIRE_OFF_BYTE || tile == WIRE_DEAD_BYTE){
                 BreadBoardItem item = locateBreadBoardItemOnBoard(x, y, z);
                 if (item instanceof Wire wire) {
                     wire.setOut(dx, dy, dz, TState.POSITIVE, t);
@@ -983,6 +999,18 @@ public class BreadBoard {
                     System.out.println("Expected Wire at " + x + "," + y + "," + z + " but got null or different type.");
                 }
             }
+//            else if(tile == WIRE_ON_BYTE){
+//                //we dont want to propagate a positive signal to an already positive node
+//                //but we do want to search for any negative nodes along the line!!
+//                BreadBoardItem item = locateBreadBoardItemOnBoard(x, y, z);
+//                if (item instanceof Wire wire) {
+//                    //wire.setOut(dx, dy, dz, TState.POSITIVE, t);
+//                    wire.signal(t);
+//                } else {
+//                    System.out.println("Expected Wire at " + x + "," + y + "," + z + " but got null or different type.");
+//                }
+//
+//            }
             else if (tile == LED_OFF_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
@@ -1032,11 +1060,18 @@ public class BreadBoard {
                 //System.out.println("setWiresAndLeds(): trying to turn on unknown wire or LED");
             }
         } else if(s.equals(TState.NEGATIVE)){
-            if (tile == WIRE_ON_BYTE || tile == WIRE_DEAD_BYTE){ //|| tile == WIRE_OFF_BYTE) {
+            if (tile == WIRE_ON_BYTE || tile == WIRE_DEAD_BYTE){// || tile == WIRE_OFF_BYTE) {
                 Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y, z);
                 assert wire != null;
                 wire.setOut(dx, dy, dz, TState.NEGATIVE, t);
             }
+//            else if(tile == WIRE_OFF_BYTE) {
+//                //we dont want to propagate a negative signal to an already negative node
+//                //but we do want to search for any positive nodes along the line!!
+//                Wire wire = (Wire) locateBreadBoardItemOnBoard(x, y, z);
+//                assert wire != null;
+//                wire.signal(t);
+//            }
             else if (tile == LED_ON_BYTE) {
                 LED led = (LED) locateBreadBoardItemOnBoard(x, y, z);
                 assert led != null;
@@ -1103,6 +1138,7 @@ public class BreadBoard {
             assert not != null;
             if (not.setRightGate(s, dx, dy, dz)) {
                 not.calculate();
+                //todo make it only signal at the end of a tick
                 not.signal(t);
             }
         } else if (sBR == TileByte.And.getSymbol()) {
@@ -1240,33 +1276,20 @@ public class BreadBoard {
             System.out.println("signal(): tick out of range.");
             return;
         }
-        boolean conflict = false;
+
         // Step 1: Check for empty spacing using writeIndex
         int writeIndex = 0;
         for (int i = 0; i < signalArray.length; i++) {
             //important that this is ">" and not ">="!!
             if (signalArray[i] != null && (int) signalArray[i][SIGNAL_ARRAY_TICK_PLACE] >= Main.tickNumber) {
-
-                //check if this signal is a conflict/duplicate of current signal
-                if((int)signalArray[i][SIGNAL_ARRAY_X_PLACE] == x
-                && (int)signalArray[i][SIGNAL_ARRAY_Y_PLACE] == y
-                && (int)signalArray[i][SIGNAL_ARRAY_Z_PLACE] == z
-                && (int)signalArray[i][SIGNAL_ARRAY_TICK_PLACE] == t){
-                    conflict = true;
-                    System.out.println("=========signal(): conflict=======");
-                }
-
-
                 writeIndex++;
             }
         }
         //System.out.println("beginning"+Arrays.deepToString(signalArray));
         // Step 3: Insert new signal
         if (writeIndex < signalArray.length) {
+            signalArray[writeIndex] = new Object[]{d, s, x, y, z, t};
 
-            if(!conflict) {
-                signalArray[writeIndex] = new Object[]{d, s, x, y, z, t};
-            }
 //            System.out.println("aft insertion"+Arrays.deepToString(signalArray));
 //            System.out.println(
 //                    "signal(): " +
@@ -1533,6 +1556,7 @@ public class BreadBoard {
             }else if(A.value + B.value + C.value + D.value + E.value + F.value >= 1){
                 out = TState.NEGATIVE;
             }
+            signalsOutputAtCurrentTick++;
         }
 
         public void signal(final int tick_when_set){
@@ -1587,15 +1611,15 @@ public class BreadBoard {
 
         public void calculate(){
             //this.out = !B; old
-            if(A.value + B.value + C.value + D.value + E.value + F.value == 1){
+            if(A.value + B.value + C.value + D.value + E.value + F.value == TState.POSITIVE.value){
                 //notting from A
                 //if only one ordinal is one AKA positive, then output should be negative
                 this.out = TState.NEGATIVE;
-            }else if(A.value + B.value + C.value + D.value + E.value + F.value == 50){//notting from C
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value == TState.NEGATIVE.value){//notting from C
                 //if only one value is 50 AKA "TState.NEGATIVE" and the others are "0",
                 //AKA "TState.DEAD", then output should be positive
                 this.out = TState.POSITIVE;
-            }else if(A.value + B.value + C.value + D.value + E.value + F.value != -255){//one dead input
+            }else if(A.value + B.value + C.value + D.value + E.value + F.value != TState.DEAD.value){//one dead input
                 this.out = TState.NEGATIVE;
             }
 
@@ -2331,6 +2355,14 @@ public class BreadBoard {
             s += "\n";
         }
         return s;
+    }
+
+    public boolean isGatesAllowedToSignalOut() {
+        return gatesAllowedToSignalOut;
+    }
+
+    public void setGatesAllowedToSignalOut(boolean gatesAllowedToSignalOut) {
+        this.gatesAllowedToSignalOut = gatesAllowedToSignalOut;
     }
 
 }

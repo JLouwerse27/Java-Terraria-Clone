@@ -17,6 +17,11 @@ public abstract class Gate extends BreadBoardItem {
     TState F = TState.UNUSED;//~ zAbove
     ////no F because there should never be six inputs!
 
+    protected int signalsOutputAtCurrentTick = 0;
+    /**There can be five possible inputs, so five possible states
+     * in one tick for any given gate*/
+    //protected int [] signals = new int[5];
+
     byte numberOfInputsTotal = 0;
     byte numberOfInputsOn = 0;
 
@@ -86,24 +91,22 @@ public abstract class Gate extends BreadBoardItem {
     }
 
     /**
-     *
+     * Gates have multiple inputs coming in, usually at the same time, however it is calculated
+     * one input at a time, thus giving multiple outputs even if the inputs come in simultaneously.
      * @param tick_when_set
      */
     public void signal(final int tick_when_set){
-//            System.out.println("Gate.signal(): going " +
-//                            this.getDir() + ", " +
-//                    out + ", at" +
-//                    this.getX() + " " +
-//                    this.getY() + " " +
-//                    this.getZ() + " on tick " +
-//                    (tick_when_set+1));
-        Main.getBreadBoard().signal(
-                this.getDir(),
-                out,
-                this.getX(),
-                this.getY(),
-                this.getZ(),
-                tick_when_set+1);
+        //if(Main.getB().isGatesAllowedToSignalOut()){
+            Main.getBreadBoard().signal(
+                    this.getDir(),
+                    out,
+                    this.getX(),
+                    this.getY(),
+                    this.getZ(),
+                    tick_when_set+1);
+        //}else {
+        //    signals[signalsOutputAtCurrentTick]
+        //}
     }
 
     public TState getOut(){

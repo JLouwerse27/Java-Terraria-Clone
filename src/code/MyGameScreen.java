@@ -80,6 +80,10 @@ public class MyGameScreen extends JComponent {
     private Graphics2D g2d;
     private Graphics ng;
 
+
+    private final double FONT_SCALAR = 1.5;
+    private final double BLOCK_DIRECTION_PLACEMENT = 1.5;
+
     // Default constructor initializing the game screen with default dimensions and tile configuration
     public MyGameScreen() {
         WIDTH = 500;
@@ -176,7 +180,7 @@ public class MyGameScreen extends JComponent {
         
         if(Main.gameMode == Main.GATES_GAMEMODE) {
             //noinspection DuplicatedCode
-            int fontSize = (int) (th / 1.5);
+            int fontSize = (int) (th / FONT_SCALAR);
             g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
 
             //draw mouse coordinates on screen
@@ -216,17 +220,17 @@ public class MyGameScreen extends JComponent {
 
                         if(breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
                             if (breadBoard.getBreadboardDirection2()[layer][j][k] == dR) {
-                                g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dL) {
-                                g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dD) {
-                                g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dU) {
-                                g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dI) {
-                                g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dO) {
-                                g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / 1.5));
+                                g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
                             }
                         }
                     }
@@ -235,7 +239,7 @@ public class MyGameScreen extends JComponent {
             paintSignalStuff();
             paintTempArrayStuff();
 
-            fontSize = (int) (originalTileSize / 1.5);//don't know if this should be here
+            fontSize = (int) (originalTileSize / FONT_SCALAR);//don't know if this should be here
             //paintMouseCoordinates(g);
             paintMouseCoordinatesOriginal();
             //paintFPS(main.getFrames());
@@ -259,9 +263,9 @@ public class MyGameScreen extends JComponent {
         if(g.equals(MyGameScreen.this.getGraphics())){
             System.out.println("calsdf");
         }
+        int fontSize = (int) (originalTileSize / FONT_SCALAR);
         g2d = (Graphics2D) g;
-        g2d.clearRect(WIDTH - 240, HEIGHT - 50, 100, (int) (originalTileSize / 1.5));
-        int fontSize = (int) (originalTileSize / 1.5);
+        g2d.clearRect(WIDTH - 240, HEIGHT - 50, 100, fontSize);
         g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
         g2d.setColor(Color.WHITE);
         int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
@@ -277,7 +281,7 @@ public class MyGameScreen extends JComponent {
      * Uses MyGameScreen.getGraphics, not Frame.getGraphics!
      */
     public void paintMouseCoordinatesOriginal() {
-        int fontSize = (int) (originalTileSize / 1.5);
+        int fontSize = (int) (originalTileSize / FONT_SCALAR);
         g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
         g2d.setColor(Color.WHITE);
         int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
@@ -290,7 +294,7 @@ public class MyGameScreen extends JComponent {
      * Uses MyGameScreen.getGraphics, not Frame.getGraphics!
      */
     public void paintFPS(int fps) {
-        int fontSize = (int) (originalTileSize / 1.5);
+        int fontSize = (int) (originalTileSize / FONT_SCALAR);
         g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
         g2d.setColor(Color.WHITE);
         int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
@@ -370,12 +374,19 @@ public class MyGameScreen extends JComponent {
         //}
     }
 
+    /**
+     * PAINT THE COMMANDS, AS WELL AS THE COLOURED RECTANGLE WHEN COPYING, CUTTING, AND PASTING
+     */
     private void paintCommandStuff() {
     	
     	int tw = (int) tileWidth;
     	int th = (int) tileHeight;
-    	int layer = Main.LOGIC_SCREEN_LAYER;
-    	
+        int layer;
+        if(getAllLayers()) {
+            layer = Main.LOGIC_SCREEN_LAYER;
+        }else {
+            layer = 0;
+        }
     	if(breadBoard.getGamemode() == BreadBoard.DEFAULT_KEYWORD)
         {
             g2d.setColor(Color.WHITE);
@@ -390,63 +401,87 @@ public class MyGameScreen extends JComponent {
             g2d.drawString("DIRECTION 2: " + Main.getTheSecondDirection(), WIDTH - 505 , HEIGHT - 10);
 
         }else if(breadBoard.getGamemode() == BreadBoard.COPYING_KEYWORD ||
-                breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD ) //IF THE USER HAS CLICKED CTL C OR CTL V
+                breadBoard.getGamemode() == BreadBoard.CUTTING_KEYWORD ||
+                breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD) //IF THE USER HAS CLICKED CTL C, X, OR V
         {
-            if(Main.getCopying() || Main.getCutting()) //NOT REDUNDANT, THIS IS WHEN USER IS DRAGGING
+            if(Main.getCopying() || Main.getCutting() || Main.getPasting()) //NOT REDUNDANT, THIS IS WHEN USER IS DRAGGING
             {
-                int dx = (mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET) /
+
+
+                int dx = (mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET)/ // + DEFAULT_SCREEN_X_OFFSET) /
                         (tw) * tw + xOffset;
 
-                int dy = (mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) /
-                         (th) * th + yOffset;
-//                if (
-//                    (double)((mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET))
-//                            - (Math.floor((double) (mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) /
-//                                    (th)))
-//                            * th > 0){
-//                    dy+=th;
-//                }
-                                //mouseY[0] + DEFAULT_SCREEN_Y_OFFSET; //- yOffset % tileSize;//(int)((mouseY[0])/tileHeight)*tileHeight;
-
-                System.out.println("mouseY[0] = " + mouseY[0] + "mouseY[1] = " + mouseY[1] +" dy = " + dy);
+                int dy = ((mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) / (th)) * th + yOffset;
+                //if(dy < th) dy = 0;
+                System.out.println("dy = " + dy + " yO = " + yOffset + " my0 " + mouseY[0]);
 
                 if(Main.getCopying()) {
                     g2d.setColor(Color.CYAN);
                 }else if(Main.getCutting()) {
                     g2d.setColor(Color.RED);
+                }else if(Main.getPasting()){
+                    g2d.setColor(Color.GREEN);
                 }
                 if(tempCutCopyPasteBoardList != null
                         && tempCutCopyPasteBoardList.size() > 0
                         && tempCutCopyPasteBoardList.get(0).size() > 0) {
+                    //CHANGING 0s to 1s because i dont want the top and left sides before the cursor to be selected!
                     for (int j = 0; j < tempCutCopyPasteBoardList.get(layer).size(); j++) {
                         for (int k = 0; k < tempCutCopyPasteBoardList.get(layer).get(j).size(); k++) {
                             //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(j).get(k)));
 
                             g2d.fillRect(
-                                    (int) (k * tw + dx),
-                                    (int) (j * th + dy),
+                                    (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
+                                    (int) ((j + SELECTION_BIAS_Y) * th + dy),
                                     tw,
                                     th);
                         }
                     }
                 }
-                g2d.setColor(Color.WHITE);
-                g2d.drawRect(mouseX[0]+ DEFAULT_SCREEN_X_OFFSET,
-                        mouseY[0]+ DEFAULT_SCREEN_Y_OFFSET,
-                        mouseX[1]-mouseX[0],
-                        mouseY[1]-mouseY[0]);
+                if(!getPasting()) {
+                    g2d.setColor(Color.WHITE);
+                    g2d.drawRect(mouseX[0] + DEFAULT_SCREEN_X_OFFSET,
+                            mouseY[0] + DEFAULT_SCREEN_Y_OFFSET,
+                            mouseX[1] - mouseX[0],
+                            mouseY[1] - mouseY[0]);
+                }
             }
             g2d.setColor(Color.WHITE);
             if(Main.getCopying()) {
                 g2d.drawString("COPYING", WIDTH - 140, HEIGHT - 30);
             }else if(Main.getCutting()) {
                 g2d.drawString("CUTTING", WIDTH - 140, HEIGHT - 30);
+            }else if(Main.getPasting()) {
+                g2d.drawString("PASTING", WIDTH - 140, HEIGHT - 30);
             }
-        }else if(breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD)
-        {
-            g2d.setColor(Color.WHITE);
-            g2d.drawString("PASTING", WIDTH - 140, HEIGHT - 30);
+
         }
+//        else if(breadBoard.getGamemode() == BreadBoard.PASTING_KEYWORD)
+//        {
+//            g2d.setColor(Color.GREEN);
+//            int dx = (mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET)/ // + DEFAULT_SCREEN_X_OFFSET) /
+//                    (tw) * tw + xOffset;
+//
+//            int dy = (mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) /
+//                    (th) * th + yOffset;
+//            if(tempCutCopyPasteBoardList != null
+//                    && tempCutCopyPasteBoardList.size() > 0
+//                    && tempCutCopyPasteBoardList.get(0).size() > 0) {
+//                for (int j = 0; j < tempCutCopyPasteBoardList.get(layer).size(); j++) {
+//                    for (int k = 0; k < tempCutCopyPasteBoardList.get(layer).get(j).size(); k++) {
+//                        //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(j).get(k)));
+//
+//                        g2d.fillRect(
+//                                (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
+//                                (int) ((j + Main.SELECTION_BIAS_Y) * th + dy),
+//                                tw,
+//                                th);
+//                    }
+//                }
+//            }
+//
+//
+//        }
     }
     
     /**
