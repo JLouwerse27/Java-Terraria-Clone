@@ -49,7 +49,7 @@ public class Main implements Runnable{
 
     static final int DEFAULT_SCREEN_SIZE = 10;//ARCHAIC: TERRARIA AND SUCH
     static final int MIN_SCREEN_PIXEL_SIZE = 1;
-    static final int DEFAULT_SCREEN_Y_OFFSET = -32;
+    static final int DEFAULT_SCREEN_Y_OFFSET = -31;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
     static final int DEFAULT_LOGIC_SCREEN_SIZE = 3;
     private static short LOGIC_SCREEN_WIDTH;
@@ -577,9 +577,9 @@ public class Main implements Runnable{
 
                         short eY = (short) ((Main.mouseY[1] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
                         if (eY > MyGameScreen.yPixels) eY = MyGameScreen.yPixels;
-                        System.out.println("mouseY0=" + Main.mouseY[0] + " mouseY1=" + Main.mouseY[1]);
-                        System.out.println("SCREEN_Y_OFFSET=" + Main.SCREEN_Y_OFFSET);
-                        System.out.println("tileHeight=" + MyGameScreen.tileHeight);
+                        //System.out.println("mouseY0=" + Main.mouseY[0] + " mouseY1=" + Main.mouseY[1]);
+                        //System.out.println("SCREEN_Y_OFFSET=" + Main.SCREEN_Y_OFFSET);
+                        //System.out.println("tileHeight=" + MyGameScreen.tileHeight);
                         if(allLayers) {
                             b.eraseRegion((short)(sX), (short)(sY), b.BOTTOM_Z, eX, eY, b.TOP_Z);
                         }else {
@@ -1023,17 +1023,35 @@ public class Main implements Runnable{
      */
     private static void paste(){
 
-        short sX = (short) ((mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth);
-        if(sX < 0) sX = 0;
+        short sX = (short) (Math.floor((double)(mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / (double)MyGameScreen.tileWidth));
+        if(sX < -SELECTION_BIAS_X) sX = -SELECTION_BIAS_X;
 
-        short sY = (short) ((mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight);
-        if(sY < 0) sY = 0;
+        short sY = (short) (Math.floor((double)(mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / (double)MyGameScreen.tileHeight));
+        if(sY < -SELECTION_BIAS_Y) sY = -SELECTION_BIAS_Y;
 
         byte sz = 0;
         byte ez = (byte) mgs.tempCutCopyPasteBoardList.size();
         if(!allLayers) {
             sz = 0;
             ez = 1;
+
+//            System.out.println("Pasting from " +
+//                    (sX + SELECTION_BIAS_X) + ", " +
+//                    (sY + SELECTION_BIAS_Y) + ", " +
+//                    (sz + LOGIC_SCREEN_LAYER) + " to " +
+//                    (sX + SELECTION_BIAS_X + mgs.tempCutCopyPasteBoardList.get(0).get(0).size()) + ", " +
+//                    (sY + SELECTION_BIAS_Y + mgs.tempCutCopyPasteBoardList.get(0).size()) + ", " +
+//                    (ez + LOGIC_SCREEN_LAYER));
+
+        }else {
+
+//            System.out.println("Pasting from " +
+//                    (sX + SELECTION_BIAS_X) + ", " +
+//                    (sY + SELECTION_BIAS_Y) + ", " +
+//                    sz + " to " +
+//                    (sX + SELECTION_BIAS_X + mgs.tempCutCopyPasteBoardList.get(0).get(0).size()) + ", " +
+//                    (sY + SELECTION_BIAS_Y + mgs.tempCutCopyPasteBoardList.get(0).size()) + ", " +
+//                    ez);
         }
 
         if(pasting && b.getGamemode().equals(BreadBoard.PASTING_KEYWORD)){

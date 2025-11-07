@@ -51,7 +51,13 @@ public class MyGameScreen extends JComponent {
 
     static final short MINIMAP_TILE_SIZE = 4;
 
+    /**
+     * TBH I forgot why I created xOffset when Main.SCREEN_X_OFFSET exists
+     */
     int xOffset = 0;
+    /**
+     * TBH I forgot why I created yOffset when Main.SCREEN_Y_OFFSET exists
+     */
     int yOffset = 0;
 
     private BreadBoard breadBoard;
@@ -80,6 +86,8 @@ public class MyGameScreen extends JComponent {
     private Graphics2D g2d;
     private Graphics ng;
 
+    private Color borderColour = new Color(100,120,100);
+    private Color fillColour = new Color(255,255,255);
 
     private final double FONT_SCALAR = 1.5;
     private final double BLOCK_DIRECTION_PLACEMENT = 1.5;
@@ -259,20 +267,20 @@ public class MyGameScreen extends JComponent {
      * Paints the mouse coordinates at the bottom right of the screen
      * Uses FRAME.getGraphics, not MyGameScreen.getGraphics!
      */
-    public void paintMouseCoordinates(Graphics g) {
-        if(g.equals(MyGameScreen.this.getGraphics())){
-            System.out.println("calsdf");
-        }
-        int fontSize = (int) (originalTileSize / FONT_SCALAR);
-        g2d = (Graphics2D) g;
-        g2d.clearRect(WIDTH - 240, HEIGHT - 50, 100, fontSize);
-        g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
-        g2d.setColor(Color.WHITE);
-        int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
-        int y = mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET;
-        g2d.drawString(x / tileWidth + "," + y / tileHeight, WIDTH - 240, HEIGHT - 30);
-
-    }
+//    public void paintMouseCoordinates(Graphics g) {
+//        if(g.equals(MyGameScreen.this.getGraphics())){
+//            System.out.println("calsdf");
+//        }
+//        int fontSize = (int) (originalTileSize / FONT_SCALAR);
+//        g2d = (Graphics2D) g;
+//        g2d.clearRect(WIDTH - 240, HEIGHT - 50, 100, fontSize);
+//        g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
+//        g2d.setColor(Color.WHITE);
+//        int x = mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET;
+//        int y = mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET;
+//        g2d.drawString(x / tileWidth + "," + y / tileHeight, WIDTH - 240, HEIGHT - 30);
+//
+//    }
     
     
 
@@ -375,7 +383,8 @@ public class MyGameScreen extends JComponent {
     }
 
     /**
-     * PAINT THE COMMANDS, AS WELL AS THE COLOURED RECTANGLE WHEN COPYING, CUTTING, AND PASTING
+     * PAINT THE COMMANDS <br>
+     * AS WELL AS THE COLOURED RECTANGLE WHEN COPYING, CUTTING, OR PASTING
      */
     private void paintCommandStuff() {
     	
@@ -408,43 +417,96 @@ public class MyGameScreen extends JComponent {
             {
 
 
-                int dx = (mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET)/ // + DEFAULT_SCREEN_X_OFFSET) /
-                        (tw) * tw + xOffset;
-
-                int dy = ((mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) / (th)) * th + yOffset;
-                //if(dy < th) dy = 0;
-                System.out.println("dy = " + dy + " yO = " + yOffset + " my0 " + mouseY[0]);
+                int dx = (int)(Math.floor((double)(mouseX[0] - xOffset + DEFAULT_SCREEN_X_OFFSET) / ((double)tw)) * tw + xOffset);
+                if(dx + tw < xOffset){
+                    dx = xOffset - tw;
+                }
+                int dy = (int)(Math.floor((double)(mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) / ((double)th)) * th + yOffset);
+                if(dy + th < yOffset){
+                    dy = yOffset - th;
+                }
+                //System.out.println("dy = " + dy + " yOffset = " + yOffset + " my0 - 31 = " + (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET));
+                //System.out.println("(my0 - yOff - 31) / th = " + ((double)(mouseY[0] - yOffset + DEFAULT_SCREEN_Y_OFFSET) / (double)(th)) );
 
                 if(Main.getCopying()) {
-                    g2d.setColor(Color.CYAN);
+                    fillColour = Color.CYAN;
                 }else if(Main.getCutting()) {
-                    g2d.setColor(Color.RED);
+                    fillColour = Color.RED;
                 }else if(Main.getPasting()){
-                    g2d.setColor(Color.GREEN);
+                    fillColour = Color.GREEN;
                 }
+
                 if(tempCutCopyPasteBoardList != null
                         && tempCutCopyPasteBoardList.size() > 0
                         && tempCutCopyPasteBoardList.get(0).size() > 0) {
-                    //CHANGING 0s to 1s because i dont want the top and left sides before the cursor to be selected!
-                    for (int j = 0; j < tempCutCopyPasteBoardList.get(layer).size(); j++) {
-                        for (int k = 0; k < tempCutCopyPasteBoardList.get(layer).get(j).size(); k++) {
-                            //g2d.setColor(getColour(tempCutCopyPasteBoardList.get(j).get(k)));
 
-                            g2d.fillRect(
-                                    (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
-                                    (int) ((j + SELECTION_BIAS_Y) * th + dy),
-                                    tw,
-                                    th);
+//                    System.out.println("drawing rectangle from " +
+//                            (SELECTION_BIAS_X * tw + dx) + ", " +
+//                            (SELECTION_BIAS_Y * th + dy) + " to " +
+//                            ((tempCutCopyPasteBoardList.get(layer).get(0).size() + Main.SELECTION_BIAS_X) * tw + dx) + ", " +
+//                            ((tempCutCopyPasteBoardList.get(layer).size() + SELECTION_BIAS_Y) * th + dy));
+
+
+                    //cutting/copying
+                    if(!getPasting()) {
+                        for (int j = -1; j < tempCutCopyPasteBoardList.get(layer).size() + 1; j++) {
+                            if(j == -1 || j == tempCutCopyPasteBoardList.get(layer).size()) {
+                                g2d.setColor(borderColour);
+                                //draw a singular rectangle along the width of the thing (this is the top border)
+                                g2d.fillRect(
+                                        (int) (dx),
+                                        (int) ((j + SELECTION_BIAS_Y) * th + dy),
+                                        tw*(tempCutCopyPasteBoardList.get(layer).get(0).size()+2),
+                                        th);
+                            }else {
+                                for (int k = -1; k < tempCutCopyPasteBoardList.get(layer).get(j).size() + 1; k++) {
+                                    if(k == -1 || k == tempCutCopyPasteBoardList.get(layer).get(j).size()) {
+                                        g2d.setColor(borderColour);
+                                        g2d.fillRect(
+                                                (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
+                                                (int) ((j + SELECTION_BIAS_Y) * th + dy),
+                                                tw,
+                                                th);
+                                    }else {
+                                        //use if you want the actual block colour
+                                        //this won't render the block directions though
+                                        g2d.setColor(getColour(
+                                                tempCutCopyPasteBoardList.get(layer).get(j).get(k),
+                                                k, j, layer));
+                                        //g2d.setColor(fillColour);
+                                        g2d.fillRect(
+                                                (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
+                                                (int) ((j + SELECTION_BIAS_Y) * th + dy),
+                                                tw,
+                                                th);
+                                    }
+                                }
+                            }
+                        }
+                    }else {
+                        for (int j = 0; j < tempCutCopyPasteBoardList.get(layer).size(); j++) {
+                            for (int k = 0; k < tempCutCopyPasteBoardList.get(layer).get(j).size(); k++) {
+                                g2d.setColor(getColour(
+                                        tempCutCopyPasteBoardList.get(layer).get(j).get(k),
+                                        k, j, layer));
+
+                                g2d.fillRect(
+                                        (int) ((k + Main.SELECTION_BIAS_X) * tw + dx),
+                                        (int) ((j + SELECTION_BIAS_Y) * th + dy),
+                                        tw,
+                                        th);
+                            }
                         }
                     }
                 }
-                if(!getPasting()) {
-                    g2d.setColor(Color.WHITE);
-                    g2d.drawRect(mouseX[0] + DEFAULT_SCREEN_X_OFFSET,
-                            mouseY[0] + DEFAULT_SCREEN_Y_OFFSET,
-                            mouseX[1] - mouseX[0],
-                            mouseY[1] - mouseY[0]);
-                }
+                //actual selected rectangle, might be confusing
+//                if(!getPasting()) {
+//                    g2d.setColor(Color.PINK);
+//                    g2d.drawRect(mouseX[0] + DEFAULT_SCREEN_X_OFFSET,
+//                            mouseY[0] + DEFAULT_SCREEN_Y_OFFSET,
+//                            mouseX[1] - mouseX[0],
+//                            mouseY[1] - mouseY[0]);
+//                }
             }
             g2d.setColor(Color.WHITE);
             if(Main.getCopying()) {

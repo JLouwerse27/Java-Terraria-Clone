@@ -346,6 +346,7 @@ public class BreadBoard {
                                     final Direction dir2, final short x, final short y, final byte z){
 
         if(x < 0 || y < 0 || y > breadboardByte[z].length || x > breadboardByte[z][y].length){
+            System.out.println("attempted to changebreadboardbytes from illegal location");
             return false;
         }
 
@@ -640,7 +641,7 @@ public class BreadBoard {
             if(sX < Main.SELECTION_BIAS_X) sX = 0 - Main.SELECTION_BIAS_X;
 
             int sY = (int)(Main.mouseY[0] - Main.SCREEN_Y_OFFSET + Main.DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight;
-            if(sY < Main.SELECTION_BIAS_X) sY = 0 - Main.SELECTION_BIAS_Y;
+            if(sY < Main.SELECTION_BIAS_Y) sY = 0 - Main.SELECTION_BIAS_Y;
 
             int eX = (int)(Main.mouseX[1] - Main.SCREEN_X_OFFSET + Main.DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth;
             if(eX > MyGameScreen.xPixels) eX = MyGameScreen.xPixels;
