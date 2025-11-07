@@ -36,7 +36,7 @@ i
 o
 those are resistors
 
-You can press [ and ] to cycle through your "inventory"
+You can press \[ and ] to cycle through your "inventory"
 
 
 Press control and scroll to zoom in out
@@ -59,10 +59,12 @@ A screwed up NOT gate works if you remove it and replace it
 The thing at the right side is a debug, it will show all the signals being propogated at the current tick.
 
 On level two is an example of the TLW thing from my COMP architecture class
+
 	There are 8 instructions (its halfway complete right now) 
 	and there are 4 inputs to control which one you want (it could have up to 16 instructions)
 
 On level six, at the bottom right is my computer
+
 	its pretty basic but it can:
  	 -add a number
 	 -read and write 3 bit numbers
@@ -76,7 +78,6 @@ On level six, at the bottom right is my computer
 	2. then press the switch near the middle to turn the machine on,
 	3. then press the switch near the middle again to turn the machine off (like an off signal from a clock) 
         4. press the next instruction switch and repeat steps 2 and 3.
-
 
 	Execute the first instruction to write 3 to register 1
 	Execute the second instruction to write 5 to register 2
@@ -117,7 +118,7 @@ For one layer cut and copy, paste can be done on any layer.
 Multiple layer cut and copy will always be pasted from the first layer,
 as you are cutting/copying from every layer.
 ================================================================================
-----------------------------------------------------------------------------------------------------------
+\----------------------------------------------------------------------------------------------------------
 
 Ok that's about it!
 Thank you for reading!
