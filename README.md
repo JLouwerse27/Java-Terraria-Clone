@@ -93,30 +93,28 @@ On level six, at the bottom right is my computer
 
 -------------------------------------------------Updates--------------------------------------------------
 
-Nov 4, 2025===Just added step through!==================
+Nov 4, 2025---Just added step through!------------------
 Press space to disable ticks.
 Then press "." to step through ticks.
 Press space again if you want to enable ticks as normal.
-========================================================
-
-Nov 5, 2025===Just added better editing!==================
+--------------------------------------------------------
+Nov 5, 2025---Just added better editing!------------------
 Press "e" to enable editing.
-The HUD will show the 
- -block type
- -direction 1
- -direction 2
+The HUD will show the
+-block type
+-direction 1
+-direction 2
 Press c to change direction 1 for all future blocks placed
 Press x to change direction 2 for all future blocks placed
 Press e again if you want to go back to defualt
-==========================================================
-
-Nov 7, 2025===========Just added better cut copy paste!=========================
+----------------------------------------------------------
+Nov 7, 2025-----------Just added better cut copy paste!-------------------------
 Press normal cut copy and paste commands for normal cut copy paste of one layer.
 Press shift while doing cut or copy to do a cut/copy of all the layers.
 For one layer cut and copy, paste can be done on any layer.
 Multiple layer cut and copy will always be pasted from the first layer,
 as you are cutting/copying from every layer.
-================================================================================
+--------------------------------------------------------------------------------
 ----------------------------------------------------------------------------------------------------------
 
 Ok that's about it!
