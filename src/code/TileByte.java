@@ -7,6 +7,21 @@ package src.code;
 public enum TileByte {
     // BreadBoard
 
+    //====note====
+    //update
+    //in this file
+    //   finalTypeExcludingWireDead
+    //in BreadBoard.java:
+    //   addNewItemToBreadBoardItemsListInitiallyByte
+    //   itemEnumBytes[], and
+    //   convertToTypeBytes
+    //   setBreadBoardStateByteInitial if the tile can be turned to a different colour
+    //   in BreadBoard everytime you add a TileByte that is able
+    //   to be edited into the board
+    //in MyGameScreen.java:
+    //   getColour
+    //whenever you add a new tile
+
     Any((byte) -1),//this might be stupid
     Empty((byte) 0),
     SwitchOff((byte) 1),
@@ -32,9 +47,19 @@ public enum TileByte {
     GreenLEDOff((byte) 21),
     BlueLEDOn((byte) 22),
     BlueLEDOff((byte) 23),
+    AnalogueWire((byte) 24),
+    Collector((byte) 25),
+    Base((byte) 26),
+    Emitter((byte) 27),
+    TriStateBufferConnected((byte)28),
+    TriStateBufferDisconnected((byte)29),
     WireDead((byte) 52);
+    //Resistor((byte N);
 
-
+    /**
+     * Used in Main.java
+     */
+    public static final int finalTypeExcludingWireDead = 29;
 
     private final byte symbol;
     TileByte(byte symbol) {

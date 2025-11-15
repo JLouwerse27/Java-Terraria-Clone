@@ -7,7 +7,8 @@ public abstract class BreadBoardItem { //extends Thread {
     private short x = 0;
     private short y = 0;
     private short z = 1;//1 is middle in a 3 block tall array
-    private TState out = TState.DEAD;//-1 off, 0 dead, 1 on
+    //putting this in DigitalBreadBoardItem
+    //private TState out = TState.DEAD;//-1 off, 0 dead, 1 on
     private Direction dir = Direction.RIGHT;
 
     public BreadBoardItem(final Direction dir, final short x, final short y, final short z) {
@@ -35,16 +36,15 @@ public abstract class BreadBoardItem { //extends Thread {
         return dir;
     }
 
-    public TState getOut(){
-        return out;
-    }
+    //digital
+//    public TState getOut(){
+//        return out;
+//    }
 
     public void setDir(final Direction dir){
         this.dir = dir;
     }
 
-    public byte returnTile(){
-        return TileByte.Empty.getSymbol();
-    }
+    public abstract byte returnTile();
 
 }

@@ -8,13 +8,13 @@ package src.code;
  */
 public abstract class Gate extends BreadBoardItem {
 
-    TState out = TState.UNUSED;
-    TState A = TState.UNUSED;//wire is to the left -- gate is to the right
-    TState B = TState.UNUSED;//~ down
-    TState C = TState.UNUSED;//~ right
-    TState D = TState.UNUSED;//~ up
-    TState E = TState.UNUSED;//~ zBelow
-    TState F = TState.UNUSED;//~ zAbove
+    protected TState out = TState.UNUSED;
+    protected TState A = TState.UNUSED;//wire is to the left -- gate is to the right
+    protected TState B = TState.UNUSED;//~ down
+    protected TState C = TState.UNUSED;//~ right
+    protected TState D = TState.UNUSED;//~ up
+    protected TState E = TState.UNUSED;//~ zBelow
+    protected TState F = TState.UNUSED;//~ zAbove
     ////no F because there should never be six inputs!
 
     protected int signalsOutputAtCurrentTick = 0;
@@ -25,30 +25,48 @@ public abstract class Gate extends BreadBoardItem {
     byte numberOfInputsTotal = 0;
     byte numberOfInputsOn = 0;
 
-    public Gate(final Direction dir, final short x, final short y, final byte z) {
+    public Gate(final Direction dir, final short x, final short y, final short z) {
         super(dir, x, y, z);
     }
 
-    public abstract void setA(TState on);
-    public abstract void setB(TState on);
-    public abstract void setC(TState on);
-    public abstract void setD(TState on);
-    public abstract void setE(TState on);
-    public abstract void setF(TState on);
+    public void setA(final TState on) {
+        this.A = on;
+    }
+
+    public void setB(final TState on) {
+        this.B = on;
+    }
+
+    public void setC(final TState on) {
+        this.C = on;
+    }
+
+    public void setD(final TState on) {
+        this.D = on;
+    }
+
+    public void setE(final TState on) {
+        this.E = on;
+    }
+
+    public void setF(final TState on) {
+        this.F = on;
+    }
 
     public abstract void calculate();
 
-    /**A is always 90deg to the left of output
-     * B is always 180deg away from the output
-     * C is always 90 deg to the right of output
-     * D is 90 degrees down of input
-     * E is 90 degrees up of input
-     * if gate is pointing up or down, assume regular coordinates
+    /**
+     * A is left side input
+     * B is bottom side input
+     * C is right side input
+     * D is top side input
+     * E is zBelow input
+     * F is zAbove input
      *
      * @return whether the calling function should proceed with calculations,
      * i.e. return false if you put an input where the output of a gate should be
      */
-    public boolean setRightGate(final TState s, final short deltax, final short deltay, final byte deltaz){
+    public boolean setRightGate(final TState s, final short deltax, final short deltay, final short deltaz){
         //this gate is to the right of the input (ex. wire)
         if(deltax == 1){
             if(this.getDir() != Direction.LEFT){//A gate going LEFT would be pointing back to the wire
@@ -96,8 +114,8 @@ public abstract class Gate extends BreadBoardItem {
      * @param tick_when_set
      */
     public void signal(final int tick_when_set){
-        //if(Main.getB().isGatesAllowedToSignalOut()){
-            Main.getBreadBoard().signal(
+        //if(Main.getBreadBoard().isGatesAllowedToSignalOut()){
+            Main.getBreadBoard().queueSignal(
                     this.getDir(),
                     out,
                     this.getX(),

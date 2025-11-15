@@ -1,16 +1,12 @@
 package src.code;
 
-import org.w3c.dom.ls.LSOutput;
-
 import java.awt.*;
 import java.awt.event.*;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 
 import javax.swing.*;
@@ -54,10 +50,10 @@ public class Main implements Runnable{
     static final int DEFAULT_LOGIC_SCREEN_SIZE = 3;
     private static short LOGIC_SCREEN_WIDTH;
     private static short LOGIC_SCREEN_HEIGHT;
-    private static byte LOGIC_SCREEN_ZHEIGHT;
+    private static short LOGIC_SCREEN_ZHEIGHT;
 
-    static byte LOGIC_SCREEN_LAYER;
-    private static byte DEFAULT_LOGIC_SCREEN_LAYER = 0;
+    static short LOGIC_SCREEN_LAYER;
+    private static short DEFAULT_LOGIC_SCREEN_LAYER = 0;
 
 
     static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
@@ -82,6 +78,15 @@ public class Main implements Runnable{
     static final String sS = "S";
     static final String sA = "A";
     static final String sD = "D";
+
+    /**
+     * Holds starting wire values when placing a wire down.
+     * This allows the end of the wire to have the start and vice versa.
+     */
+    static int[] tempWireLocation = new int[3];
+    static boolean placingWire = false;
+
+
     /** full file name:<br>
      *  including src/saves/ and .bin
      */
@@ -213,7 +218,7 @@ public class Main implements Runnable{
 			if(System.currentTimeMillis() - timer >= 1000) {
 				//checks frames every second
 				timer += 1000;
-				System.out.println("TICKS: "+deltaTick+" FPS: " + mgs.paintsPerSecond + " "+ frames);
+				//System.out.println("TICKS: "+deltaTick+" FPS: " + mgs.paintsPerSecond + " "+ frames);
 				//mgs.paintFPS(frames);
 				mgs.paintsPerSecond = 0;
 				frames = 0;
@@ -418,7 +423,7 @@ public class Main implements Runnable{
 
         short width;
         short height;
-        byte zHeight;
+        short zHeight;
         //String fileName = "src/saves/4,4,1 2025-06-14 12-45-05.bin";
 
         //main one
@@ -444,7 +449,7 @@ public class Main implements Runnable{
         //Path file = Paths.get("s.txt");
         //Path file = Paths.get("small.txt"); //first 3d. 3by3by3
 
-        BreadBoardFileLoader bfl = new BreadBoardFileLoader(file);
+        FileLoader bfl = new FileLoader(file);
 
         try {
             short [] dim = bfl.dimensions();
@@ -522,34 +527,44 @@ public class Main implements Runnable{
             public void mouseClicked(MouseEvent e) {
                 //checks if mouse is clicked and draws the screen accordingly
                 if(gameMode != PAUSED_GAMEMODE) {
-                    if(!pasting) {
-                        if (b.checkClick(
-                                e,
-                                (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
-                                (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
-                                (byte) LOGIC_SCREEN_LAYER)
-                        ) {
-                            mgs.repaint();
-                        }
+                    if(e.getButton() == 4){
+                        //cycleUp();
+                    }else if(e.getButton() == 5){
+                        //cycleDown();
                     }else {
-                        paste();
-                        b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
-                        pasting = false;
+                        if(!pasting) {
+                            b.checkClick(
+                                    e,
+                                    (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
+                                    (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
+                                    (byte) LOGIC_SCREEN_LAYER);
+                            mgs.repaint();
+                        }else {
+                            paste();
+                            b.setGamemode(BreadBoard.DEFAULT_KEYWORD);
+                            pasting = false;
+                        }
                     }
                 }
-
-
 
             }
 
             @Override
             public void mousePressed(MouseEvent e) {
                 if(gameMode != PAUSED_GAMEMODE) {
-                    mouseClickNumber[0] = (byte) e.getButton();
-                    mouseX[0] = (short) e.getX();
-                    mouseY[0] = (short) e.getY();
-                    P_SCREEN_X_OFFSET = Main.SCREEN_X_OFFSET;
-                    P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
+                    if(e.getButton() == 4){
+                        cycleDown();
+                        mouseClickNumber[0] = (byte) e.getButton();
+                    }else if(e.getButton() == 5){
+                        cycleUp();
+                        mouseClickNumber[0] = (byte) e.getButton();
+                    }else {
+                        mouseClickNumber[0] = (byte) e.getButton();
+                        mouseX[0] = (short) e.getX();
+                        mouseY[0] = (short) e.getY();
+                        P_SCREEN_X_OFFSET = Main.SCREEN_X_OFFSET;
+                        P_SCREEN_Y_OFFSET = SCREEN_Y_OFFSET;
+                    }
                 }
             }
 
@@ -583,7 +598,7 @@ public class Main implements Runnable{
                         if(allLayers) {
                             b.eraseRegion((short)(sX), (short)(sY), b.BOTTOM_Z, eX, eY, b.TOP_Z);
                         }else {
-                            b.eraseRegion((short)(sX), (short)(sY), LOGIC_SCREEN_LAYER, eX, eY, (byte)(LOGIC_SCREEN_LAYER + 1));
+                            b.eraseRegion((short)(sX), (short)(sY), LOGIC_SCREEN_LAYER, eX, eY, (short)(LOGIC_SCREEN_LAYER + 1));
                             System.out.println("attempted to erase region");
                         }
                         cutting = false;
@@ -631,78 +646,77 @@ public class Main implements Runnable{
 
             @Override
             public void mouseDragged(MouseEvent e) {
-                if(gameMode != PAUSED_GAMEMODE) {
-                    //DO NOT USE "!(cutting || copying)": these will be used for actual cutting and pasting
-                    //i.e. when the mouse is being dragged to cut/copy
-                    //This if must check whether I've not clicked CTL C or CTL X
-                    if (!(b.getGamemode() == BreadBoard.COPYING_KEYWORD ||
-                            b.getGamemode() == BreadBoard.CUTTING_KEYWORD)) {//dragging without CTL+C
-                        if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
-                            SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //
-                            SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
-                            SCREEN_X_OFFSET += P_SCREEN_X_OFFSET;
-                            SCREEN_Y_OFFSET += P_SCREEN_Y_OFFSET;
+                if (gameMode != PAUSED_GAMEMODE) {
+                    if(mouseClickNumber[0] != 4 && mouseClickNumber[0] != 5) {
+                        //DO NOT USE "!(cutting || copying)": these will be used for actual cutting and pasting
+                        //i.e. when the mouse is being dragged to cut/copy
+                        //This if must check whether I've not clicked CTL C or CTL X
+                        if (!(b.getGamemode() == BreadBoard.COPYING_KEYWORD ||
+                                b.getGamemode() == BreadBoard.CUTTING_KEYWORD)) {//dragging without CTL+C
+                            if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
+                                SCREEN_X_OFFSET = -(mouseX[0] - e.getX()); //
+                                SCREEN_Y_OFFSET = -(mouseY[0] - e.getY()); //+ DEFAULT_SCREEN_Y_OFFSET;
+                                SCREEN_X_OFFSET += P_SCREEN_X_OFFSET;
+                                SCREEN_Y_OFFSET += P_SCREEN_Y_OFFSET;
 
-                            mf.getGameScreen().xOffset = (int) SCREEN_X_OFFSET;
-                            mf.getGameScreen().yOffset = (int) SCREEN_Y_OFFSET;
-                            
-                            mgs.repaint();
-                        } else if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
-                            //System.out.println(e.getButton()); is 0 in this case, for all clicks
-                            if (mouseClickNumber[0] == MouseEvent.BUTTON1) {//left button tapped and then dragged
-                                if (b.checkClick(
-                                        e,
-                                        (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
-                                        (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
-                                        (byte) LOGIC_SCREEN_LAYER)) {
-                                	
+                                mf.getGameScreen().xOffset = (int) SCREEN_X_OFFSET;
+                                mf.getGameScreen().yOffset = (int) SCREEN_Y_OFFSET;
+
+                                mgs.repaint();
+                            } else if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {
+                                //System.out.println(e.getButton()); is 0 in this case, for all clicks
+                                if (mouseClickNumber[0] == MouseEvent.BUTTON1) {//left button tapped and then dragged
+                                    b.checkClick(
+                                            e,
+                                            (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
+                                            (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
+                                            (byte) LOGIC_SCREEN_LAYER);
+                                    mgs.repaint();
+
+                                } else if (mouseClickNumber[0] == MouseEvent.BUTTON3) {//right button tapped and then dragged
+                                    b.checkClick(
+                                            e,
+                                            (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
+                                            (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
+                                            LOGIC_SCREEN_LAYER);
                                     mgs.repaint();
                                 }
-                            } else if (mouseClickNumber[0] == MouseEvent.BUTTON3) {//right button tapped and then dragged
-                                if (b.checkClick(
-                                        e,
-                                        (short) (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET),
-                                        (short) (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET),
-                                        LOGIC_SCREEN_LAYER)) {
-                                	
-                                	mgs.repaint();
+                            }
+                        } else {//dragging with CTL+C or CTL+X
+                            //this first and last if may be irrelevant
+                            if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {//while editing
+
+                                mouseX[1] = (short) e.getX();
+                                mouseY[1] = (short) e.getY();
+
+                                b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
+
+                                mgs.repaint();
+                            } else if (b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)
+                                    || b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
+
+                                if (b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)) {
+                                    copying = true;
+                                    cutting = false;
+                                } else if (b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
+                                    cutting = true;
+                                    copying = false;
                                 }
-                            }
-                        }
-                    } else {//dragging with CTL+C or CTL+X
-                        //this first and last if may be irrelevant
-                        if (b.getGamemode().equals(BreadBoard.EDITING_KEYWORD)) {//while editing
 
-                            mouseX[1] = (short) e.getX();
-                            mouseY[1] = (short) e.getY();
+                                mouseX[1] = (short) e.getX();
+                                mouseY[1] = (short) e.getY();
 
-                            b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
-                             
-                            mgs.repaint();
-                        } else if (b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)
-                                || b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)) {
+                                b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
 
-                            if(b.getGamemode().equals(BreadBoard.COPYING_KEYWORD)){
-                                copying = true;
-                                cutting = false;
-                            }else if(b.getGamemode().equals(BreadBoard.CUTTING_KEYWORD)){
-                                cutting = true;
+                                mgs.repaint();
+                            } else if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
                                 copying = false;
+                                cutting = false;
+                                pasting = false;
                             }
-
-                            mouseX[1] = (short) e.getX();
-                            mouseY[1] = (short) e.getY();
-
-                            b.checkClick(e, mouseX[1], mouseY[1], LOGIC_SCREEN_LAYER);
-                             
-                            mgs.repaint();
-                        } else if (b.getGamemode().equals(BreadBoard.DEFAULT_KEYWORD)) {
-                            copying = false;
-                            cutting = false;
-                            pasting = false;
                         }
-                    }
-                }
+                    }//checks for mousebutton 4 and 5
+                }//checks for paused
 //                dragging[0] = true;
             }
 
@@ -710,6 +724,15 @@ public class Main implements Runnable{
             public void mouseMoved(MouseEvent e) {
                 mouseX[0] = (short) e.getX();
                 mouseY[0] = (short) e.getY();
+
+                if(placingWire){
+                    if(theDirection == Direction.RIGHT){
+                        int x = (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileSize;
+                        int y = (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileSize;
+                        System.out.println("x " + x + ", y " + y);
+                    }
+                }
+
                 if(pasting){
                     mgs.repaint();
                 }
@@ -813,29 +836,11 @@ public class Main implements Runnable{
                         } else if (e.getKeyCode() == KeyEvent.VK_O) {
                             b.itemCursor = 11;
                         } else if (e.getKeyCode() == KeyEvent.VK_P) {
-                            b.itemCursor = 17;//XOR
+                            b.itemCursor = 17;//XOR; 17 because we need to switch switches, buttons, and wireOn
                         } else if (e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
-                            //cycle down
-                            if (b.itemCursor == 52) {
-                                b.itemCursor = 1;
-                            } else if (b.itemCursor == 3) {
-                                b.itemCursor = 52;
-                            } else if (b.itemCursor == 17) {
-                                b.itemCursor = 11;
-                            } else {
-                                b.itemCursor = (b.itemCursor > 0) ? (byte) (b.itemCursor - 1) : b.itemCursor;//XOR
-                            }
+                            cycleDown();
                         } else if (e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
-                            //cycle up
-                            if (b.itemCursor == 52) {
-                                b.itemCursor = 3;
-                            } else if (b.itemCursor == 1) {
-                                b.itemCursor = 52;
-                            } else if (b.itemCursor == 11) {
-                                b.itemCursor = 17;
-                            } else {
-                                b.itemCursor = (b.itemCursor < 23) ? (byte) (b.itemCursor + 1) : b.itemCursor;//XOR
-                            }
+                            cycleUp();
                         } else if (e.getKeyCode() == KeyEvent.VK_EQUALS) {
                             if (LOGIC_SCREEN_LAYER + 1 <= b.TOP_Z) {
                                 LOGIC_SCREEN_LAYER++;
@@ -874,7 +879,7 @@ public class Main implements Runnable{
                             }
                         }
 
-                        //clear signal queue
+                        //clear queueSignal queue
                         if (e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
                             b.setSignalArrayToNull();
                         }
@@ -1016,6 +1021,41 @@ public class Main implements Runnable{
                 }
             }
         });
+    }
+
+    /**
+     * Cycles the item cursor up.
+     * Skips unusable itemcursors.
+     */
+    private void cycleUp() {
+        //cycle up
+        if (b.itemCursor == 1) {
+            b.itemCursor = 52;
+        } else if (b.itemCursor == 52) {
+            b.itemCursor = 3;
+        } else if (b.itemCursor == 11) {
+            b.itemCursor = 17;
+        } else if (b.itemCursor == TileByte.Collector.getSymbol()) {
+            b.itemCursor = (byte) (TileByte.Collector.getSymbol() + 3);
+        }else {
+            b.itemCursor = (b.itemCursor < TileByte.finalTypeExcludingWireDead) ? (byte) (b.itemCursor + 1) : 0;
+        }
+    }
+
+    private void cycleDown() {
+        //use this when you've added other symbols which are above emitter
+        if (b.itemCursor == (byte) (TileByte.Emitter.getSymbol() + 1)) {
+            b.itemCursor = TileByte.Collector.getSymbol();
+        }else if (b.itemCursor == 17) {
+            b.itemCursor = 11;
+        } else if (b.itemCursor == 3) {
+            b.itemCursor = 52;
+        } else if (b.itemCursor == 52) {
+            b.itemCursor = 1;
+        } else {
+            //get rid of the "- 2" when you have things above emitter.
+            b.itemCursor = (b.itemCursor > 0) ? (byte) (b.itemCursor - 1) : TileByte.finalTypeExcludingWireDead;
+        }
     }
 
     /**
@@ -1360,6 +1400,10 @@ public class Main implements Runnable{
     public static BreadBoard getBreadBoard() {
         return b;
     }
+
+    public static void setBreadBoard(BreadBoard b){
+        Main.b = b;
+    }
     
     public int getFrames() {
     	return frames;
@@ -1387,14 +1431,6 @@ public class Main implements Runnable{
 
     public static void setTheSecondDirection(Direction theSecondDirection) {
         Main.theSecondDirection = theSecondDirection;
-    }
-
-    public static BreadBoard getB(){
-        return b;
-    }
-
-    public static void setB(BreadBoard b){
-        Main.b = b;
     }
 
     public static boolean getAllLayers(){

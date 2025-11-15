@@ -8,7 +8,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 
 /**
- * Creates a .txt file which can later be loaded using BreadBoardFileLoader
+ * Creates a .txt file which can later be loaded using FileLoader
  */
 public class FileCreator {
 

@@ -9,7 +9,7 @@ NO-OP (no operation):
 NORMAL (normal reading):
 0001 (OPCODE), 3 SIGNALS ON/OFF, NEXT/STEP
 Ex "11,000,000,111" sinmply lights up the bottom 3 and goes to the next instruction
-Ex "11,000,000,111" would lights up the bottom 3 triggers the step signal
+Ex "11,000,000,111" would lights up the bottom 3 triggers the step queueSignal
 
 GO TO (goes to an instruction):
 //IF (CONDITION BIT = 1), THEN IT CHECKS THE THREE PREVIOUS LINES FOR A variable, an operator and a value. IF THE CONDITION IS MET, THEN IT GOES TO the specified line

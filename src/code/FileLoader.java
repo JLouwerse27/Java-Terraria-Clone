@@ -5,11 +5,11 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
-public class BreadBoardFileLoader {
+public class FileLoader {
 
     private final byte[] fileContent;
 
-    public BreadBoardFileLoader(Path path) {
+    public FileLoader(Path path) {
         try {
             fileContent = Files.readAllBytes(path);
         } catch (IOException e) {
@@ -25,9 +25,9 @@ public class BreadBoardFileLoader {
         short height = dim[1];
         short zHeight = dim[2];
 
-        System.out.println("BreadBoardFileLoader.load(): width = " + width + ", height = " + height + ", zHeight = " + zHeight);
+        System.out.println("FileLoader.load(): width = " + width + ", height = " + height + ", zHeight = " + zHeight);
 
-        System.out.println("BreadBoardFileLoader.load(): dimensions array: "+Arrays.toString(dimensions()));
+        System.out.println("FileLoader.load(): dimensions array: "+Arrays.toString(dimensions()));
 
         byte[][][] tiles = new byte[zHeight][height][width];
         byte[][][] dir1Raw = new byte[zHeight][height][width];
@@ -142,7 +142,7 @@ public class BreadBoardFileLoader {
 //        }
 //
 //        board.setBreadBoardState(tiles, dir1, dir2);
-//        System.out.println("BreadBoardFileLoader.load(): called setBreadBoardState()");
+//        System.out.println("FileLoader.load(): called setBreadBoardState()");
     }
 
     public short[] dimensions() throws IOException {

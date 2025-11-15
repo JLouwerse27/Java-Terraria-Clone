@@ -1,7 +1,6 @@
 package src.code;
 
 import java.awt.*;
-import java.sql.SQLOutput;
 import java.util.Arrays;
 import java.util.List;
 import java.util.ArrayList;
@@ -12,29 +11,29 @@ import static src.code.Main.*;
 /**
  * MyGameScreen is a custom JComponent that represents the game screen.
  * It handles the rendering of the game tiles based on the provided dimensions and tile information.
- * 
+ * <br><br>
  * The class provides multiple constructors to initialize the game screen with different configurations.
- * It also includes methods to paint the game screen, determine tile colors, and update the screen size.
+ * It also includes methods to paint the game screen, determine tile colors, and update the screen size.<br>
  * 
- * Fields:
- * - WIDTH: The width of the game screen.
- * - HEIGHT: The height of the game screen.
- * - xPixels: The number of horizontal tiles.
- * - yPixels: The number of vertical tiles.
- * - tileSize: The size of each tile (deprecated).
- * - tileWidth: The width of each tile.
- * - tileHeight: The height of each tile.
+ * <br> Fields: <br>
+ * - WIDTH: The width of the game screen.<br>
+ * - HEIGHT: The height of the game screen.<br>
+ * - xPixels: The number of horizontal tiles.<br>
+ * - yPixels: The number of vertical tiles.<br>
+ * - tileSize: The size of each tile (deprecated).<br>
+ * - tileWidth: The width of each tile.<br>
+ * - tileHeight: The height of each tile.<br>
  * 
- * Constructors:
- * - MyGameScreen(): Initializes the game screen with default dimensions and tile configuration.
- * - MyGameScreen(int numX, int numY): Initializes the game screen with specified number of horizontal and vertical tiles.
- * - MyGameScreen(int width, int height, int numX, int numY): Initializes the game screen with specified dimensions and tile configuration.
+ * <br>Constructors:<br>
+ * - MyGameScreen(): Initializes the game screen with default dimensions and tile configuration.<br>
+ * - MyGameScreen(int numX, int numY): Initializes the game screen with specified number of horizontal and vertical tiles.<br>
+ * - MyGameScreen(int width, int height, int numX, int numY): Initializes the game screen with specified dimensions and tile configuration.<br>
  * 
- * Methods:
- * - paint(Graphics g): Renders the game screen by drawing the tiles based on their colors.
- * - getColour(String c): Returns the color corresponding to the given tile symbol.
- * - updateSize(): Updates the size of the game screen and recalculates the tile dimensions.
- * - setPixels(int numX, int numY): Sets the number of horizontal and vertical tiles (currently commented out).
+ * <br>Methods:<br>
+ * - paint(Graphics g): Renders the game screen by drawing the tiles based on their colors.<br>
+ * - getColour(String c): Returns the color corresponding to the given tile symbol.<br>
+ * - updateSize(): Updates the size of the game screen and recalculates the tile dimensions.<br>
+ * - setPixels(int numX, int numY): Sets the number of horizontal and vertical tiles (currently commented out).<br>
  */
 public class MyGameScreen extends JComponent {
     
@@ -66,13 +65,13 @@ public class MyGameScreen extends JComponent {
     boolean needToRepaintTiles = true;
 
     //quality of life things
-    private final static Direction dR = Direction.RIGHT;
-    private final static Direction dL = Direction.LEFT;
-    private final static Direction dU = Direction.UP;
-    private final static Direction dD = Direction.DOWN;
-    private final static Direction dN = Direction.NONE;
-    private final static Direction dO = Direction.OUTOF;
-    private final static Direction dI = Direction.INTO;
+    final static Direction dR = Direction.RIGHT;
+    final static Direction dL = Direction.LEFT;
+    final static Direction dU = Direction.UP;
+    final static Direction dD = Direction.DOWN;
+    final static Direction dN = Direction.NONE;
+    final static Direction dO = Direction.OUTOF;
+    final static Direction dI = Direction.INTO;
 
     List<List<List<Byte>>> tempCutCopyPasteBoardList = new ArrayList<List<List<Byte>>>();
     List<List<List<Direction>>> tempCutCopyPasteBoardDirection1List = new ArrayList<List<List<Direction>>>();
@@ -122,7 +121,7 @@ public class MyGameScreen extends JComponent {
      * @param numY
      * @param b BreadBoard
      */
-    public MyGameScreen(final short numX, final short numY, final byte numZ, final BreadBoard b, final Main m) {
+    public MyGameScreen(final short numX, final short numY, final short numZ, final BreadBoard b, final Main m) {
         WIDTH = 500;
         HEIGHT = 500;
         xPixels = numX;
@@ -194,7 +193,7 @@ public class MyGameScreen extends JComponent {
             //draw mouse coordinates on screen
 
 
-            int layer = Main.LOGIC_SCREEN_LAYER;
+            final int layer = Main.LOGIC_SCREEN_LAYER;
 
             for (int j = fby; j < lby; j++) {
                 for (int k = fbx; k < lbx; k++) {
@@ -204,6 +203,19 @@ public class MyGameScreen extends JComponent {
                     g2d.fillRect(k * tw + xOffset, j * th + yOffset, tw, th);
 
                     g2d.setColor(Color.WHITE);
+
+                    //draw CBE for transistor (Collector, Base, Emitter)
+                    if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Collector.getSymbol()) {
+                        g2d.drawString("C", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
+                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Base.getSymbol()) {
+                        g2d.drawString("B", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
+                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Emitter.getSymbol()) {
+                        g2d.drawString("E", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
+                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferConnected.getSymbol() ||
+                            breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferDisconnected.getSymbol()) {
+                        g2d.drawString("Tr", k * tw + xOffset + tw/3, j * th + yOffset + th/2);
+                    }
+
                     //draw the direction
                     if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.RIGHT)) {
                         g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th/2);
@@ -403,9 +415,15 @@ public class MyGameScreen extends JComponent {
 
         }else if(breadBoard.getGamemode() == BreadBoard.EDITING_KEYWORD)
         {
+            String tileName;
+            if(TileByte.fromSymbol(breadBoard.itemCursor).toString() == "Collector"){
+                tileName = "Transistor";
+            }else {
+                tileName = TileByte.fromSymbol(breadBoard.itemCursor).toString();
+            }
             g2d.setColor(Color.WHITE);
             g2d.drawString("EDITING", WIDTH - 140, HEIGHT - 30);
-            g2d.drawString(TileByte.fromSymbol(breadBoard.itemCursor).toString(), WIDTH - 505, HEIGHT - 50);
+            g2d.drawString(tileName, WIDTH - 505, HEIGHT - 50);
             g2d.drawString("DIRECTION 1: " + Main.getTheDirection(), WIDTH - 505 , HEIGHT - 30);
             g2d.drawString("DIRECTION 2: " + Main.getTheSecondDirection(), WIDTH - 505 , HEIGHT - 10);
 
@@ -612,6 +630,8 @@ public class MyGameScreen extends JComponent {
             return new Color(10,100,10);
         }else if (c == TileByte.Resistor10.getSymbol()) {
             return new Color(10,80,10);
+        }else if (c == TileByte.Xor.getSymbol()) {
+            return new Color(200,120,20);
         }else if (c == TileByte.RedLEDOn.getSymbol()) {
             BreadBoard.RedLED rled = (BreadBoard.RedLED) breadBoard.locateBreadBoardItemOnBoard(x,y,z);
             if(rled != null) {
@@ -629,8 +649,18 @@ public class MyGameScreen extends JComponent {
             return new Color(0,0,255);
         }else if (c == TileByte.BlueLEDOff.getSymbol()) {
             return new Color(0,0,10);
-        }else if (c == TileByte.Xor.getSymbol()) {
-            return new Color(200,120,20);
+        }else if (c == TileByte.AnalogueWire.getSymbol()) {
+            return new Color(180,40,40);
+        }else if (c == TileByte.Collector.getSymbol()) {
+            return new Color(40,40,40);
+        }else if (c == TileByte.Base.getSymbol()) {
+            return new Color(50,50,50);
+        }else if (c == TileByte.Emitter.getSymbol()) {
+            return new Color(40,40,40);
+        }else if (c == TileByte.TriStateBufferDisconnected.getSymbol()) {
+            return new Color(100,40,40);
+        }else if (c == TileByte.TriStateBufferConnected.getSymbol()) {
+            return new Color(40,100,40);
         }else {
             //System.out.println("paint(): given c: " + c);
             return Color.GRAY;

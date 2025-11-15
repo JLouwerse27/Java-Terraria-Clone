@@ -89,7 +89,7 @@ public class Assembler {
 	NORMAL (normal reading):
 	OPERATION/NO OP, 9 SIGNALS ON/OFF, NEXT/STEP
 	Ex "1,000,000,111,1" sinmply lights up the bottom 3 and goes to the next instruction
-	Ex "1,000,000,111,0" would lights up the bottom 3 triggers the step signal
+	Ex "1,000,000,111,0" would lights up the bottom 3 triggers the step queueSignal
 
 	GO TO (goes to an instruction):
 	REGULAR/RELATIVE, POS/neg, 9 BITS
