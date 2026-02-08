@@ -1,4 +1,4 @@
-package src.code;
+package src.code.Enums;
 
 /**
  * The {@code TileString} enum represents different types of tiles in the game.
@@ -53,13 +53,20 @@ public enum TileByte {
     Emitter((byte) 27),
     TriStateBufferConnected((byte)28),
     TriStateBufferDisconnected((byte)29),
+    SupaWire((byte) 30),
+    TwoByTwoLEDOff((byte) 31),
+    TwoByTwoLEDOn((byte) 32),
+    ThreeByThreeLEDOff((byte) 33),
+    ThreeByThreeLEDOn((byte) 34),
+    FourByFourLEDOff((byte) 35),
+    FourByFourLEDOn((byte) 36),
     WireDead((byte) 52);
     //Resistor((byte N);
 
     /**
      * Used in Main.java
      */
-    public static final int finalTypeExcludingWireDead = 29;
+    public static final int finalTypeExcludingWireDead = 36;
 
     private final byte symbol;
     TileByte(byte symbol) {

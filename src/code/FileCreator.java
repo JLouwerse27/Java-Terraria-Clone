@@ -59,15 +59,6 @@ public class FileCreator {
         Files.write(path, b);
     }
 
-    public static void saveToFile(final String s, final String fileName){
-        try (FileWriter writer = new FileWriter(fileName)) {
-            writer.write(s);
-            //System.out.println("Saved breadboard to " + fileName + ".");
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
     /**
      * Byte version of writeToFile
      * @param w

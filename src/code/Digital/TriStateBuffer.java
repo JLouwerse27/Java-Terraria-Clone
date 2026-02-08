@@ -1,8 +1,12 @@
 package src.code.Digital;
 
 import src.code.*;
+import src.code.Enums.Direction;
+import src.code.Enums.TState;
+import src.code.Enums.TileByte;
 
 public class TriStateBuffer extends Gate {
+
     public TriStateBuffer(Direction dir, short x, short y, short z) {
         super(dir, x, y, z);
     }
@@ -52,7 +56,11 @@ public class TriStateBuffer extends Gate {
 
     @Override
     public void signal(int tick_when_set) {
-        super.signal(tick_when_set);
+        //change to variable if buggy.
+        if(Main.getBreadBoard().getBreadboardByte()[getZ()][getY()][getX()]
+        == TileByte.TriStateBufferConnected.getSymbol()){
+            super.signal(tick_when_set);
+        }
     }
 
     @Override

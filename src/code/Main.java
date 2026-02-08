@@ -1,13 +1,14 @@
 package src.code;
 
+import src.code.Enums.Direction;
+import src.code.Enums.TileByte;
+
 import java.awt.*;
 import java.awt.event.*;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 import javax.swing.*;
 
@@ -32,18 +33,12 @@ public class Main implements Runnable{
 	private double tickspersecond = 8;
 	//private double paintTicksPerSecond = 64;
 	private double ns = 1_000_000_000 / tickspersecond;
-    	
-    //magic numbers
-    static final int PUNCHCARD_DISPLAY_WIDTH = 32;
 
     static final int PAUSED_GAMEMODE = -1;
-    static final int TERRARIA_GAMEMODE = 1;
-    static final int PUNCHCARD_GAMEMODE = 2;
     static final int GATES_GAMEMODE = 3;
     static final int FILE_REQUEST = 50;
     //static final String GATES_GAMEMODE_STRING = "";
 
-    static final int DEFAULT_SCREEN_SIZE = 10;//ARCHAIC: TERRARIA AND SUCH
     static final int MIN_SCREEN_PIXEL_SIZE = 1;
     static final int DEFAULT_SCREEN_Y_OFFSET = -31;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
@@ -53,7 +48,7 @@ public class Main implements Runnable{
     private static short LOGIC_SCREEN_ZHEIGHT;
 
     static short LOGIC_SCREEN_LAYER;
-    private static short DEFAULT_LOGIC_SCREEN_LAYER = 0;
+    private final static short DEFAULT_LOGIC_SCREEN_LAYER = 0;
 
 
     static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
@@ -66,18 +61,6 @@ public class Main implements Runnable{
 
     public static final int SELECTION_BIAS_X = 1;
     public static final int SELECTION_BIAS_Y = 1;
-
-    static final String sP = TileString.Player.getSymbol();
-    static final String sWall = TileString.Wall.getSymbol();
-    static final String sEmpty = TileString.Empty.getSymbol();
-    static final String sDown = "DOWN";
-    static final String sUp = "UP";
-    static final String sLeft = "LEFT";
-    static final String sRight = "RIGHT";
-    static final String sW = "W";
-    static final String sS = "S";
-    static final String sA = "A";
-    static final String sD = "D";
 
     /**
      * Holds starting wire values when placing a wire down.
@@ -145,22 +128,8 @@ public class Main implements Runnable{
      * @param args Command line arguments
      */
     public static void main(final String[] args) {
-        if(args != null && args.length > 0) {
-            if (args[0].equals(Integer.toString(TERRARIA_GAMEMODE))) {
-                numTiles = DEFAULT_SCREEN_SIZE;
-                gameMode = TERRARIA_GAMEMODE;
-                initTerrariaClone();
-                System.out.println("Initialized Terraria Clone");
-            } else if (args[0].equals(Integer.toString(PUNCHCARD_GAMEMODE))) {
-                numTiles = PUNCHCARD_DISPLAY_WIDTH;
-                gameMode = PUNCHCARD_GAMEMODE;
-                initPunchCard();
-                System.out.println("Initialized Punch Card");
-            }
-        }else {
-        	gameMode = GATES_GAMEMODE;
-        	Main m = new Main();            
-        }
+        gameMode = GATES_GAMEMODE;
+        Main m = new Main();
 
     }
 
@@ -306,7 +275,7 @@ public class Main implements Runnable{
                                     }
                                 }else {
 
-                                    fileName = "src/saves/TLW.bin";
+                                    fileName = "C:\\Users\\josep\\Documents\\VS Code (made by me)\\Java MT Thing\\Java-Terraria-Clone\\src\\saves\\TLW.bin";
                                     if (Files.exists(Paths.get(fileName))) {
                                         mf.remove(txt);
                                         mf.remove(masterPanel);
@@ -749,6 +718,7 @@ public class Main implements Runnable{
 
             @Override
             public void keyPressed(KeyEvent e) {
+                /*TODO: INSERT TRY CATCH*/
                 keys[e.getKeyCode()] = true;
                 if (e.getKeyCode() == KeyEvent.VK_ESCAPE) {
                     if (gameMode == GATES_GAMEMODE) {
@@ -837,6 +807,8 @@ public class Main implements Runnable{
                             b.itemCursor = 11;
                         } else if (e.getKeyCode() == KeyEvent.VK_P) {
                             b.itemCursor = 17;//XOR; 17 because we need to switch switches, buttons, and wireOn
+                        } else if (e.getKeyCode() == KeyEvent.VK_J) {
+                            b.itemCursor = 17;//XOR; 17 because we need to switch switches, buttons, and wireOn
                         } else if (e.getKeyCode() == KeyEvent.VK_OPEN_BRACKET) {
                             cycleDown();
                         } else if (e.getKeyCode() == KeyEvent.VK_CLOSE_BRACKET) {
@@ -882,6 +854,10 @@ public class Main implements Runnable{
                         //clear queueSignal queue
                         if (e.getKeyCode() == KeyEvent.VK_BACK_SLASH) {
                             b.setSignalArrayToNull();
+
+                            if(keys[KeyEvent.VK_SHIFT]){
+                                b.setAllThingsToDead();
+                            }
                         }
 
                     } else if (keys[KeyEvent.VK_CONTROL]) {
@@ -1034,6 +1010,8 @@ public class Main implements Runnable{
         } else if (b.itemCursor == 52) {
             b.itemCursor = 3;
         } else if (b.itemCursor == 11) {
+            b.itemCursor = 15;
+        } else if (b.itemCursor == 15) {
             b.itemCursor = 17;
         } else if (b.itemCursor == TileByte.Collector.getSymbol()) {
             b.itemCursor = (byte) (TileByte.Collector.getSymbol() + 3);
@@ -1047,8 +1025,10 @@ public class Main implements Runnable{
         if (b.itemCursor == (byte) (TileByte.Emitter.getSymbol() + 1)) {
             b.itemCursor = TileByte.Collector.getSymbol();
         }else if (b.itemCursor == 17) {
+            b.itemCursor = 15;
+        } else if (b.itemCursor == 15) {
             b.itemCursor = 11;
-        } else if (b.itemCursor == 3) {
+        }else if (b.itemCursor == 3) {
             b.itemCursor = 52;
         } else if (b.itemCursor == 52) {
             b.itemCursor = 1;
@@ -1139,202 +1119,131 @@ public class Main implements Runnable{
             //pasting = false;
         }
     }
-
-    public static void initPunchCard(){
-                
-        tiles = new String[numTiles][numTiles];
-        initTiles(numTiles);
-
-        mf = new MyFrame();
-        mf.setSize(500 + 16, 500 + 38);
-        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mf.setTitle("muh punchcard");
-        mf.setGameScreen(new MyGameScreen(numTiles, numTiles));
-        mf.setVisible(true);
-        Assembler a = new Assembler(numTiles);
-        
-    }
-
-    public static void initTerrariaClone() {
-        Player p1 = new Player(1, 1, 1);
-        Player p2 = new Player(3, 3, 2);
-        Player p3 = new Player(7, 3, 3);
-
-        // tiles = new char[numTiles][numTiles];
-        tiles = new String[numTiles][numTiles];
-        List<GameObject> gameObjects = new ArrayList<GameObject>();
-
-        List<Player> players = new ArrayList<Player>();
-        players.add(p1);
-        players.add(p2);
-        players.add(p3);
+//
+//    public static void initPunchCard(){
+//
+//        tiles = new String[numTiles][numTiles];
 //        initTiles(numTiles);
-        initTiles(numTiles, players);
+//
+//        mf = new MyFrame();
+//        mf.setSize(500 + 16, 500 + 38);
+//        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        mf.setTitle("muh punchcard");
+//        mf.setGameScreen(new MyGameScreen(numTiles, numTiles));
+//        mf.setVisible(true);
+//        Assembler a = new Assembler(numTiles);
+//
+//    }
 
-        mf = new MyFrame();
-        mf.setSize(500 + 16, 500 + 38);
-        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        mf.setTitle("muh frame");
-               
-        mf.setGameScreen(new MyGameScreen(numTiles, numTiles));
-        mf.setVisible(true);
-
-
-        mf.addKeyListener(new KeyListener() {
-            //function to reduce code repetition
-            boolean code(java.awt.event.KeyEvent e, String d) {
-                switch (d) {
-                    case sUp:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_UP)
-                            return true;
-                        break;
-                    case sDown:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN)
-                            return true;
-                        break;
-                    case sLeft:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_LEFT)
-                            return true;
-                        break;
-                    case sRight:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_RIGHT)
-                            return true;
-                        break;
-                    case sW:   
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_W)
-                            return true;
-                        break;
-                    case sS:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_S)
-                            return true;
-                        break;
-                    case sA:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_A)
-                            return true;
-                        break;
-                    case sD:
-                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_D)
-                            return true;
-                        break;
-                    default:
-                        break;
-                }
-                return false;
-            }
-
-            @Override
-            public void keyTyped(java.awt.event.KeyEvent e) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void keyReleased(java.awt.event.KeyEvent e) {
-                // TODO Auto-generated method stub
-            }
-
-            @Override
-            public void keyPressed(java.awt.event.KeyEvent e) {
-                
-                // TODO Auto-generated method stub
-                if(code(e, sUp) || code(e, sW)) {
-                    p1.move(Direction.UP);
-                    System.out.println(sUp + p1.getX() + p1.getY());
-                }
-                else if(code(e, sDown) || code(e, sS)) {
-                    p1.move(Direction.DOWN);
-                    System.out.println(sDown + p1.getX() + p1.getY());
-                }
-                else if(code(e, sLeft) || code(e, sA)) {
-                    p1.move(Direction.LEFT);
-                    System.out.println(sLeft + p1.getX() + p1.getY());
-                }
-                else if(code(e, sRight) || code(e, sD)) {
-                    p1.move(Direction.RIGHT);
-                    System.out.println(sRight + p1.getX() + p1.getY());
-                }
-                mf.getContentPane().repaint();
-                setTiles(numTiles, players);
-                System.out.println("Key Pressed");
-            }
-            
-        });
-        
-
-
-        
-        //MyFrame mf = new MyFrame(500,300);
-    }
-
-/**
-     * Initializes the tiles withnd walls.
-     * @param num The number of tiles.
-     */
-    public static void initTiles(int num) {
-        for (int i = 0; i < num; i++) {
-            for (int j = 0; j < num; j++) {
-                    tiles[i][j] = TileString.Wall.getSymbol();
-            }
-        }
-    }
-
-
-    /**
-     * Initializes the tiles with players and walls.
-     * @param num The number of tiles.
-     * @param ps The list of players.
-     */
-    public static <T> void initTiles(int num, List<T> ps) {
-    for (int i = 0; i < num; i++) {
-    for (int j = 0; j < num; j++) {
-    for (T player : ps) {
-    if (j == ((Player) player).getX() && i == ((Player) player).getY()) {
-    tiles[i][j] = TileString.Player.getSymbol();
-    }
-    }
-    if (tiles[i][j] != TileString.Player.getSymbol()) {
-    if (i == 0 || i == num - 1 || j == 0 || j == num - 1) {
-    tiles[i][j] = TileString.Wall.getSymbol();
-    } else {
-    tiles[i][j] = TileString.Empty.getSymbol();
-    }
-    }
-    }
-    }
-    }
-
-    /**
-     * Sets the tiles with players and walls.
-     * @param num The number of tiles.
-     * @param ps The list of players.
-     */
-    public static <T> void setTiles(int num, List<T> ps) {
-        for (int i = 0; i < num; i++) {
-            for (int j = 0; j < num; j++) {
-                if (i == 0 || i == num - 1 || j == 0 || j == num - 1) {
-                    tiles[i][j] = TileString.Wall.getSymbol();
-                } else {
-                    tiles[i][j] = TileString.Empty.getSymbol();
-                }
-                for (T player : ps) {
-                    if (j == ((Player) player).getX() && i == ((Player) player).getY()) {
-                        tiles[i][j] = TileString.Player.getSymbol();
-                    }
-                }
-            }
-        }
-        //shouldPrintTiles(num, DEFAULT_SCREEN_SIZE);
-    }
-
-    /**
-     * Prints the tiles if the number of tiles is less than or equal to the specified number.
-     * @param num The number of tiles.
-     * @param n The specified number.
-     */
-    private static void shouldPrintTiles(final int num, final int n) {
-        if (num <= n) {
-            //printTiles(num);
-        }
-    }
+//    public static void initTerrariaClone() {
+//        Player p1 = new Player(1, 1, 1);
+//        Player p2 = new Player(3, 3, 2);
+//        Player p3 = new Player(7, 3, 3);
+//
+//        // tiles = new char[numTiles][numTiles];
+//        tiles = new String[numTiles][numTiles];
+//        List<GameObject> gameObjects = new ArrayList<GameObject>();
+//
+//        List<Player> players = new ArrayList<Player>();
+//        players.add(p1);
+//        players.add(p2);
+//        players.add(p3);
+//        initTiles(numTiles);
+//        initTiles(numTiles, players);
+//
+//        mf = new MyFrame();
+//        mf.setSize(500 + 16, 500 + 38);
+//        mf.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+//        mf.setTitle("muh frame");
+//
+//        mf.setGameScreen(new MyGameScreen(numTiles, numTiles));
+//        mf.setVisible(true);
+//
+//
+//        mf.addKeyListener(new KeyListener() {
+//            //function to reduce code repetition
+//            boolean code(java.awt.event.KeyEvent e, String d) {
+//                switch (d) {
+//                    case sUp:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_UP)
+//                            return true;
+//                        break;
+//                    case sDown:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_DOWN)
+//                            return true;
+//                        break;
+//                    case sLeft:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_LEFT)
+//                            return true;
+//                        break;
+//                    case sRight:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_RIGHT)
+//                            return true;
+//                        break;
+//                    case sW:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_W)
+//                            return true;
+//                        break;
+//                    case sS:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_S)
+//                            return true;
+//                        break;
+//                    case sA:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_A)
+//                            return true;
+//                        break;
+//                    case sD:
+//                        if(e.getKeyCode() == java.awt.event.KeyEvent.VK_D)
+//                            return true;
+//                        break;
+//                    default:
+//                        break;
+//                }
+//                return false;
+//            }
+//
+//            @Override
+//            public void keyTyped(java.awt.event.KeyEvent e) {
+//                // TODO Auto-generated method stub
+//            }
+//
+//            @Override
+//            public void keyReleased(java.awt.event.KeyEvent e) {
+//                // TODO Auto-generated method stub
+//            }
+//
+//            @Override
+//            public void keyPressed(java.awt.event.KeyEvent e) {
+//
+//                // TODO Auto-generated method stub
+//                if(code(e, sUp) || code(e, sW)) {
+//                    p1.move(Direction.UP);
+//                    System.out.println(sUp + p1.getX() + p1.getY());
+//                }
+//                else if(code(e, sDown) || code(e, sS)) {
+//                    p1.move(Direction.DOWN);
+//                    System.out.println(sDown + p1.getX() + p1.getY());
+//                }
+//                else if(code(e, sLeft) || code(e, sA)) {
+//                    p1.move(Direction.LEFT);
+//                    System.out.println(sLeft + p1.getX() + p1.getY());
+//                }
+//                else if(code(e, sRight) || code(e, sD)) {
+//                    p1.move(Direction.RIGHT);
+//                    System.out.println(sRight + p1.getX() + p1.getY());
+//                }
+//                mf.getContentPane().repaint();
+//                setTiles(numTiles, players);
+//                System.out.println("Key Pressed");
+//            }
+//
+//        });
+//
+//
+//
+//
+//        //MyFrame mf = new MyFrame(500,300);
+//    }
 
     /**
      * Prints the tiles, dirs and 2nd dirs to the console.

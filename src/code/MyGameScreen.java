@@ -1,5 +1,8 @@
 package src.code;
 
+import src.code.Enums.Direction;
+import src.code.Enums.TileByte;
+
 import java.awt.*;
 import java.util.Arrays;
 import java.util.List;
@@ -214,6 +217,8 @@ public class MyGameScreen extends JComponent {
                     }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferConnected.getSymbol() ||
                             breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferDisconnected.getSymbol()) {
                         g2d.drawString("Tr", k * tw + xOffset + tw/3, j * th + yOffset + th/2);
+                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.SupaWire.getSymbol()) {
+                        g2d.drawString("Su", k * tw + xOffset + tw/3, j * th + yOffset + th/2);
                     }
 
                     //draw the direction
@@ -324,21 +329,37 @@ public class MyGameScreen extends JComponent {
 
 
     public void paintSignalStuff() {
-        Object[][] localCopy = new Object[breadBoard.getSignalArray().length][];
+
+        int leftOffset = 363;
+        int widthOfBox = 63;
+        int daLength = 0;
+
         for (int j = 0; j < breadBoard.getSignalArray().length; j++) {
+            if (breadBoard.getSignalArray()[j] != null) {
+                daLength++;
+            }
+        }
+
+        Object[][] localCopy = new Object[daLength][];
+
+        for (int j = 0; j < daLength; j++) {
             if (breadBoard.getSignalArray()[j] != null) {
                 localCopy[j] = Arrays.copyOf(breadBoard.getSignalArray()[j], breadBoard.getSignalArray()[j].length);
             }
         }
+
 
         int fontSize = 10;
         g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
 
         //if(!breadBoard.cleaningSignalArray) {
 
-        for (int k = 0; k <= BreadBoard.SIGNAL_ARRAY_LAST_PLACE; k++) {
+        for (int k = -1; k <= BreadBoard.SIGNAL_ARRAY_LAST_PLACE; k++) {
             String s = "";
             switch (k) {
+                case -1:
+                    s = "Sigs " + localCopy.length;
+                    break;
                 case 0:
                     s = "D";
                     break;
@@ -355,28 +376,30 @@ public class MyGameScreen extends JComponent {
                     s = "Z";
                     break;
                 case 5:
-                    s = "T";
+                    s = "Tick";
                     break;
-
+                case 6:
+                    s = "Type";
+                    break;
                 default:
                     System.out.println("MyGameScreen.paintSignalStuff(): whattayadoinghere");
             }
             g2d.setColor(Color.black);
-            g2d.drawString(s,k * 63 + (WIDTH - 363), (fontSize + 1));
+            g2d.drawString(s,k * widthOfBox + (WIDTH - leftOffset), (fontSize + 1));
         }
-        g2d.drawString("TICK: " + Main.tickNumber, -102 + (WIDTH - 363), (fontSize + 1));
+        g2d.drawString("TICK: " + Main.tickNumber, - leftOffset + 241 + (WIDTH - leftOffset), (fontSize + 1));
         for (int j = 0; j < localCopy.length; j++) {
             if(localCopy[j] != null){
                 //System.out.println(Arrays.toString(breadBoard.getSignalArray()[j]));
                 for (int k = 0; k < localCopy[j].length; k++) {
                     if(localCopy[j][k] != null) {
                         g2d.setColor(Color.black);
-                        g2d.drawRect(k * 63 + (WIDTH - 363), j * (fontSize + 1) + (fontSize + 1), 62, fontSize);
+                        g2d.drawRect(k * widthOfBox + (WIDTH - leftOffset), j * (fontSize + 1) + (fontSize + 1), widthOfBox-1, fontSize);
 
                         //fontSize = 20;
                         g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
                         g2d.drawString(localCopy[j][k].toString(),
-                                k * 63 + (WIDTH - 363),
+                                k * widthOfBox + (WIDTH - leftOffset),
                                 j * (fontSize + 1) + 2 * (fontSize + 1));
                     }
                 }
@@ -384,11 +407,11 @@ public class MyGameScreen extends JComponent {
 
             for (int k = 0; k <= BreadBoard.SIGNAL_ARRAY_LAST_PLACE; k++) {
                 g2d.setColor(Color.black);
-                g2d.drawRect(k * 63 + (WIDTH - 363), j * (fontSize + 1) + fontSize + 1, 62, fontSize);
+                g2d.drawRect(k * widthOfBox + (WIDTH - leftOffset), j * (fontSize + 1) + fontSize + 1, widthOfBox-1, fontSize);
             }
 
             g2d.drawString(String.valueOf(j),
-                    WIDTH - 389,
+                    WIDTH - leftOffset - 23,
                     j * (fontSize + 1) + 2 * (fontSize + 1));
         }
         //}
@@ -601,10 +624,18 @@ public class MyGameScreen extends JComponent {
             return Color.GREEN;
         }else if (c == TileByte.And.getSymbol()) {
             return Color.BLUE;
-        }else if (c == TileByte.LEDOff.getSymbol()) {
+        }else if (c == TileByte.LEDOff.getSymbol()){
+
             //return new Color(210, 210, 210);
             return Color.black;
-        }else if (c == TileByte.LEDOn.getSymbol()) {
+        }else if(c == TileByte.TwoByTwoLEDOff.getSymbol() ||
+                c == TileByte.ThreeByThreeLEDOff.getSymbol() ||
+                c == TileByte.FourByFourLEDOff.getSymbol()) {
+            return new Color(20,20,20);
+        }else if (c == TileByte.LEDOn.getSymbol() ||
+                  c == TileByte.TwoByTwoLEDOn.getSymbol() ||
+                  c == TileByte.ThreeByThreeLEDOn.getSymbol() ||
+                  c == TileByte.FourByFourLEDOn.getSymbol()) {
             return Color.WHITE;
         }else if (c == TileByte.ButtonOff.getSymbol()) {
             return Color.darkGray;//--
@@ -661,6 +692,8 @@ public class MyGameScreen extends JComponent {
             return new Color(100,40,40);
         }else if (c == TileByte.TriStateBufferConnected.getSymbol()) {
             return new Color(40,100,40);
+        }else if (c == TileByte.SupaWire.getSymbol()) {
+            return new Color(200,10,10);
         }else {
             //System.out.println("paint(): given c: " + c);
             return Color.GRAY;

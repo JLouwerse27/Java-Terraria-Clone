@@ -1,8 +1,9 @@
 package src.code.analogue;
 
-import src.code.Direction;
+import src.code.Enums.Direction;
 import src.code.Main;
-import src.code.TileByte;
+import src.code.Enums.TState;
+import src.code.Enums.TileByte;
 
 import static src.code.BreadBoard.*;
 
@@ -37,7 +38,12 @@ public class AnalogueWire extends AnalogueBreadBoardItem {
 //        }
     }
 
-    public void setOut(final short dx, final short dy, final short dz, final double out, final int t) {
+    @Override
+    protected void AnalogueSignal() {
+
+    }
+
+    public void inputSignal(final short dx, final short dy, final short dz, final double out, final int t) {
         this.out = out;
         //check first if this queueSignal is coming from the right input direction
         //ie if this wire is facing right, then this should not be taking input
@@ -76,14 +82,17 @@ public class AnalogueWire extends AnalogueBreadBoardItem {
     }
 
     /**
+     * Output the signal <br><br>
      * Like the queueSignal in Switch, searches for other board members.
      */
     public void signal(final int t) {
-        //if(Main.tick_true) {
-        Main.getBreadBoard().queueSignal(this.getDir(), out, this.getX(), this.getY(), this.getZ(), t + 1);
+
+        TState digitalSignal = convertToDigital(out);
+
+        Main.getBreadBoard().queueSignal(this.getDir(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile());
         //may need to check for errors in the future
         if(this.getDir2() != this.getDir() && this.getDir2() != Direction.NONE){
-            Main.getBreadBoard().queueSignal(this.getDir2(), out, this.getX(), this.getY(), this.getZ(), t + 1);
+            Main.getBreadBoard().queueSignal(this.getDir2(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile());
         }
         //System.out.println("wire.queueSignal(): at " + this.getX() + " " + this.getY()
         //+ " which will be called on tick " + (t + 1));

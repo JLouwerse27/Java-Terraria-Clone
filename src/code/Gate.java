@@ -1,7 +1,8 @@
 package src.code;
 
 
-
+import src.code.Enums.Direction;
+import src.code.Enums.TState;
 
 /**
  * Abstract gate class
@@ -121,7 +122,8 @@ public abstract class Gate extends BreadBoardItem {
                     this.getX(),
                     this.getY(),
                     this.getZ(),
-                    tick_when_set+1);
+                    tick_when_set+1,
+                    returnTile());
         //}else {
         //    signals[signalsOutputAtCurrentTick]
         //}

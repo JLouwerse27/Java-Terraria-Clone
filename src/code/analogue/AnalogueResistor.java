@@ -1,7 +1,7 @@
 package src.code.analogue;
 
-import src.code.Direction;
-import src.code.TileByte;
+import src.code.Enums.Direction;
+import src.code.Enums.TileByte;
 
 public class AnalogueResistor extends AnalogueBreadBoardItem{
 
@@ -9,6 +9,11 @@ public class AnalogueResistor extends AnalogueBreadBoardItem{
 
     public AnalogueResistor(Direction dir, short x, short y, short z) {
         super(dir, x, y, z);
+    }
+
+    @Override
+    protected void AnalogueSignal() {
+
     }
 
 

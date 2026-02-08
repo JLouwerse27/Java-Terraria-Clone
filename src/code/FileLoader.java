@@ -1,5 +1,7 @@
 package src.code;
 
+import src.code.Enums.Direction;
+
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;

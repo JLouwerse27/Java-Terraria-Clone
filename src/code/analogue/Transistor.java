@@ -1,7 +1,7 @@
 package src.code.analogue;
 
 import src.code.BreadBoardItem;
-import src.code.Direction;
+import src.code.Enums.Direction;
 
 /**
  * Class which creates a Collector, base, and emitter, based off direction and coordinates.

@@ -1,4 +1,8 @@
-package src.code;
+package src.code.Digital;
+
+import src.code.BreadBoardItem;
+import src.code.Enums.Direction;
+import src.code.Enums.TState;
 
 public abstract class DigitalBreadBoardItem extends BreadBoardItem {
 

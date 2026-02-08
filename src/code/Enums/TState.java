@@ -1,11 +1,11 @@
-package src.code;
+package src.code.Enums;
 
 public enum TState {
     DEAD((byte)-255),
     POSITIVE((byte)1),
     NEGATIVE((byte)50),
     UNUSED((byte)0);//not actually a state, but for gates with unused nodes
-    byte value;
+    public byte value;
 
     TState(byte value) {
         this.value = value;

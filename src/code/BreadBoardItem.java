@@ -1,5 +1,7 @@
 package src.code;
 
+import src.code.Enums.Direction;
+
 /**
  * Abstract Parent Class for the breadboard
  */

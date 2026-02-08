@@ -1,4 +1,4 @@
-package src.code;
+package src.code.Enums;
 
 /**
  * Enum to represent the four cardinal directions.
@@ -11,36 +11,6 @@ package src.code;
  *   <li>{@link #RIGHT} - Represents the rightward direction.</li>
  * </ul>
  */
-// Enum to represent the four cardinal directions
-//public enum Direction {
-//    UP("dU"),
-//    DOWN("dD"),
-//    LEFT("dL"),
-//    RIGHT("dR"),
-//    NONE("dN"),
-//    INTO("dI"), //away from player
-//    OUTOF("dO"); //to the player
-//
-//    private final String symbol;
-//
-//    //Direction(String symbol) {this.symbol = symbol;}
-//    Direction(String symbol) {this.symbol = symbol;}
-//
-//    //returns the symbol String
-//    public String getSymbol() {
-//        return symbol;
-//    }
-//
-//    public static Direction fromSymbol(String symbol) {
-//        for (Direction d : values()) {
-//            if (d.symbol.equals(symbol)) {
-//                return d;
-//            }
-//        }
-//        throw new IllegalArgumentException("Invalid direction symbol: " + symbol);
-//    }
-//}
-
 // Enum to represent the four cardinal directions
 public enum Direction {
     NONE((byte)0),
