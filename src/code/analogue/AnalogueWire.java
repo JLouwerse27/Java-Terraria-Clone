@@ -89,10 +89,10 @@ public class AnalogueWire extends AnalogueBreadBoardItem {
 
         TState digitalSignal = convertToDigital(out);
 
-        Main.getBreadBoard().queueSignal(this.getDir(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile());
+        Main.getBreadBoard().queueSignal(this.getDir(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile(),id);
         //may need to check for errors in the future
         if(this.getDir2() != this.getDir() && this.getDir2() != Direction.NONE){
-            Main.getBreadBoard().queueSignal(this.getDir2(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile());
+            Main.getBreadBoard().queueSignal(this.getDir2(), digitalSignal, this.getX(), this.getY(), this.getZ(), t + 1, returnTile(),id);
         }
         //System.out.println("wire.queueSignal(): at " + this.getX() + " " + this.getY()
         //+ " which will be called on tick " + (t + 1));

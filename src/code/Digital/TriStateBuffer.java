@@ -50,6 +50,24 @@ public class TriStateBuffer extends Gate {
                 Main.getBreadBoard().setBreadBoardTileByte(TileByte.TriStateBufferDisconnected.getSymbol(), getX(), getY(), getZ());
             }
             //otherwise do nothing, the "switch" is off; no current flows -- no changes
+        }else if(this.getDir() == Direction.OUTOF){
+            //top and zBelow respectively
+            if(B == TState.POSITIVE){
+                out = E;
+                Main.getBreadBoard().setBreadBoardTileByte(TileByte.TriStateBufferConnected.getSymbol(), getX(), getY(), getZ());
+            }else {
+                Main.getBreadBoard().setBreadBoardTileByte(TileByte.TriStateBufferDisconnected.getSymbol(), getX(), getY(), getZ());
+            }
+            //otherwise do nothing, the "switch" is off; no current flows -- no changes
+        }else if(this.getDir() == Direction.INTO){
+            //top and zAbove respectively
+            if(B == TState.POSITIVE){
+                out = F;
+                Main.getBreadBoard().setBreadBoardTileByte(TileByte.TriStateBufferConnected.getSymbol(), getX(), getY(), getZ());
+            }else {
+                Main.getBreadBoard().setBreadBoardTileByte(TileByte.TriStateBufferDisconnected.getSymbol(), getX(), getY(), getZ());
+            }
+            //otherwise do nothing, the "switch" is off; no current flows -- no changes
         }
 
     }

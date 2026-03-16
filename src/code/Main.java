@@ -2,6 +2,7 @@ package src.code;
 
 import src.code.Enums.Direction;
 import src.code.Enums.TileByte;
+import static src.code.MyGameScreen.useMiniMode;
 
 import java.awt.*;
 import java.awt.event.*;
@@ -39,7 +40,7 @@ public class Main implements Runnable{
     static final int FILE_REQUEST = 50;
     //static final String GATES_GAMEMODE_STRING = "";
 
-    static final int MIN_SCREEN_PIXEL_SIZE = 1;
+    static final double MIN_SCREEN_PIXEL_SIZE = 1;
     static final int DEFAULT_SCREEN_Y_OFFSET = -31;
     static final int DEFAULT_SCREEN_X_OFFSET = -8;
     static final int DEFAULT_LOGIC_SCREEN_SIZE = 3;
@@ -51,7 +52,7 @@ public class Main implements Runnable{
     private final static short DEFAULT_LOGIC_SCREEN_LAYER = 0;
 
 
-    static final double SCREEN_ZOOM_COEFFICENT = 1.25;//zoom in coefficient
+    static final double SCREEN_ZOOM_COEFFICENT = 2;//zoom in coefficient
 
     static int SCREEN_Y_OFFSET = 0;
     static int SCREEN_X_OFFSET = 0;
@@ -68,7 +69,7 @@ public class Main implements Runnable{
      */
     static int[] tempWireLocation = new int[3];
     static boolean placingWire = false;
-
+    static boolean placingTeleportWire = false;
 
     /** full file name:<br>
      *  including src/saves/ and .bin
@@ -164,6 +165,7 @@ public class Main implements Runnable{
 		double delta = 0;
 		int deltaTick = 0;
 		long timer = System.currentTimeMillis();
+        int modThing = 0;
 
 		while(running) {
 			long now = System.nanoTime();
@@ -184,15 +186,20 @@ public class Main implements Runnable{
 			if(running) {
 				frames++;
 			}
-			if(System.currentTimeMillis() - timer >= 1000) {
-				//checks frames every second
-				timer += 1000;
-				//System.out.println("TICKS: "+deltaTick+" FPS: " + mgs.paintsPerSecond + " "+ frames);
-				//mgs.paintFPS(frames);
-				mgs.paintsPerSecond = 0;
-				frames = 0;
-				lastTick = tickNumber;
-			}
+            //checks WASD 25 times a second
+            if(System.currentTimeMillis() - timer >= 40){
+                modThing++;
+                timer += 40;
+                getBreadBoard().takeCareOfWASD();
+                //checks frames every second
+                if(modThing % 25 == 0){
+                    System.out.println("TICKS: "+deltaTick+" FPS: " + mgs.paintsPerSecond + " "+ frames);
+                    mgs.paintsPerSecond = 0;
+                    frames = 0;
+                    lastTick = tickNumber;
+                }
+            }
+
 		}
 	}
 
@@ -275,7 +282,7 @@ public class Main implements Runnable{
                                     }
                                 }else {
 
-                                    fileName = "C:\\Users\\josep\\Documents\\VS Code (made by me)\\Java MT Thing\\Java-Terraria-Clone\\src\\saves\\TLW.bin";
+                                    fileName = "C:\\Users\\josep\\Documents\\VS Code (made by me)\\Java MT Thing\\Java-Terraria-Clone\\src\\saves\\THANG.bin";
                                     if (Files.exists(Paths.get(fileName))) {
                                         mf.remove(txt);
                                         mf.remove(masterPanel);
@@ -475,7 +482,7 @@ public class Main implements Runnable{
 //            }
 //        });
 //        timer.start();
-
+        b.outputStores();
         m.start();
 
     }
@@ -696,8 +703,8 @@ public class Main implements Runnable{
 
                 if(placingWire){
                     if(theDirection == Direction.RIGHT){
-                        int x = (e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileSize;
-                        int y = (e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileSize;
+                        int x = (int)((e.getX() - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET)/MyGameScreen.tileSize);
+                        int y = (int)((e.getY() - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET)/MyGameScreen.tileSize);
                         System.out.println("x " + x + ", y " + y);
                     }
                 }
@@ -758,8 +765,8 @@ public class Main implements Runnable{
                         } else if (keys[KeyEvent.VK_R]) {//rotate with "R"
                             b.rotateItem(
                                     0,
-                                    (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
-                                    (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
+                                    (int) ((mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth),
+                                    (int) ((mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight),
                                     LOGIC_SCREEN_LAYER);
                             //                    if (keys[KeyEvent.VK_SHIFT]) {//rotate second dir with "shift + R"
                             //
@@ -767,8 +774,8 @@ public class Main implements Runnable{
                         } else if (keys[KeyEvent.VK_Q]) {
                             b.rotateItem(
                                     1,
-                                    (mouseX[0] - (int) SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth,
-                                    (mouseY[0] - (int) SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight,
+                                    (int) ((mouseX[0] - SCREEN_X_OFFSET + DEFAULT_SCREEN_X_OFFSET) / MyGameScreen.tileWidth),
+                                    (int) ((mouseY[0] - SCREEN_Y_OFFSET + DEFAULT_SCREEN_Y_OFFSET) / MyGameScreen.tileHeight),
                                     LOGIC_SCREEN_LAYER);
                         } else if (keys[KeyEvent.VK_C] && !keys[KeyEvent.VK_CONTROL]) {
                             byte symbol = (byte) (theDirection.getSymbol() + 1);
@@ -864,32 +871,43 @@ public class Main implements Runnable{
                         if (!(keys[KeyEvent.VK_C] || keys[KeyEvent.VK_V] || keys[KeyEvent.VK_X])) {//zoom in and out if not copying, cutting, or pasting
                             if (mouseScrollDown[0]) {
                                 if (MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT >= MIN_SCREEN_PIXEL_SIZE) {
+                                    useMiniMode = false;
+
                                     double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
                                     double dy = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
 
-                                    int oldTileSize = MyGameScreen.tileSize;
-                                    MyGameScreen.tileSize = (byte) (MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT);
-
+                                    double oldTileSize = MyGameScreen.tileSize;
+                                    MyGameScreen.tileSize = (byte)(MyGameScreen.tileSize / SCREEN_ZOOM_COEFFICENT);
+                                    System.out.println(MyGameScreen.tileSize);
                                     SCREEN_X_OFFSET = (int) (mouseX[0] + DEFAULT_SCREEN_X_OFFSET
                                             - (dx * MyGameScreen.tileSize / oldTileSize));
                                     SCREEN_Y_OFFSET = (int) (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET
                                             - (dy * MyGameScreen.tileSize / oldTileSize));
 
-                                    mgs.xOffset = (int) SCREEN_X_OFFSET;
-                                    mgs.yOffset = (int) SCREEN_Y_OFFSET;
+                                } else {
+                                    useMiniMode = true;
 
                                 }
+
+
+
+                                mgs.xOffset = (int) SCREEN_X_OFFSET;
+                                mgs.yOffset = (int) SCREEN_Y_OFFSET;
+
+
                                 mgs.setTileSize(MyGameScreen.tileSize, MyGameScreen.tileSize);
 
                                 mgs.repaint();
                                 mouseScrollDown[0] = false;
                             } else if (mouseScrollUp[0]) {
-                                if (MyGameScreen.tileSize <= 70) {
+                                if (useMiniMode) {
+                                    useMiniMode = false;
+                                }else if (MyGameScreen.tileSize <= 70) {
                                     double dx = (mouseX[0] + DEFAULT_SCREEN_X_OFFSET - SCREEN_X_OFFSET);
                                     double dy = (mouseY[0] + DEFAULT_SCREEN_Y_OFFSET - SCREEN_Y_OFFSET);
 
-                                    int oldTileSize = MyGameScreen.tileSize;
-                                    MyGameScreen.tileSize = (byte) (MyGameScreen.tileSize * SCREEN_ZOOM_COEFFICENT);
+                                    double oldTileSize = MyGameScreen.tileSize;
+                                    MyGameScreen.tileSize = (byte)(MyGameScreen.tileSize * SCREEN_ZOOM_COEFFICENT);
                                     if (MyGameScreen.tileSize == oldTileSize) {
                                         MyGameScreen.tileSize++;
                                     }
@@ -1009,11 +1027,17 @@ public class Main implements Runnable{
             b.itemCursor = 52;
         } else if (b.itemCursor == 52) {
             b.itemCursor = 3;
-        } else if (b.itemCursor == 11) {
+        } else if (b.itemCursor == 11) {//RESISTOR 10
+            b.itemCursor = TileByte.Resistor50.getSymbol();//RESISTOR 50
+        } else if (b.itemCursor == TileByte.Resistor100.getSymbol()) {//RESISTOR 100
             b.itemCursor = 15;
-        } else if (b.itemCursor == 15) {
+        }else if (b.itemCursor == 15) {
             b.itemCursor = 17;
-        } else if (b.itemCursor == TileByte.Collector.getSymbol()) {
+        }else if (b.itemCursor == 39) {
+            b.itemCursor = TileByte.UpdatableWireDead.getSymbol();
+        }else if (b.itemCursor == TileByte.TeleportWireDead.getSymbol()) {
+            b.itemCursor = 0;
+        }    else if (b.itemCursor == TileByte.Collector.getSymbol()) {
             b.itemCursor = (byte) (TileByte.Collector.getSymbol() + 3);
         }else {
             b.itemCursor = (b.itemCursor < TileByte.finalTypeExcludingWireDead) ? (byte) (b.itemCursor + 1) : 0;
@@ -1024,9 +1048,15 @@ public class Main implements Runnable{
         //use this when you've added other symbols which are above emitter
         if (b.itemCursor == (byte) (TileByte.Emitter.getSymbol() + 1)) {
             b.itemCursor = TileByte.Collector.getSymbol();
-        }else if (b.itemCursor == 17) {
+        }else if (b.itemCursor == 0) {
+            b.itemCursor = TileByte.TeleportWireDead.getSymbol();
+        } else if (b.itemCursor == TileByte.UpdatableWireDead.getSymbol()) {
+            b.itemCursor = 39;
+        } else if (b.itemCursor == 17) {
             b.itemCursor = 15;
         } else if (b.itemCursor == 15) {
+            b.itemCursor = TileByte.Resistor100.getSymbol();
+        } else if (b.itemCursor == TileByte.Resistor50.getSymbol()) {
             b.itemCursor = 11;
         }else if (b.itemCursor == 3) {
             b.itemCursor = 52;

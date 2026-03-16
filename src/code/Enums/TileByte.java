@@ -13,13 +13,14 @@ public enum TileByte {
     //   finalTypeExcludingWireDead
     //in BreadBoard.java:
     //   addNewItemToBreadBoardItemsListInitiallyByte
-    //   itemEnumBytes[], and
     //   convertToTypeBytes
     //   setBreadBoardStateByteInitial if the tile can be turned to a different colour
-    //   in BreadBoard everytime you add a TileByte that is able
-    //   to be edited into the board
+    //   setWiresAndLEDs if it is a wire, LED, Resistor, or similar
+    //   setGates if it is a gate
     //in MyGameScreen.java:
     //   getColour
+    //in Main.java
+    //   cycleUp() and cycleDown if there is a discrepancy between the cycling and the symbol
     //whenever you add a new tile
 
     Any((byte) -1),//this might be stupid
@@ -60,13 +61,24 @@ public enum TileByte {
     ThreeByThreeLEDOn((byte) 34),
     FourByFourLEDOff((byte) 35),
     FourByFourLEDOn((byte) 36),
-    WireDead((byte) 52);
+    Presentation4Block((byte) 37),
+    Store0((byte) 38),
+    Store1((byte) 39),
+    Resistor50((byte) 40),
+    Resistor100((byte) 41),
+    UpdatableWireOff((byte) 42),
+    UpdatableWireOn((byte) 43),
+    TeleportWireOff((byte) 44),
+    TeleportWireOn((byte) 45),
+    WireDead((byte) 52),
+    UpdatableWireDead((byte) 53),
+    TeleportWireDead((byte) 54),;
     //Resistor((byte N);
 
     /**
      * Used in Main.java
      */
-    public static final int finalTypeExcludingWireDead = 36;
+    public static final int finalTypeExcludingWireDead = 41;
 
     private final byte symbol;
     TileByte(byte symbol) {

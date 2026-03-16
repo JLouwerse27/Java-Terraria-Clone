@@ -1,21 +1,22 @@
 package src.code;
 
 
+import src.code.Digital.DigitalBreadBoardItem;
 import src.code.Enums.Direction;
 import src.code.Enums.TState;
 
 /**
  * Abstract gate class
  */
-public abstract class Gate extends BreadBoardItem {
+public abstract class Gate extends DigitalBreadBoardItem {
 
     protected TState out = TState.UNUSED;
-    protected TState A = TState.UNUSED;//wire is to the left -- gate is to the right
-    protected TState B = TState.UNUSED;//~ down
-    protected TState C = TState.UNUSED;//~ right
-    protected TState D = TState.UNUSED;//~ up
-    protected TState E = TState.UNUSED;//~ zBelow
-    protected TState F = TState.UNUSED;//~ zAbove
+    protected TState A = TState.UNUSED;//input is from the left -- gate is right
+    protected TState B = TState.UNUSED;//input is from a block up -- gate is down
+    protected TState C = TState.UNUSED;//input is from the right -- gate is left
+    protected TState D = TState.UNUSED;//input is from a block down -- gate is up
+    protected TState E = TState.UNUSED;//input is from zBelow -- gate is zAbove the input
+    protected TState F = TState.UNUSED;//input is from zAbove -- gate is zBelow the input
     ////no F because there should never be six inputs!
 
     protected int signalsOutputAtCurrentTick = 0;
@@ -93,13 +94,13 @@ public abstract class Gate extends BreadBoardItem {
                 return true;
             }
             return false;
-        }else if(deltaz == 1){//this gate is zAbove the input
+        }else if(deltaz == 1){//the input is zBelow the gate; this gate is zAbove the input
             if(this.getDir() != Direction.INTO){//A gate going INTO would be pointing back to the wire
                 setE(s);
                 return true;
             }
             return false;
-        }else if(deltaz == -1){//this gate is zBelow the input
+        }else if(deltaz == -1){//the input is zAbove the gate; this gate is zBelow the input
             if(this.getDir() != Direction.OUTOF){//A gate going OUTOF would be pointing back to the wire
                 setF(s);
                 return true;
@@ -123,7 +124,7 @@ public abstract class Gate extends BreadBoardItem {
                     this.getY(),
                     this.getZ(),
                     tick_when_set+1,
-                    returnTile());
+                    returnTile(),id);
         //}else {
         //    signals[signalsOutputAtCurrentTick]
         //}

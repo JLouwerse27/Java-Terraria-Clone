@@ -1,0 +1,2 @@
+Okay I want to remake this in a faster language.
+Assembly looks too hard, but it can be easily run in DOSBox.

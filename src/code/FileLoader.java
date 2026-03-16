@@ -7,9 +7,14 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Arrays;
 
+import static src.code.FileCreator.*;
+
 public class FileLoader {
 
     private final byte[] fileContent;
+    //public static short NUMBER_OF_TELEPORT_WIRES = 0;
+    //FUTURE id (i.e. current number of pairs + 1)
+    private static short id = 0;
 
     public FileLoader(Path path) {
         try {
@@ -25,41 +30,42 @@ public class FileLoader {
 
         short width = dim[0];
         short height = dim[1];
-        short zHeight = dim[2];
+        short depth = dim[2];
 
-        System.out.println("FileLoader.load(): width = " + width + ", height = " + height + ", zHeight = " + zHeight);
+        System.out.println("FileLoader.load(): width = " + width + ", height = " + height + ", depth = " + depth);
 
         System.out.println("FileLoader.load(): dimensions array: "+Arrays.toString(dimensions()));
 
-        byte[][][] tiles = new byte[zHeight][height][width];
-        byte[][][] dir1Raw = new byte[zHeight][height][width];
-        byte[][][] dir2Raw = new byte[zHeight][height][width];
+        byte[][][] tiles = new byte[depth][height][width];
+        byte[][][] dir1Raw = new byte[depth][height][width];
+        byte[][][] dir2Raw = new byte[depth][height][width];
+        byte[][] teleports = new byte[TOTAL_NUMBER_OF_TELEPORT_WIRES][INFO_PER_TELEPORT];
 
         byte tile = -128;
-        for (int thang = 0; thang < 3; thang++) {
-            if(thang == 0) {
-                for(int i = 0; i < zHeight; i++) {
+        for (int sublayer = 0; sublayer < FileCreator.SUBLAYERS; sublayer++) {
+            if(sublayer == 0) {
+                for(int i = 0; i < depth; i++) {
                     for (int j = 0; j < height; j++) {
                         for (int k = 0; k < width; k++) {
-                            tile = fileContent[6 + thang * zHeight * height * width + i * height * width + j * width + k];
+                            tile = fileContent[6 + sublayer * depth * height * width + i * height * width + j * width + k];
                             tiles[i][j][k] = tile;
                         }
                     }
                 }
-            }else if(thang == 1) {
-                for(int i = 0; i < zHeight; i++) {
+            }else if(sublayer == 1) {
+                for(int i = 0; i < depth; i++) {
                     for (int j = 0; j < height; j++) {
                         for (int k = 0; k < width; k++) {
-                            tile = fileContent[6 + thang * zHeight * height * width + i * height * width + j * width + k];
+                            tile = fileContent[6 + sublayer * depth * height * width + i * height * width + j * width + k];
                             dir1Raw[i][j][k] = tile;
                         }
                     }
                 }
-            }else if(thang == 2) {
-                for(int i = 0; i < zHeight; i++) {
+            }else if(sublayer == 2) {
+                for(int i = 0; i < depth; i++) {
                     for (int j = 0; j < height; j++) {
                         for (int k = 0; k < width; k++) {
-                            tile = fileContent[6 + thang * zHeight * height * width + i * height * width + j * width + k];
+                            tile = fileContent[6 + sublayer * depth * height * width + i * height * width + j * width + k];
                             dir2Raw[i][j][k] = tile;
                         }
                     }
@@ -67,84 +73,34 @@ public class FileLoader {
             }
         }
 
-
-//        tile = fileContent[6];
-//        System.out.println("Tile should be " + tile);
-//        tiles[0][0][0] = tile;
-//        System.out.println("Tiles is: " + Arrays.deepToString(tiles));
-//        tile = fileContent[7];
-//        dir1Raw[0][0][0] = tile;
-//        tile = fileContent[8];
-//        dir2Raw[0][0][0] = tile;
-
-
-        Direction[][][] dir1 = new Direction[zHeight][height][width];
-        Direction[][][] dir2 = new Direction[zHeight][height][width];
-        for (int zz = 0; zz < zHeight; zz++) {
-            for (int yy = 0; yy < height; yy++) {
-                for (int xx = 0; xx < width; xx++) {
-                    dir1[zz][yy][xx] = Direction.fromSymbol(dir1Raw[zz][yy][xx]);
-                    dir2[zz][yy][xx] = Direction.fromSymbol(dir2Raw[zz][yy][xx]);
+        byte datum = -128;
+        for (int tw = 0; tw < TOTAL_NUMBER_OF_TELEPORT_WIRES; tw++) {
+            for (int datumNo = 0; datumNo < INFO_PER_TELEPORT; datumNo++) {
+                datum = fileContent[6+ FileCreator.SUBLAYERS * depth * height * width + tw * INFO_PER_TELEPORT + datumNo];
+                teleports[tw][datumNo] = datum;
+                //WARNING: TELEPORT BLOCKS MUST BE PERFECTLY PLACED IN ORDER FOR THIS TO WORK
+                //MUST GO TP1, TP0, TP1, TP0, ETC.
+                //check if tw is odd, and the id place is not equal to 0.
+                if(tw % 2 == 1 && datumNo == 7 && datum != 0){
+                    id++;
                 }
             }
         }
 
 
-        board.setBreadBoardStateByteInitial(tiles, dir1, dir2);
-//        for (int i = 6; i < zHeight + 6; i++) {
-//            for (int j = 6; j < height + 6; j++) {
-//                for (int k = 6; k < width + 6; k++) {
-//                    tiles[z][j][k] = tile;
-//                }
-//            }
-//        }
+        Direction[][][] dir1 = new Direction[depth][height][width];
+        Direction[][][] dir2 = new Direction[depth][height][width];
+        for (int z = 0; z < depth; z++) {
+            for (int y = 0; y < height; y++) {
+                for (int x = 0; x < width; x++) {
+                    dir1[z][y][x] = Direction.fromSymbol(dir1Raw[z][y][x]);
+                    dir2[z][y][x] = Direction.fromSymbol(dir2Raw[z][y][x]);
+                }
+            }
+        }
 
-//        for (String line : lines) {
-//            line = line.trim();
-//            if (line.isEmpty()) continue;
-//
-//            if (line.startsWith("LAYER")) {
-//                z++;
-//                y = 0;
-//                continue;
-//            }
-//            if (line.equals("TILES") || line.equals("DIR1") || line.equals("DIR2")) {
-//                section = line;
-//                y = 0;
-//                continue;
-//            }
-//
-//            String[] parts = line.split(",", -1);
-//            for (int x = 0; x < width; x++) {
-//                switch (section) {
-//                    case "TILES":
-//                        tiles[z][y][x] = parts[x];
-//                        break;
-//                    case "DIR1":
-//                        dir1Raw[z][y][x] = parts[x];
-//                        break;
-//                    case "DIR2":
-//                        dir2Raw[z][y][x] = parts[x];
-//                        break;
-//                }
-//            }
-//            y++;
-//        }
-//
-//        // Convert string directions to enum
-//        Direction[][][] dir1 = new Direction[zHeight][height][width];
-//        Direction[][][] dir2 = new Direction[zHeight][height][width];
-//        for (int zz = 0; zz < zHeight; zz++) {
-//            for (int yy = 0; yy < height; yy++) {
-//                for (int xx = 0; xx < width; xx++) {
-//                    dir1[zz][yy][xx] = Direction.fromSymbol(dir1Raw[zz][yy][xx]);
-//                    dir2[zz][yy][xx] = Direction.fromSymbol(dir2Raw[zz][yy][xx]);
-//                }
-//            }
-//        }
-//
-//        board.setBreadBoardState(tiles, dir1, dir2);
-//        System.out.println("FileLoader.load(): called setBreadBoardState()");
+
+        board.setBreadBoardStateByteInitial(tiles, dir1, dir2, teleports, id);
     }
 
     public short[] dimensions() throws IOException {

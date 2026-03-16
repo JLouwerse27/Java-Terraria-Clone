@@ -62,7 +62,7 @@ public class TEmitter extends AnalogueBreadBoardItem{
 
     @Override
     public void signal(int t) {
-        Main.getBreadBoard().queueSignal(this.getDir(), digitalOut, this.getX(), this.getY(), this.getZ(), t + 1, returnTile());
+        Main.getBreadBoard().queueSignal(this.getDir(), digitalOut, this.getX(), this.getY(), this.getZ(), t + 1, returnTile(),id);
     }
 
     public TBase getTBase() {

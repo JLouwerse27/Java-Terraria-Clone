@@ -1,7 +1,6 @@
 package src.code;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -16,13 +15,20 @@ public class FileCreator {
     final static int Y_BYTES = 2;
     final static int Z_BYTES = 2;
     final static int SUBLAYERS = 3;//tiles, dir1, dir2
+    final public static int TOTAL_NUMBER_OF_TELEPORT_WIRES = 300;
+    final public static int INFO_PER_TELEPORT = 8;//2 each for X,Y,Z and two for ID (teleportNumber is stored in Direction1)
+
+    private final int FALSE = 0;
+    private final int TRUE = 1;
+
+    final public static byte TELEPORT_INFO_DUMMY_VALUE = 0;
 
     private final String fileName;
 
     public FileCreator(final int w, final int h, final int d, final String fileName) {
         this.fileName = fileName;
-        if(createFile() == 0) {
-            writeToFileBytes(w, h, d);
+        if(createFile() == FALSE) {
+            writeToFileInitially(w, h, d);
         }
 //        if(w % 100 == 0 && h % 100 == 0){
 //            writeToFile100(w, h, d);
@@ -42,10 +48,10 @@ public class FileCreator {
         try {
             if (file.createNewFile()) {
                 System.out.println("File created.");
-                return 0;
+                return FALSE;
             } else {
                 System.out.println("File already exists.");
-                return 1;
+                return TRUE;
             }
         } catch (IOException e) {
             e.printStackTrace();
@@ -60,14 +66,14 @@ public class FileCreator {
     }
 
     /**
-     * Byte version of writeToFile
+     * Populate the BRAND NEW file with zeros.
      * @param w
      * @param h
      * @param d
      */
-    public void writeToFileBytes(final int w, final int h, final int d) {
+    public void writeToFileInitially(final int w, final int h, final int d) {
         System.out.println("Writing to file with bytes.");
-        int length = X_BYTES + Y_BYTES + Z_BYTES + SUBLAYERS * w * h * d;
+        int length = X_BYTES + Y_BYTES + Z_BYTES + SUBLAYERS * w * h * d + TOTAL_NUMBER_OF_TELEPORT_WIRES * INFO_PER_TELEPORT;
         byte [] b = new byte[length];
 
         b[0] = (byte) (w / 128);
@@ -95,6 +101,12 @@ public class FileCreator {
             }
         }
 
+        for (int tw = 0; tw < TOTAL_NUMBER_OF_TELEPORT_WIRES; tw++) {
+            for (int datum = 0; datum < INFO_PER_TELEPORT; datum++) {
+                b[6+ (FileCreator.SUBLAYERS - 1) * d * h * w + (d-1) * h * w + (h-1) * w + (w-1)
+                        + tw * INFO_PER_TELEPORT + datum] = TELEPORT_INFO_DUMMY_VALUE;
+            }
+        }
 
         System.out.println("done calculating what to output");
 

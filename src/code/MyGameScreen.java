@@ -46,10 +46,10 @@ public class MyGameScreen extends JComponent {
     static short xPixels;
     static short yPixels;
     static short zPixels;
-    static byte tileSize = 40;
+    static byte tileSize = 32;
     static byte tileWidth;
     static byte tileHeight;
-    static byte originalTileSize = 40;
+    static byte originalTileSize = 32;
 
     static final short MINIMAP_TILE_SIZE = 4;
 
@@ -66,6 +66,8 @@ public class MyGameScreen extends JComponent {
     private Main main;
     int paintsPerSecond = 0;
     boolean needToRepaintTiles = true;
+    public static boolean useMiniMode = false;
+    public static final int miniModeScalar = 4;
 
     //quality of life things
     final static Direction dR = Direction.RIGHT;
@@ -169,16 +171,24 @@ public class MyGameScreen extends JComponent {
         int th = (int) tileHeight;
 
         int bufferPixels = 1;
-        
-        /** First block horizontally visible*/
-        int fbx = (int) (-SCREEN_X_OFFSET - DEFAULT_SCREEN_X_OFFSET) / tileSize  - bufferPixels;
-        /** First block vertically visible*/
-        int fby = (int) (-SCREEN_Y_OFFSET) / tileSize - bufferPixels;
-        /** last block horizontal */
-        int lbx = (int) (-SCREEN_X_OFFSET - DEFAULT_SCREEN_X_OFFSET + WIDTH) / tileSize + bufferPixels;
-        /** last block vertical */
-        int lby = (int) (-SCREEN_Y_OFFSET - DEFAULT_SCREEN_Y_OFFSET + HEIGHT) / tileSize + bufferPixels;
 
+        int fbx, fby, lbx, lby;
+
+        if(!useMiniMode) {
+            /** First block horizontally visible*/
+            fbx = (int) ((-SCREEN_X_OFFSET - DEFAULT_SCREEN_X_OFFSET) / tileSize - bufferPixels);
+            /** First block vertically visible*/
+            fby = (int) ((-SCREEN_Y_OFFSET) / tileSize - bufferPixels);
+            /** last block horizontal */
+            lbx = (int) ((-SCREEN_X_OFFSET - DEFAULT_SCREEN_X_OFFSET + WIDTH) / tileSize + bufferPixels);
+            /** last block vertical */
+            lby = (int) ((-SCREEN_Y_OFFSET - DEFAULT_SCREEN_Y_OFFSET + HEIGHT) / tileSize + bufferPixels);
+        }else {
+            fbx = 0;
+            fby = 0;
+            lbx = WIDTH;
+            lby = HEIGHT;
+        }
         
         if(fbx < 0) fbx = 0;
         if(fby < 0) fby = 0;
@@ -189,89 +199,133 @@ public class MyGameScreen extends JComponent {
         
         
         if(Main.gameMode == Main.GATES_GAMEMODE) {
-            //noinspection DuplicatedCode
-            int fontSize = (int) (th / FONT_SCALAR);
-            g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
-
-            //draw mouse coordinates on screen
-
 
             final int layer = Main.LOGIC_SCREEN_LAYER;
 
-            for (int j = fby; j < lby; j++) {
-                for (int k = fbx; k < lbx; k++) {
+            if(!useMiniMode) {
+                int fontSize = (int) (th / FONT_SCALAR);
+                g2d.setFont(new Font("Arial", Font.BOLD, fontSize));
 
-                    //draw the individual tile
-                    g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k], k, j, layer));
-                    g2d.fillRect(k * tw + xOffset, j * th + yOffset, tw, th);
+                //draw mouse coordinates on screen
 
-                    g2d.setColor(Color.WHITE);
+                for (int j = fby; j < lby; j++) {
+                    for (int k = fbx; k < lbx; k++) {
 
-                    //draw CBE for transistor (Collector, Base, Emitter)
-                    if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Collector.getSymbol()) {
-                        g2d.drawString("C", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Base.getSymbol()) {
-                        g2d.drawString("B", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Emitter.getSymbol()) {
-                        g2d.drawString("E", k * tw + xOffset + tw/2, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferConnected.getSymbol() ||
-                            breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferDisconnected.getSymbol()) {
-                        g2d.drawString("Tr", k * tw + xOffset + tw/3, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardByte()[layer][j][k] == TileByte.SupaWire.getSymbol()) {
-                        g2d.drawString("Su", k * tw + xOffset + tw/3, j * th + yOffset + th/2);
-                    }
+                        //draw the individual tile
+                        g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k], k, j, layer));
+                        g2d.fillRect(k * tw + xOffset, j * th + yOffset, tw, th);
 
-                    //draw the direction
-                    if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.RIGHT)) {
-                        g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.LEFT)) {
-                        g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.DOWN)) {
-                        g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.UP)) {
-                        g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.INTO)) {
-                        g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th/2);
-                    }else if(breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.OUTOF)) {
-                        g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th/2);
-                    }
-                    if(breadBoard.getBreadboardByte()[layer][j][k] == (TileByte.DoubleWire).getSymbol()
-                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOn.getSymbol()
-                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOff.getSymbol()
-                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireDead.getSymbol()
-                    && breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
-                        //BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.getBreadBoardItemsList().get(breadBoard.getBreadBoardItemIndexAtCoordinates(k,j));
-                        //BreadBoard.Wire w = (BreadBoard.Wire)breadBoard.locateBreadBoardItemOnBoard(k,j,layer);
+                        if(tileSize > 1) {
+                            g2d.setColor(Color.WHITE);
 
-                        if(breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
-                            if (breadBoard.getBreadboardDirection2()[layer][j][k] == dR) {
-                                g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
-                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dL) {
-                                g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
-                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dD) {
-                                g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
-                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dU) {
-                                g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
-                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dI) {
-                                g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
-                            } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dO) {
-                                g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                            if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireOn.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireOff.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireDead.getSymbol()){
+                                g2d.drawString("Te", k * tw + xOffset + tw / 3, j * th + yOffset + th / 2);
+                                //DIRECTION 1 WILL BE USED AS TELEPORTWIRE NUMBER!! :D
+                                if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.NONE)) {
+                                    g2d.drawString(String.valueOf(Direction.NONE.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                }else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.RIGHT)) {
+                                    g2d.drawString(String.valueOf(Direction.RIGHT.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.LEFT)) {
+                                    g2d.drawString(String.valueOf(Direction.LEFT.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.DOWN)) {
+                                    g2d.drawString(String.valueOf(Direction.DOWN.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.UP)) {
+                                    g2d.drawString(String.valueOf(Direction.UP.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.INTO)) {
+                                    g2d.drawString(String.valueOf(Direction.INTO.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.OUTOF)) {
+                                    g2d.drawString(String.valueOf(Direction.OUTOF.ordinal()), k * tw + xOffset, j * th + yOffset + th / 2);
+                                }
+                            }else {
+
+                                //draw CBE for transistor (Collector, Base, Emitter)
+                                if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Collector.getSymbol()) {
+                                    g2d.drawString("C", k * tw + xOffset + tw / 2, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Base.getSymbol()) {
+                                    g2d.drawString("B", k * tw + xOffset + tw / 2, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.Emitter.getSymbol()) {
+                                    g2d.drawString("E", k * tw + xOffset + tw / 2, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferConnected.getSymbol() ||
+                                        breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TriStateBufferDisconnected.getSymbol()) {
+                                    g2d.drawString("Tr", k * tw + xOffset + tw / 3, j * th + yOffset + th / 2);
+                                } else if (breadBoard.getBreadboardByte()[layer][j][k] == TileByte.SupaWire.getSymbol()) {
+                                    g2d.drawString("Su", k * tw + xOffset + tw / 3, j * th + yOffset + th / 2);
+                                }
+
+                                    //draw the direction
+                                    if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.RIGHT)) {
+                                        g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.LEFT)) {
+                                        g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.DOWN)) {
+                                        g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.UP)) {
+                                        g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.INTO)) {
+                                        g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    } else if (breadBoard.getBreadboardDirection()[layer][j][k].equals(Direction.OUTOF)) {
+                                        g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th / 2);
+                                    }
+                            }
+                            if (breadBoard.getBreadboardByte()[layer][j][k] == (TileByte.DoubleWire).getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOn.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireOff.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.WireDead.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.SwitchOn.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.SwitchOff.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.UpdatableWireDead.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.UpdatableWireOn.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.UpdatableWireOff.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireDead.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireOn.getSymbol()
+                                    || breadBoard.getBreadboardByte()[layer][j][k] == TileByte.TeleportWireOff.getSymbol()
+                                    && breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
+                                //BreadBoard.DoubleWire dw = (BreadBoard.DoubleWire)breadBoard.getBreadBoardItemsList().get(breadBoard.getBreadBoardItemIndexAtCoordinates(k,j));
+                                //BreadBoard.Wire w = (BreadBoard.Wire)breadBoard.locateBreadBoardItemOnBoardFromCoordinates(k,j,layer);
+
+                                if (breadBoard.getBreadboardDirection2()[layer][j][k] != dN) {
+                                    if (breadBoard.getBreadboardDirection2()[layer][j][k] == dR) {
+                                        g2d.drawString(">", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dL) {
+                                        g2d.drawString("<", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dD) {
+                                        g2d.drawString("v", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dU) {
+                                        g2d.drawString("^", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dI) {
+                                        g2d.drawString("O", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    } else if (breadBoard.getBreadboardDirection2()[layer][j][k] == dO) {
+                                        g2d.drawString("+", k * tw + xOffset, j * th + yOffset + th / 2 + (int) (th / BLOCK_DIRECTION_PLACEMENT));
+                                    }
+                                }
                             }
                         }
                     }
                 }
-            }
-            paintSignalStuff();
-            paintTempArrayStuff();
+                paintSignalStuff();
+                paintTempArrayStuff();
 
-            fontSize = (int) (originalTileSize / FONT_SCALAR);//don't know if this should be here
-            //paintMouseCoordinates(g);
-            paintMouseCoordinatesOriginal();
-            //paintFPS(main.getFrames());
-            
+                fontSize = (int) (originalTileSize / FONT_SCALAR);//don't know if this should be here
+                //paintMouseCoordinates(g);
+                paintMouseCoordinatesOriginal();
+                //paintFPS(main.getFrames());
+
 //============== COPYING CUTTING AND PASTING OVERLAY (and mode strings) =======================================
-            //-- draw a string to show if you're in default or editing mode ----
-            paintCommandStuff();
+                //-- draw a string to show if you're in default or editing mode ----
+                paintCommandStuff();
+            }else {
+                for (int j = fby; j < lby; j+= miniModeScalar) {
+                    for (int k = fbx; k < lbx; k += miniModeScalar) {
+                        g2d.setColor(getColour(breadBoard.getBreadboardByte()[layer][j][k], k, j, layer));
+                        g2d.fillRect(k * tw / miniModeScalar + xOffset,
+                                j * th / miniModeScalar + yOffset,
+                                tw,
+                                th);
+                    }
+                }
+            }
         }else if(gameMode == PAUSED_GAMEMODE)
         {
             g2d.setColor(Color.BLACK);
@@ -330,7 +384,7 @@ public class MyGameScreen extends JComponent {
 
     public void paintSignalStuff() {
 
-        int leftOffset = 363;
+        int leftOffset = 483;
         int widthOfBox = 63;
         int daLength = 0;
 
@@ -380,6 +434,9 @@ public class MyGameScreen extends JComponent {
                     break;
                 case 6:
                     s = "Type";
+                    break;
+                case 7:
+                    s = "ID";
                     break;
                 default:
                     System.out.println("MyGameScreen.paintSignalStuff(): whattayadoinghere");
@@ -661,10 +718,14 @@ public class MyGameScreen extends JComponent {
             return new Color(10,100,10);
         }else if (c == TileByte.Resistor10.getSymbol()) {
             return new Color(10,80,10);
+        }else if (c == TileByte.Resistor50.getSymbol()) {
+            return new Color(10,50,10);
+        }else if (c == TileByte.Resistor100.getSymbol()) {
+            return new Color(10,30,10);
         }else if (c == TileByte.Xor.getSymbol()) {
             return new Color(200,120,20);
         }else if (c == TileByte.RedLEDOn.getSymbol()) {
-            BreadBoard.RedLED rled = (BreadBoard.RedLED) breadBoard.locateBreadBoardItemOnBoard(x,y,z);
+            BreadBoard.RedLED rled = (BreadBoard.RedLED) breadBoard.getBreadBoardItemOnBoardFromCoordinates(x,y,z);
             if(rled != null) {
                 return new Color(rled.getBrightness(), 0, 0);
             }else {
@@ -694,6 +755,22 @@ public class MyGameScreen extends JComponent {
             return new Color(40,100,40);
         }else if (c == TileByte.SupaWire.getSymbol()) {
             return new Color(200,10,10);
+        }else if (c == TileByte.Store0.getSymbol()) {
+            return new Color(32,50,50);
+        }else if (c == TileByte.Store1.getSymbol()) {
+            return new Color(100,150,150);
+        }else if (c == TileByte.UpdatableWireDead.getSymbol()) {
+            return new Color(25,70,100);
+        }else if (c == TileByte.UpdatableWireOn.getSymbol()) {
+            return new Color(30,100,200);
+        }else if (c == TileByte.UpdatableWireOff.getSymbol()) {
+            return new Color(28,90,160);
+        }else if (c == TileByte.TeleportWireDead.getSymbol()) {
+            return new Color(60,60,120);
+        }else if (c == TileByte.TeleportWireOn.getSymbol()) {
+            return new Color(100,100,200);
+        }else if (c == TileByte.TeleportWireOff.getSymbol()) {
+            return new Color(80,80,160);
         }else {
             //System.out.println("paint(): given c: " + c);
             return Color.GRAY;
@@ -710,6 +787,7 @@ public class MyGameScreen extends JComponent {
     public void setTileSize(final byte tw, final byte th) {
         tileWidth = tw;
         tileHeight = th;
+        //System.out.println("tile size " + tw);
     }
 
     // Method to set the number of horizontal and vertical tiles (currently commented out)
